@@ -1,25 +1,21 @@
 "use client";
 
-import { ServerEvent, SessionStatus, AgentConfig } from "@/app/types";
-import { useTranscript } from "@/app/contexts/TranscriptContext";
-import { useEvent } from "@/app/contexts/EventContext";
+import { ServerEvent, SessionStatus, TranscriptItem } from "../types";
+import { useTranscript } from "../contexts/TranscriptContext";
+import { useEvent } from "../contexts/EventContext";
 import { useRef } from "react";
 
 export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
-  selectedAgentName: string;
-  selectedAgentConfigSet: AgentConfig[] | null;
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
-  setSelectedAgentName: (name: string) => void;
+  toolLogic: Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any>;
   shouldForceResponse?: boolean;
 }
 
 export function useHandleServerEvent({
   setSessionStatus,
-  selectedAgentName,
-  selectedAgentConfigSet,
   sendClientEvent,
-  setSelectedAgentName,
+  toolLogic
 }: UseHandleServerEventParams) {
   const {
     transcriptItems,
@@ -37,14 +33,11 @@ export function useHandleServerEvent({
     arguments: string;
   }) => {
     const args = JSON.parse(functionCallParams.arguments);
-    const currentAgent = selectedAgentConfigSet?.find(
-      (a) => a.name === selectedAgentName
-    );
 
     addTranscriptBreadcrumb(`function call: ${functionCallParams.name}`, args);
 
-    if (currentAgent?.toolLogic?.[functionCallParams.name]) {
-      const fn = currentAgent.toolLogic[functionCallParams.name];
+    if (toolLogic[functionCallParams.name]) {
+      const fn = toolLogic[functionCallParams.name];
       const fnResult = await fn(args, transcriptItems);
       addTranscriptBreadcrumb(
         `function call result: ${functionCallParams.name}`,
@@ -60,29 +53,6 @@ export function useHandleServerEvent({
         },
       });
       sendClientEvent({ type: "response.create" });
-    } else if (functionCallParams.name === "transferAgents") {
-      const destinationAgent = args.destination_agent;
-      const newAgentConfig =
-        selectedAgentConfigSet?.find((a) => a.name === destinationAgent) || null;
-      if (newAgentConfig) {
-        setSelectedAgentName(destinationAgent);
-      }
-      const functionCallOutput = {
-        destination_agent: destinationAgent,
-        did_transfer: !!newAgentConfig,
-      };
-      sendClientEvent({
-        type: "conversation.item.create",
-        item: {
-          type: "function_call_output",
-          call_id: functionCallParams.call_id,
-          output: JSON.stringify(functionCallOutput),
-        },
-      });
-      addTranscriptBreadcrumb(
-        `function call: ${functionCallParams.name} response`,
-        functionCallOutput
-      );
     } else {
       const simulatedResult = { result: true };
       addTranscriptBreadcrumb(

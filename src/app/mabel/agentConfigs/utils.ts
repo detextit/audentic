@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "@/app/types";
+import { AgentConfig, Tool } from "../types";
 
 /**
  * This defines and adds "transferAgents" tool dynamically based on the specified downstreamAgents on each agent.
@@ -14,7 +14,7 @@ export function injectTransferTools(agentDefs: AgentConfig[]): AgentConfig[] {
       const availableAgentsList = downstreamAgents
         .map(
           (dAgent) =>
-            `- ${dAgent.name}: ${dAgent.publicDescription ?? "No description"}`
+            `- ${dAgent.name}`
         )
         .join("\n");
 
@@ -67,13 +67,6 @@ export function injectTransferTools(agentDefs: AgentConfig[]): AgentConfig[] {
       agentDef.tools.push(transferAgentTool);
     }
 
-    // so .stringify doesn't break with circular dependencies
-    agentDef.downstreamAgents = agentDef.downstreamAgents?.map(
-      ({ name, publicDescription }) => ({
-        name,
-        publicDescription,
-      })
-    );
   });
 
   return agentDefs;

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { allAgentSets } from '../../mabel/agentConfigs';
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -48,14 +49,25 @@ export async function POST(request: Request) {
         }
       );
     }
-
-    const settings = await request.json();
+    if (!apiKey || !allAgentSets[apiKey]){
+      return NextResponse.json(
+        {error: "Invalid API key"},
+        {
+          status: 401,
+          headers: getCorsHeaders(false) || {},
+        }
+      )
+    }
+    const agentConfig = allAgentSets[apiKey][0];
+    const instructions = agentConfig.instructions || "You are a helpful assistant." + (agentConfig.firstMessage ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}` : "");
 
     const sessionSettings = {
       model: "gpt-4o-mini-realtime-preview",
       modalities: ["text", "audio"],
-      instructions: `${settings.systemPrompt}` + (settings.firstMessage ? `\n\nInitiate the conversation with: ${settings.firstMessage}` : ""),
+      instructions: instructions,
       voice: "alloy",
+      input_audio_format: "pcm16",
+      output_audio_format: "pcm16",
       input_audio_transcription: {
         model: "whisper-1"
       },
@@ -67,7 +79,7 @@ export async function POST(request: Request) {
         create_response: true
       },
       temperature: 0.6,
-      tools: settings.tools ? JSON.parse(settings.tools) : [],
+      tools: agentConfig.tools || [],
       max_response_output_tokens: 1024
     };
 
@@ -90,9 +102,10 @@ export async function POST(request: Request) {
     const data = await response.json();
     const tokenResponse = {
       client_secret: data.client_secret,
-      initiate_conversation: settings.firstMessage ? true : false,
+      initiate_conversation: agentConfig.firstMessage? true : false,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
+      tool_logic: agentConfig.toolLogic? agentConfig.toolLogic : {},
     };
     return NextResponse.json(tokenResponse, { status: 200 });
   } catch (error) {

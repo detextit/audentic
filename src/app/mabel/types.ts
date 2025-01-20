@@ -24,11 +24,10 @@ export interface Tool {
   description: string;
   parameters: ToolParameters;
 }
-
 export interface AgentConfig {
   name: string;
-  publicDescription: string; // gives context to agent transfer tool
   instructions: string;
+  firstMessage?: string;
   tools: Tool[];
   toolLogic?: Record<
     string,
