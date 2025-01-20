@@ -57,7 +57,6 @@ export function useHandleServerEvent({
       sendClientEvent({ type: "response.create" });
     } else if (functionCallParams.name === "end_conversation") {
       const functionCallOutput = {
-        context: args.conversation_context,
         did_end_conversation: true,
       };
       sendClientEvent({

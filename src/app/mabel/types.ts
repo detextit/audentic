@@ -23,7 +23,7 @@ export interface Tool {
   type: "function";
   name: string;
   description: string;
-  parameters: ToolParameters;
+  parameters?: ToolParameters;
 }
 export interface AgentConfig {
   name: string;
