@@ -8,6 +8,7 @@ import { useRef } from "react";
 export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
+  disconnectFromRealtime: () => void;
   toolLogic: Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any>;
   shouldForceResponse?: boolean;
 }
@@ -15,6 +16,7 @@ export interface UseHandleServerEventParams {
 export function useHandleServerEvent({
   setSessionStatus,
   sendClientEvent,
+  disconnectFromRealtime,
   toolLogic
 }: UseHandleServerEventParams) {
   const {
@@ -53,6 +55,24 @@ export function useHandleServerEvent({
         },
       });
       sendClientEvent({ type: "response.create" });
+    } else if (functionCallParams.name === "end_conversation") {
+      const functionCallOutput = {
+        context: args.conversation_context,
+        did_end_conversation: true,
+      };
+      sendClientEvent({
+        type: "conversation.item.create",
+        item: {
+          type: "function_call_output",
+          call_id: functionCallParams.call_id,
+          output: JSON.stringify(functionCallOutput),
+        },
+      });
+      addTranscriptBreadcrumb(
+        `function call: ${functionCallParams.name} response`,
+        functionCallOutput
+      );
+      disconnectFromRealtime();
     } else {
       const simulatedResult = { result: true };
       addTranscriptBreadcrumb(

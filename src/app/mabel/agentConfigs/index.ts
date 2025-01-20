@@ -1,12 +1,6 @@
 import { AllAgentConfigsType } from "../types";
-import frontDeskAuthentication from "./frontDeskAuthentication";
-import customerServiceRetail from "./customerServiceRetail";
-import example from "./example";
+import voiceAct from "./voiceAct";
 
 export const allAgentSets: AllAgentConfigsType = {
-  frontDeskAuthentication,
-  customerServiceRetail,
-  example,
+  "voiceAct": voiceAct,
 };
-
-export const defaultAgentSetKey = "example";

@@ -17,7 +17,7 @@ interface SessionControlsProps {
   agentId?: string;
 }
 
-function SessionControlsCore({ agentId="example" }: SessionControlsProps) {
+function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
 
   const { logClientEvent, logServerEvent } = useEvent();  
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -42,12 +42,6 @@ function SessionControlsCore({ agentId="example" }: SessionControlsProps) {
       );
     }
   };
-
-  const handleServerEventRef = useHandleServerEvent({
-    setSessionStatus,
-    sendClientEvent,
-    toolLogic,
-  });
   
 
   const connectToRealtime = async () => {
@@ -185,6 +179,12 @@ function SessionControlsCore({ agentId="example" }: SessionControlsProps) {
     }
   };
 
+  const handleServerEventRef = useHandleServerEvent({
+    setSessionStatus,
+    sendClientEvent,
+    disconnectFromRealtime,
+    toolLogic,
+  });
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
 

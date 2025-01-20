@@ -16,6 +16,7 @@ export interface ToolParameters {
   properties: Record<string, ToolParameterProperty>;
   required?: string[];
   additionalProperties?: boolean;
+  strict?: boolean;
 }
 
 export interface Tool {
