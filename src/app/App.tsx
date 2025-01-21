@@ -1,5 +1,13 @@
 "use client";
 import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -9,20 +17,36 @@ import {
 import SessionControls from "./mabel/components/SessionControls";
 
 function App() {
-
   return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-            <div className="flex items-center gap-2 px-4">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-            </div>
-          </header>
-          <SessionControls/>
-        </SidebarInset>
-      </SidebarProvider>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "350px",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar />
+      <SidebarInset>
+        <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          {/* TODO: Add dynamic breadcrumb based on selections*/}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/">Agents</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Agent Builder</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        {/* TODO: Add dynamic content based on selections*/}
+      </SidebarInset>
+      <SessionControls/>
+    </SidebarProvider>
   );
 }
 
