@@ -10,7 +10,6 @@ function Transcript() {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   function scrollToBottom() {
     if (transcriptRef.current) {
