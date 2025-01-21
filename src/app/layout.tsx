@@ -16,7 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SignedOut>
             </SignedOut>
             <SignedIn>
-              <UserButton/>
             </SignedIn>
           </header>
           <main>{children}</main>
