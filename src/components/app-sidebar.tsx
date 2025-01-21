@@ -47,63 +47,55 @@ const data = {
   navMain: [
     {
       title: "Agents",
-      url: "#",
+      url: "/",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
+          title: "Dashboard",
+          url: "/",
+        },
+        {
           title: "History",
-          url: "#",
+          url: "/history",
         },
         {
           title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          url: "/starred",
         },
       ],
     },
     {
       title: "Documentation",
-      url: "#",
+      url: "/docs",
       icon: BookOpen,
       items: [
         {
           title: "Get Started",
-          url: "#",
+          url: "/docs",
         },
         {
           title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          url: "/docs/tutorials",
         },
       ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: Settings2,
       items: [
         {
           title: "General",
-          url: "#",
+          url: "/settings/general",
         },
         {
           title: "Team",
-          url: "#",
+          url: "/settings/team",
         },
         {
           title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          url: "/settings/billing",
         },
       ],
     },
