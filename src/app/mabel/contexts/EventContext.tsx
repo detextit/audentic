@@ -9,26 +9,48 @@ type EventContextValue = {
   logClientEvent: (eventObj: Record<string, any>, eventNameSuffix?: string) => void;
   logServerEvent: (eventObj: Record<string, any>, eventNameSuffix?: string) => void;
   toggleExpand: (id: number | string) => void;
+  setSessionId: (id: string) => void;
 };
 
 const EventContext = createContext<EventContextValue | undefined>(undefined);
 
 export const EventProvider: FC<PropsWithChildren> = ({ children }) => {
   const [loggedEvents, setLoggedEvents] = useState<LoggedEvent[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
 
   function addLoggedEvent(direction: "client" | "server", eventName: string, eventData: Record<string, any>) {
     const id = eventData.event_id || uuidv4();
-    setLoggedEvents((prev) => [
-      ...prev,
-      {
-        id,
-        direction,
-        eventName,
-        eventData,
-        timestamp: new Date().toLocaleTimeString(),
-        expanded: false,
-      },
-    ]);
+    const newEvent: LoggedEvent = {
+      id,
+      direction,
+      eventName,
+      eventData,
+      timestamp: new Date().toLocaleTimeString(),
+      expanded: false,
+    };
+
+    if (sessionId) {
+      // Log to database via API - omit UI-specific fields
+      fetch('/api/events/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          event: {
+            id: newEvent.id,
+            direction: newEvent.direction,
+            eventName: newEvent.eventName,
+            eventData: newEvent.eventData,
+          }, 
+          sessionId 
+        }),
+      }).catch(error => {
+        console.error('Error logging event:', error);
+      });
+    }
+
+    setLoggedEvents((prev) => [...prev, newEvent]);
   }
 
   const logClientEvent: EventContextValue["logClientEvent"] = (eventObj, eventNameSuffix = "") => {
@@ -52,10 +74,15 @@ export const EventProvider: FC<PropsWithChildren> = ({ children }) => {
     );
   };
 
-
   return (
     <EventContext.Provider
-      value={{ loggedEvents, logClientEvent, logServerEvent, toggleExpand }}
+      value={{ 
+        loggedEvents, 
+        logClientEvent, 
+        logServerEvent, 
+        toggleExpand,
+        setSessionId 
+      }}
     >
       {children}
     </EventContext.Provider>

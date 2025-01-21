@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 import { SessionStatus, TranscriptItem } from "../types";
 
 // Context providers & hooks
 import Transcript from "./Transcript";
+import { TranscriptProvider, useTranscript } from "../contexts/TranscriptContext";
 import Events from "./Events";
 import { EventProvider, useEvent } from "../contexts/EventContext";
 import { useHandleServerEvent } from "../hooks/useHandleServerEvent";
@@ -11,7 +13,6 @@ import { useHandleServerEvent } from "../hooks/useHandleServerEvent";
 // Utilities
 import { Button } from "../components/ui/button";
 import { Phone, PhoneOff } from "lucide-react";
-import { TranscriptProvider } from "../contexts/TranscriptContext";
 
 interface SessionControlsProps {
   agentId?: string;
@@ -19,13 +20,15 @@ interface SessionControlsProps {
 
 function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
 
-  const { logClientEvent, logServerEvent } = useEvent();  
+  const { logClientEvent, logServerEvent, setSessionId: setEventSessionId } = useEvent();  
+  const { transcriptItems, setSessionId: setTranscriptSessionId } = useTranscript();
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("DISCONNECTED");
   const [toolLogic, setToolLogic] = useState<Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any>>({});
+  const [sessionId, setSessionId] = useState<string>("");
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dcRef.current && dcRef.current.readyState === "open") {
@@ -49,8 +52,26 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
     setSessionStatus("CONNECTING");
 
     try {
-      logClientEvent({ url: "/session" }, "fetch_session_token_request");
-      const tokenResponse = await fetch("/api/session", {
+      // Create new session via API
+      const newSessionId = uuidv4();
+      const createSessionResponse = await fetch('/api/sessions/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: newSessionId, agentId }),
+      });
+
+      if (!createSessionResponse.ok) {
+        throw new Error('Failed to create session');
+      }
+
+      setSessionId(newSessionId);
+      setEventSessionId(newSessionId);
+      setTranscriptSessionId(newSessionId);
+
+      logClientEvent({ url: "/token" }, "fetch_session_token_request");
+      const tokenResponse = await fetch("/api/token", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +175,29 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
     }
   };
 
-  const disconnectFromRealtime = () => {
+  const disconnectFromRealtime = async () => {
+    if (sessionId) {
+      // End session via API with final transcript
+      try {
+        await fetch('/api/sessions/end', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            sessionId,
+            transcriptItems // Send current transcript items
+          }),
+        });
+      } catch (error) {
+        console.error('Error ending session:', error);
+      }
+
+      setSessionId("");
+      setEventSessionId("");
+      setTranscriptSessionId("");
+    }
+
     if (pcRef.current) {
       pcRef.current.getSenders().forEach((sender) => {
         if (sender.track) {

@@ -6,13 +6,17 @@ import { LoggedEvent } from "../types";
 
 export interface EventsProps {
   isExpanded: boolean;
+  events?: LoggedEvent[];
+  isHistory?: boolean;
 }
 
-function Events({ isExpanded }: EventsProps) {
+function Events({ isExpanded, events, isHistory = false }: EventsProps) {
   const [prevEventLogs, setPrevEventLogs] = useState<LoggedEvent[]>([]);
   const eventLogsContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const { loggedEvents, toggleExpand } = useEvent();
+  const eventContext = useEvent();
+  const loggedEvents = isHistory ? (events || []) : eventContext.loggedEvents;
+  const toggleExpand = isHistory ? (() => {}) : eventContext.toggleExpand;
 
   const getDirectionArrow = (direction: string) => {
     if (direction === "client") return { symbol: "▲", color: "#7f5af0" };

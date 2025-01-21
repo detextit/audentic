@@ -6,7 +6,7 @@ export function injectDefaultTools(agentDef: AgentConfig): AgentConfig {
   const endConversationTool: Tool = {
     type: "function",
     name: "end_conversation",
-    description: `Triggers a call hang up with the user. Only call this function if the context of the conversation is appropriate.`,
+    description: `Triggers a call hang up with the user. Use this function to end the conversation when the user does not need any more assistance. Initiate this function after saying "Goodbye!".`,
   };
 
     // Ensure the agent has a tools array

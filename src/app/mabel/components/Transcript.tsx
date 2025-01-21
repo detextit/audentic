@@ -5,11 +5,20 @@ import ReactMarkdown from "react-markdown";
 import { TranscriptItem } from "../types";
 import { useTranscript } from "../contexts/TranscriptContext";
 
-function Transcript() {
-  const { transcriptItems, toggleTranscriptItemExpand } = useTranscript();
+interface TranscriptProps {
+  transcriptItems?: TranscriptItem[];
+  isHistory?: boolean;
+}
+
+function Transcript({ transcriptItems: items, isHistory = false }: TranscriptProps) {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
+
+  // Only use context if not in history mode
+  const transcriptContext = useTranscript();
+  const transcriptItems = isHistory ? (items || []) : transcriptContext.transcriptItems;
+  const toggleTranscriptItemExpand = isHistory ? (() => {}) : transcriptContext.toggleTranscriptItemExpand;
 
   function scrollToBottom() {
     if (transcriptRef.current) {
