@@ -39,6 +39,3 @@ yarn-error.log*
 next-env.d.ts
 todo.md
 
-mabel/dist
-mabel/node_modules
-mabel/lib
