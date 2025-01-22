@@ -1,5 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TranscriptItem } from "../types";
 
 interface HistoryTranscriptProps {
@@ -8,17 +9,18 @@ interface HistoryTranscriptProps {
 
 export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
   return (
-    <div className="flex flex-col flex-1 bg-white min-h-0 rounded-xl">
-      <div className="relative flex-1 min-h-0">
-        <div className="overflow-auto p-4 flex flex-col gap-y-4 h-full">
+    <div className="w-full rounded-xl transition-all flex flex-col bg-white h-screen">
+      <div className="font-semibold px-6 py-4 sticky top-0 z-10 text-base border-b bg-white">
+        Transcript
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-6">
           {transcriptItems.map((item) => {
             if (item.type === "MESSAGE") {
               return (
                 <div
                   key={item.itemId}
-                  className={`flex flex-col ${
-                    item.isHidden ? "opacity-50" : ""
-                  }`}
+                  className={`py-2 ${item.isHidden ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-center gap-x-2 text-xs text-gray-500">
                     <span>{item.timestamp}</span>
@@ -35,14 +37,14 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
               return (
                 <div
                   key={item.itemId}
-                  className="flex flex-col gap-y-1 text-xs text-gray-500 border-l-2 border-gray-200 pl-2"
+                  className="py-2 text-xs text-gray-500 border-l-2 border-gray-200 pl-2"
                 >
                   <div className="flex items-center gap-x-2">
                     <span>{item.timestamp}</span>
                     <span className="font-medium">{item.title}</span>
                   </div>
                   {item.data && (
-                    <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded">
+                    <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded mt-1">
                       {JSON.stringify(item.data, null, 2)}
                     </pre>
                   )}
@@ -53,7 +55,7 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
             return null;
           })}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
-} 
+}

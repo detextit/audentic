@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 import { SessionStatus, TranscriptItem } from "../types";
 
 // Context providers & hooks
-import Transcript from "./Transcript";
-import { TranscriptProvider, useTranscript } from "../contexts/TranscriptContext";
-import Events from "./Events";
+import {
+  TranscriptProvider,
+  useTranscript,
+} from "../contexts/TranscriptContext";
 import { EventProvider, useEvent } from "../contexts/EventContext";
 import { useHandleServerEvent } from "../hooks/useHandleServerEvent";
 
@@ -18,16 +19,29 @@ interface SessionControlsProps {
   agentId?: string;
 }
 
-function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
-
-  const { logClientEvent, logServerEvent, setSessionId: setEventSessionId } = useEvent();  
-  const { transcriptItems, setSessionId: setTranscriptSessionId } = useTranscript();
+function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
+  const {
+    logClientEvent,
+    logServerEvent,
+    setSessionId: setEventSessionId,
+  } = useEvent();
+  const { transcriptItems, setSessionId: setTranscriptSessionId } =
+    useTranscript();
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
-  const [sessionStatus, setSessionStatus] = useState<SessionStatus>("DISCONNECTED");
-  const [toolLogic, setToolLogic] = useState<Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any>>({});
+  const [sessionStatus, setSessionStatus] =
+    useState<SessionStatus>("DISCONNECTED");
+  const [toolLogic, setToolLogic] = useState<
+    Record<
+      string,
+      (
+        args: any,
+        transcriptLogsFiltered: TranscriptItem[]
+      ) => Promise<any> | any
+    >
+  >({});
   const [sessionId, setSessionId] = useState<string>("");
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
@@ -45,7 +59,6 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
       );
     }
   };
-  
 
   const connectToRealtime = async () => {
     if (sessionStatus !== "DISCONNECTED") return;
@@ -54,16 +67,16 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
     try {
       // Create new session via API
       const newSessionId = uuidv4();
-      const createSessionResponse = await fetch('/api/sessions/create', {
-        method: 'POST',
+      const createSessionResponse = await fetch("/api/sessions/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ sessionId: newSessionId, agentId }),
       });
 
       if (!createSessionResponse.ok) {
-        throw new Error('Failed to create session');
+        throw new Error("Failed to create session");
       }
 
       setSessionId(newSessionId);
@@ -74,14 +87,18 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
       const tokenResponse = await fetch("/api/token", {
         method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': agentId  // Add API key to headers
+          "Content-Type": "application/json",
+          "X-API-Key": agentId, // Add API key to headers
         },
       });
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
-        console.error('Token response not OK:', tokenResponse.status, errorText);
+        console.error(
+          "Token response not OK:",
+          tokenResponse.status,
+          errorText
+        );
         setSessionStatus("DISCONNECTED");
         return;
       }
@@ -89,7 +106,7 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
       const data = await tokenResponse.json();
       logServerEvent(data, "fetch_session_token_response");
 
-      if (!data || !data.client_secret?.value) { 
+      if (!data || !data.client_secret?.value) {
         logClientEvent(data, "error.no_ephemeral_key");
         console.error("No ephemeral key provided by the server");
         setSessionStatus("DISCONNECTED");
@@ -97,7 +114,7 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
       }
 
       const EPHEMERAL_KEY = data.client_secret.value;
-      
+
       // Create audio element
       if (!audioElementRef.current) {
         audioElementRef.current = document.createElement("audio");
@@ -110,7 +127,7 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
 
       pc.ontrack = (e) => {
         if (audioElementRef.current) {
-            audioElementRef.current.srcObject = e.streams[0];
+          audioElementRef.current.srcObject = e.streams[0];
         }
       };
 
@@ -168,7 +185,6 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
       dc.addEventListener("message", (e: MessageEvent) => {
         handleServerEventRef.current(JSON.parse(e.data));
       });
-
     } catch (err) {
       console.error("Error connecting to realtime:", err);
       setSessionStatus("DISCONNECTED");
@@ -179,18 +195,18 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
     if (sessionId) {
       // End session via API with final transcript
       try {
-        await fetch('/api/sessions/end', {
-          method: 'POST',
+        await fetch("/api/sessions/end", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             sessionId,
-            transcriptItems // Send current transcript items
+            transcriptItems, // Send current transcript items
           }),
         });
       } catch (error) {
-        console.error('Error ending session:', error);
+        console.error("Error ending session:", error);
       }
 
       setSessionId("");
@@ -232,52 +248,46 @@ function SessionControlsCore({ agentId="voiceAct" }: SessionControlsProps) {
   const isConnecting = sessionStatus === "CONNECTING";
 
   return (
-    <div>
-      <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
-       <Transcript/>
-       <Events isExpanded={true} />
-      </div>
     <div className="fixed right-8 bottom-8">
       {/* Pulsing background effect when not active */}
       {!isConnected && !isConnecting && (
-          <div className="absolute inset-4 rounded-2xl bg-black/10 blur-sm animate-[pulse_2s_ease-in-out_infinite]" />
-        )}
-        
-        {/* Main floating card */}
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 min-w-[240px] border border-gray-100">
-          {/* Card header */}
-          <div className="mb-3 text-sm font-medium text-gray-600">
-            {isConnected ? "Listening..." : "Need help?"}
-          </div>
+        <div className="absolute inset-4 rounded-2xl bg-black/10 blur-sm animate-[pulse_2s_ease-in-out_infinite]" />
+      )}
 
-          {/* Control button */}
-          <div className="flex justify-center">
-            {isConnected ? (
-              <Button 
-                onClick={onToggleConnection}
-                variant="outline" 
-                className="rounded-full px-6 py-2 border border-gray-200 hover:bg-gray-50/80 w-full"
-              >
-                <PhoneOff className="mr-2 h-4 w-4 text-red-500" />
-                <span>End call</span>
-              </Button>
-            ) : (
-              <Button
-                onClick={onToggleConnection}
-                className={`rounded-full px-6 py-2 w-full ${
-                  isConnecting 
-                    ? "bg-gray-100 text-gray-600" 
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-              >
-                <Phone className="mr-2 h-4 w-4" />
-                <span>{isConnecting ? "Connecting..." : "Call Agent"}</span>
-              </Button>
-            )}
-            </div>
-          </div>
+      {/* Main floating card */}
+      <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 min-w-[240px] border border-gray-100">
+        {/* Card header */}
+        <div className="mb-3 text-sm font-medium text-gray-600">
+          {isConnected ? "Listening..." : "Need help?"}
+        </div>
+
+        {/* Control button */}
+        <div className="flex justify-center">
+          {isConnected ? (
+            <Button
+              onClick={onToggleConnection}
+              variant="outline"
+              className="rounded-full px-6 py-2 border border-gray-200 hover:bg-gray-50/80 w-full"
+            >
+              <PhoneOff className="mr-2 h-4 w-4 text-red-500" />
+              <span>End call</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={onToggleConnection}
+              className={`rounded-full px-6 py-2 w-full ${
+                isConnecting
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              <Phone className="mr-2 h-4 w-4" />
+              <span>{isConnecting ? "Connecting..." : "Call Agent"}</span>
+            </Button>
+          )}
         </div>
       </div>
+    </div>
   );
 }
 
@@ -290,6 +300,5 @@ function SessionControls(props: SessionControlsProps) {
     </TranscriptProvider>
   );
 }
-
 
 export default SessionControls;
