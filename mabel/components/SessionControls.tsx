@@ -1,6 +1,4 @@
 import { useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-
 import { SessionStatus, TranscriptItem } from "../types";
 
 // Context providers & hooks
@@ -65,38 +63,14 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
     setSessionStatus("CONNECTING");
 
     try {
-      // Create new session via API
-      const newSessionId = uuidv4();
-      const createSessionResponse = await fetch(
-        "https://voiceact.vercel.app/api/sessions/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sessionId: newSessionId, agentId }),
-        }
-      );
-
-      if (!createSessionResponse.ok) {
-        throw new Error("Failed to create session");
-      }
-
-      setSessionId(newSessionId);
-      setEventSessionId(newSessionId);
-      setTranscriptSessionId(newSessionId);
-
       logClientEvent({ url: "/token" }, "fetch_session_token_request");
-      const tokenResponse = await fetch(
-        "https://voiceact.vercel.app/api/token",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": agentId, // Add API key to headers
-          },
-        }
-      );
+      const tokenResponse = await fetch("/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": agentId, // Add API key to headers
+        },
+      });
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
@@ -118,6 +92,22 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
         setSessionStatus("DISCONNECTED");
         return;
       }
+
+      const createSessionResponse = await fetch("/api/sessions/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId: data.session_id, agentId }),
+      });
+
+      if (!createSessionResponse.ok) {
+        throw new Error("Failed to create session");
+      }
+
+      setSessionId(data.session_id);
+      setEventSessionId(data.session_id);
+      setTranscriptSessionId(data.session_id);
 
       const EPHEMERAL_KEY = data.client_secret.value;
 
