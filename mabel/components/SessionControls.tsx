@@ -248,7 +248,7 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
   const isConnecting = sessionStatus === "CONNECTING";
 
   return (
-    <div className="fixed right-8 bottom-8 z-50">
+    <div>
       {/* Pulsing background effect when not active */}
       {!isConnected && !isConnecting && (
         <div className="absolute inset-4 rounded-2xl bg-black/10 blur-sm animate-[pulse_2s_ease-in-out_infinite]" />
@@ -275,6 +275,7 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
           ) : (
             <Button
               onClick={onToggleConnection}
+              variant="default"
               className={`rounded-full px-6 py-2 w-full ${
                 isConnecting
                   ? "bg-gray-100 text-gray-600"
