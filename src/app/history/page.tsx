@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import SessionHistory from '../mabel/components/SessionHistory';
+import { useEffect, useState } from "react";
+import SessionHistory from "./components/SessionHistory";
 
 interface Session {
   session_id: string;
@@ -19,13 +19,13 @@ export default function SessionsPage() {
   useEffect(() => {
     async function fetchSessions() {
       try {
-        const response = await fetch('/api/sessions');
-        if (!response.ok) throw new Error('Failed to fetch sessions');
+        const response = await fetch("/api/sessions");
+        if (!response.ok) throw new Error("Failed to fetch sessions");
         const data = await response.json();
         setSessions(data);
       } catch (error) {
-        console.error('Error fetching sessions:', error);
-        setError('Failed to load sessions');
+        console.error("Error fetching sessions:", error);
+        setError("Failed to load sessions");
       } finally {
         setIsLoading(false);
       }
@@ -45,7 +45,7 @@ export default function SessionsPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Session History</h1>
-      
+
       <div className="grid grid-cols-4 gap-4">
         {/* Sessions list */}
         <div className="col-span-1 border rounded-lg p-4">
@@ -56,8 +56,8 @@ export default function SessionsPage() {
                 key={session.session_id}
                 className={`p-2 rounded cursor-pointer ${
                   selectedSessionId === session.session_id
-                    ? 'bg-gray-100'
-                    : 'hover:bg-gray-50'
+                    ? "bg-gray-100"
+                    : "hover:bg-gray-50"
                 }`}
                 onClick={() => setSelectedSessionId(session.session_id)}
               >

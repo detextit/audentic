@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { allAgentSets } from '../../mabel/agentConfigs';
+import { NextResponse } from "next/server";
+import { allAgentSets } from "../../../../mabel/agentConfigs";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
     return {
-      'Access-Control-Allow-Origin': "*",
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
     };
   }
   return null;
@@ -14,8 +14,8 @@ const getCorsHeaders = (isAllowed: boolean) => {
 
 // Add this to handle OPTIONS preflight requests
 export async function OPTIONS(request: Request) {
-  const origin = request.headers.get('Origin');
-  const apiKey = request.headers.get('X-API-Key');
+  const origin = request.headers.get("Origin");
+  const apiKey = request.headers.get("X-API-Key");
 
   // Verify API key for OPTIONS request
   const isValidApiKey = await verifyApiKey(origin, apiKey);
@@ -33,8 +33,8 @@ export async function OPTIONS(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const origin = request.headers.get('Origin');
-    const apiKey = request.headers.get('X-API-Key');
+    const origin = request.headers.get("Origin");
+    const apiKey = request.headers.get("X-API-Key");
 
     // Verify API key and get CORS headers
     const isValidApiKey = await verifyApiKey(origin, apiKey);
@@ -42,24 +42,29 @@ export async function POST(request: Request) {
 
     if (!isValidApiKey || !corsHeaders) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: "Unauthorized" },
         {
           status: 401,
           headers: getCorsHeaders(false) || {}, // Always return CORS headers for error responses
         }
       );
     }
-    if (!apiKey || !allAgentSets[apiKey]){
+    if (!apiKey || !allAgentSets[apiKey]) {
       return NextResponse.json(
-        {error: "Invalid API key"},
+        { error: "Invalid API key" },
         {
           status: 401,
           headers: getCorsHeaders(false) || {},
         }
-      )
+      );
     }
     const agentConfig = allAgentSets[apiKey][0];
-    const instructions = agentConfig.instructions || "You are a helpful assistant." + (agentConfig.firstMessage ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}` : "");
+    const instructions =
+      agentConfig.instructions ||
+      "You are a helpful assistant." +
+        (agentConfig.firstMessage
+          ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}`
+          : "");
 
     const sessionSettings = {
       model: "gpt-4o-mini-realtime-preview",
@@ -69,51 +74,53 @@ export async function POST(request: Request) {
       input_audio_format: "pcm16",
       output_audio_format: "pcm16",
       input_audio_transcription: {
-        model: "whisper-1"
+        model: "whisper-1",
       },
       turn_detection: {
         type: "server_vad",
         threshold: 0.5,
         prefix_padding_ms: 300,
         silence_duration_ms: 500,
-        create_response: true
+        create_response: true,
       },
       temperature: 0.6,
       tools: agentConfig.tools || [],
-      max_response_output_tokens: 1024
+      max_response_output_tokens: 1024,
     };
 
-
-    const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(sessionSettings)
-    });
+    const response = await fetch(
+      "https://api.openai.com/v1/realtime/sessions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sessionSettings),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Token fetch error:', error);
+      console.error("Token fetch error:", error);
       return NextResponse.json({ error }, { status: response.status });
     }
 
     const data = await response.json();
     const tokenResponse = {
       client_secret: data.client_secret,
-      initiate_conversation: agentConfig.firstMessage? true : false,
+      initiate_conversation: agentConfig.firstMessage ? true : false,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
-      tool_logic: agentConfig.toolLogic? agentConfig.toolLogic : {},
+      tool_logic: agentConfig.toolLogic ? agentConfig.toolLogic : {},
     };
     return NextResponse.json(tokenResponse, { status: 200 });
   } catch (error) {
-    console.error('Token route error:', error);
-    const origin = request.headers.get('Origin');
+    console.error("Token route error:", error);
+    const origin = request.headers.get("Origin");
 
     return NextResponse.json(
-      { error: 'Failed to get token' },
+      { error: "Failed to get token" },
       {
         status: 500,
         headers: getCorsHeaders(false) || {},
@@ -123,14 +130,17 @@ export async function POST(request: Request) {
 }
 
 // Enhance the verifyApiKey function to check both API key and origin if needed
-async function verifyApiKey(origin: string | null, apiKey: string | null): Promise<boolean> {
+async function verifyApiKey(
+  origin: string | null,
+  apiKey: string | null
+): Promise<boolean> {
   if (!apiKey && !origin) return false;
 
   try {
     console.log(origin, apiKey);
     return true; // Replace with actual verification
   } catch (error) {
-    console.error('API key verification error:', error);
+    console.error("API key verification error:", error);
     return false;
   }
 }
