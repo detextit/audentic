@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Bot, BookOpen, Command, PlusCircle, Terminal, Plus, MoreHorizontal } from "lucide-react"
+import { Bot, Terminal, FileClock } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { NavUser } from "@/components/nav-user"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 
 import {
   Sidebar,
@@ -16,58 +16,39 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
+import AgentsPage from "@/app/agents/page"
+import SessionsPage from "@/app/history/page"
 
 // This is sample data
 const navItems = [
   {
     title: "Agents",
-    url: "/",
+    url: "/agents",
     icon: Bot,
+    size: 5,
   },
   {
     title: "History",
     url: "/history",
-    icon: BookOpen,
-  },
-]
-
-// Sample agents data - in real app this would come from your backend
-const sampleAgents = [
-  {
-    id: "1",
-    name: "Customer Support Agent",
-    description: "Handles customer inquiries and support tickets",
-  },
-  {
-    id: "2", 
-    name: "Sales Assistant",
-    description: "Helps with product recommendations and sales",
+    icon: FileClock,
+    size: 5,
   },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const { setOpen } = useSidebar()
-  const [agents] = React.useState(sampleAgents)
-
-  const activeItem = navItems.find(item => pathname.startsWith(item.url)) || navItems[0]
+  const router = useRouter()
+  const [selectedItem, setSelectedItem] = React.useState<string>("Agents")
 
   return (
-    <Sidebar
-      collapsible="icon"
-      className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
-      {...props}
-    >
-      {/* First sidebar with main navigation */}
+    <div className="flex h-screen">
       <Sidebar
         collapsible="none"
-        className="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r"
+        className="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r flex-shrink-0"
       >
         <SidebarHeader>
           <SidebarMenu>
@@ -86,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="flex-1">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -99,12 +80,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       }}
                       asChild
                       isActive={pathname.startsWith(item.url)}
-                      className="px-2.5 md:px-2"
+                      size="lg"
+                      className="md:h-8 md:p-0 flex aspect-square size-8 items-center justify-center rounded-lg"
                     >
-                      <Link href={item.url}>
-                        <item.icon className="size-4" />
-                        <span>{item.title}</span>
-                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedItem(item.title)
+                          window.history.pushState({}, '', item.url)
+                        }}
+                      >
+                        <item.icon className="size-5 min-w-5 min-h-5" />
+                      </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -116,58 +104,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <NavUser />
         </SidebarFooter>
       </Sidebar>
-
-      {/* Second sidebar with context-specific content */}
-      <Sidebar collapsible="none" className="hidden flex-1 md:flex">
-        <SidebarHeader className="gap-3.5 border-b p-4">
-          <div className="flex w-full items-center justify-between">
-            <div className="text-base font-medium text-foreground">
-              {activeItem.title}
-            </div>
-            {activeItem.url === '/' && (
-              <Button 
-                variant="outline"
-                onClick={ () => {
-                  // TODO: handle create new agent
-                  console.log("Create new agent")
-                }}
-              >
-                <Plus className="size-2" /> Create
-              </Button>
-            )}
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup className="px-0">
-            <SidebarGroupContent>
-            <SidebarMenu>
-            {agents.map((agent) => (
-                  <SidebarMenuItem key={agent.name}>
-                    <SidebarMenuButton
-                      tooltip={{
-                        children: agent.description,
-                        hidden: false,
-                      }}
-                      asChild
-                      // TODO: Add active state
-                      className="px-2.5 md:px-2"
-                      onClick={() => {
-                        // TODO: hanlde agent click
-                        console.log(`${agent.name} clicked`)
-                      }}
-                    >
-              <Label>
-                <Bot className="h-4 w-4" />
-                {agent.name}
-              </Label>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-    </Sidebar>
+      <div>
+        {selectedItem === "History" && <SessionsPage />}
+        {selectedItem === "Agents" && <AgentsPage />}
+      </div>
+    </div>
   )
 }

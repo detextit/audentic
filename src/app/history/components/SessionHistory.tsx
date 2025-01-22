@@ -51,11 +51,13 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   }
 
   return (
-    <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
-      <div className="flex-1">
+    <div className="grid grid-cols-2 h-full divide-x w-full">
+      <div className="h-full w-full overflow-hidden">
         <HistoryTranscript transcriptItems={transcriptItems} />
       </div>
-      <HistoryEvents events={events} />
+      <div className="h-full w-full overflow-hidden">
+        <HistoryEvents events={events} />
+      </div>
     </div>
   );
 }
