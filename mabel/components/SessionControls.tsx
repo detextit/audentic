@@ -12,7 +12,7 @@ import { EventProvider, useEvent } from "../contexts/EventContext";
 import { useHandleServerEvent } from "../hooks/useHandleServerEvent";
 
 // Utilities
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 import { Phone, PhoneOff } from "lucide-react";
 
 interface SessionControlsProps {
@@ -248,7 +248,7 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
   const isConnecting = sessionStatus === "CONNECTING";
 
   return (
-    <div className="fixed right-8 bottom-8">
+    <div className="fixed right-8 bottom-8 z-50">
       {/* Pulsing background effect when not active */}
       {!isConnected && !isConnecting && (
         <div className="absolute inset-4 rounded-2xl bg-black/10 blur-sm animate-[pulse_2s_ease-in-out_infinite]" />
@@ -301,4 +301,4 @@ function SessionControls(props: SessionControlsProps) {
   );
 }
 
-export default SessionControls;
+export { SessionControls };
