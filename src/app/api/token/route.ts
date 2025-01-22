@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { allAgentSets } from "../../../../mabel/agentConfigs";
+import { allAgentSets } from "@/agentConfigs";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
