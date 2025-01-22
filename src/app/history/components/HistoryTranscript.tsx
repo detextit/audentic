@@ -9,7 +9,7 @@ interface HistoryTranscriptProps {
 
 export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
   return (
-    <div className="w-full rounded-xl transition-all flex flex-col bg-white h-screen">
+    <div className="w-full rounded-xl transition-all flex flex-col bg-white h-full">
       <div className="font-semibold px-6 py-4 sticky top-0 z-10 text-base border-b bg-white">
         Transcript
       </div>
