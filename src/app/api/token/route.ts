@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { allAgentSets } from "@/agentConfigs";
+import { getAgentConfig } from "@/agentConfigs";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         }
       );
     }
-    if (!apiKey || !allAgentSets[apiKey]) {
+    if (!apiKey || !getAgentConfig(apiKey)) {
       return NextResponse.json(
         { error: "Invalid API key" },
         {
@@ -58,11 +58,11 @@ export async function POST(request: Request) {
         }
       );
     }
-    const agentConfig = allAgentSets[apiKey][0];
+    const agentConfig = getAgentConfig(apiKey);
     const instructions =
-      agentConfig.instructions ||
+      agentConfig?.instructions ||
       "You are a helpful assistant." +
-        (agentConfig.firstMessage
+        (agentConfig?.firstMessage
           ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}`
           : "");
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         create_response: true,
       },
       temperature: 0.6,
-      tools: agentConfig.tools || [],
+      tools: agentConfig?.tools || [],
       max_response_output_tokens: 1024,
     };
 
@@ -111,10 +111,10 @@ export async function POST(request: Request) {
     const tokenResponse = {
       client_secret: data.client_secret,
       session_id: data.id,
-      initiate_conversation: agentConfig.firstMessage ? true : false,
+      initiate_conversation: agentConfig?.firstMessage ? true : false,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
-      tool_logic: agentConfig.toolLogic ? agentConfig.toolLogic : {},
+      tool_logic: agentConfig?.toolLogic ? agentConfig.toolLogic : {},
     };
     return NextResponse.json(tokenResponse, { status: 200 });
   } catch (error) {

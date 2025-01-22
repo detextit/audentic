@@ -26,6 +26,8 @@ export interface Tool {
   parameters?: ToolParameters;
 }
 export interface AgentConfig {
+  id: string;
+  userId: string;
   name: string;
   instructions: string;
   firstMessage?: string;
