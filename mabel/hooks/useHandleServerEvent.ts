@@ -9,7 +9,10 @@ export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
   disconnectFromRealtime: () => void;
-  toolLogic: Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any>;
+  toolLogic: Record<
+    string,
+    (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any
+  >;
   shouldForceResponse?: boolean;
 }
 
@@ -17,7 +20,7 @@ export function useHandleServerEvent({
   setSessionStatus,
   sendClientEvent,
   disconnectFromRealtime,
-  toolLogic
+  toolLogic,
 }: UseHandleServerEventParams) {
   const {
     transcriptItems,

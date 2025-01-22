@@ -107,8 +107,10 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
+    console.log("Token data:", data);
     const tokenResponse = {
       client_secret: data.client_secret,
+      session_id: data.id,
       initiate_conversation: agentConfig.firstMessage ? true : false,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
