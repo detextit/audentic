@@ -67,13 +67,16 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
     try {
       // Create new session via API
       const newSessionId = uuidv4();
-      const createSessionResponse = await fetch("/api/sessions/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sessionId: newSessionId, agentId }),
-      });
+      const createSessionResponse = await fetch(
+        "https://voiceact.vercel.app/api/sessions/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessionId: newSessionId, agentId }),
+        }
+      );
 
       if (!createSessionResponse.ok) {
         throw new Error("Failed to create session");
@@ -84,13 +87,16 @@ function SessionControlsCore({ agentId = "voiceAct" }: SessionControlsProps) {
       setTranscriptSessionId(newSessionId);
 
       logClientEvent({ url: "/token" }, "fetch_session_token_request");
-      const tokenResponse = await fetch("/api/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": agentId, // Add API key to headers
-        },
-      });
+      const tokenResponse = await fetch(
+        "https://voiceact.vercel.app/api/token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": agentId, // Add API key to headers
+          },
+        }
+      );
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
