@@ -52,7 +52,7 @@ export const dbService = {
       `;
       return sessionId;
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error("Error creating session:", error);
       throw error;
     }
   },
@@ -65,7 +65,7 @@ export const dbService = {
         WHERE session_id = ${sessionId}
       `;
     } catch (error) {
-      console.error('Error ending session:', error);
+      console.error("Error ending session:", error);
     }
   },
 
@@ -83,7 +83,7 @@ export const dbService = {
         )
       `;
     } catch (error) {
-      console.error('Error logging event to database:', error);
+      console.error("Error logging event to database:", error);
     }
   },
 
@@ -108,7 +108,7 @@ export const dbService = {
         )
       `;
     } catch (error) {
-      console.error('Error logging transcript item to database:', error);
+      console.error("Error logging transcript item to database:", error);
     }
   },
 
@@ -118,13 +118,13 @@ export const dbService = {
         .filter(([_, value]) => value !== undefined)
         .map(([key, value]) => ({
           key,
-          value: typeof value === 'object' ? JSON.stringify(value) : value
+          value: typeof value === "object" ? JSON.stringify(value) : value,
         }));
 
       if (updateFields.length > 0) {
         const setClause = updateFields
           .map(({ key }) => `${key} = $${key}`)
-          .join(', ');
+          .join(", ");
 
         const values = Object.fromEntries(
           updateFields.map(({ key, value }) => [key, value])
@@ -138,7 +138,7 @@ export const dbService = {
         );
       }
     } catch (error) {
-      console.error('Error updating transcript item:', error);
+      console.error("Error updating transcript item:", error);
     }
-  }
-}; 
+  },
+};
