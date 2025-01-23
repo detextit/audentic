@@ -18,20 +18,19 @@ import { SessionControls } from "@voiceact/mabel";
 
 function App() {
   return (
-    <>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "350px",
-          } as React.CSSProperties
-        }
-      >
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "350px",
+        } as React.CSSProperties
+      }
+    >
+      <div className="flex h-screen">
         <AppSidebar />
-        <SidebarInset>
-          <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            {/* TODO: Add dynamic breadcrumb based on selections*/}
+        {/* <div className="flex-1 flex flex-col min-h-screen">
+          <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-5">
+
+            //TODO: Add dynamic breadcrumb based on selections
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
@@ -44,13 +43,15 @@ function App() {
               </BreadcrumbList>
             </Breadcrumb>
           </header>
-          {/* TODO: Add dynamic content based on selections*/}
-        </SidebarInset>
-      </SidebarProvider>
+          <main className="flex-1">
+            <SidebarInset />
+          </main>
+        </div> */}
+      </div>
       <div className="fixed right-8 bottom-8">
         <SessionControls />
       </div>
-    </>
+    </SidebarProvider >
   );
 }
 
