@@ -1,7 +1,7 @@
 "use client";
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
-import { Bot, Link } from "lucide-react";
+import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { navItems } from "@/components/app-sidebar";
 import { usePathname } from "next/navigation";
 import { AgentForm } from "@/components/agent-form";
+import Link from 'next/link'
 
 export default function AgentsPage() {
     const pathname = usePathname()
