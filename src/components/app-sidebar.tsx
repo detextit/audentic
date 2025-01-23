@@ -24,7 +24,7 @@ import AgentsPage from "@/app/agents/page"
 import SessionsPage from "@/app/history/page"
 
 // This is sample data
-const navItems = [
+export const navItems = [
   {
     title: "Agents",
     url: "/agents",
