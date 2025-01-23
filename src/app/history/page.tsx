@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FileClock } from "lucide-react";
 import SessionHistory from "./components/SessionHistory";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
+import { Label } from "@/components/ui/label";
 
 interface Session {
   session_id: string;
@@ -34,55 +47,66 @@ export default function SessionsPage() {
     fetchSessions();
   }, []);
 
-  if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
-  }
-
-  if (isLoading) {
-    return <div className="p-4">Loading sessions...</div>;
-  }
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Session History</h1>
 
-      <div className="grid grid-cols-4 gap-4">
-        {/* Sessions list */}
-        <div className="col-span-1 border rounded-lg p-4">
-          <h2 className="text-lg font-semibold mb-2">Sessions</h2>
-          <div className="space-y-2">
-            {sessions.map((session) => (
-              <div
-                key={session.session_id}
-                className={`p-2 rounded cursor-pointer ${
-                  selectedSessionId === session.session_id
-                    ? "bg-gray-100"
-                    : "hover:bg-gray-50"
-                }`}
-                onClick={() => setSelectedSessionId(session.session_id)}
-              >
-                <div className="text-sm font-medium">
-                  Agent: {session.agent_id}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(session.started_at).toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Session details */}
-        <div className="col-span-3 border rounded-lg p-4">
-          {selectedSessionId ? (
-            <SessionHistory sessionId={selectedSessionId} />
-          ) : (
-            <div className="text-center text-gray-500">
-              Select a session to view details
+    <div className="flex h-screen w-full overflow-hidden">
+      <Sidebar collapsible="none" className="h-screen w-64 border-r flex-shrink-0">
+        <SidebarHeader className="gap-3.5 border-b p-3">
+          <div className="flex w-full items-center justify-between">
+            <div className="text-base font-medium text-foreground">
+              Sessions
             </div>
-          )}
-        </div>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup className="px-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {sessions.map((session) => (
+                  <SidebarMenuItem key={session.session_id}>
+                    <SidebarMenuButton
+                      tooltip={{
+                        children: new Date(session.started_at).toLocaleString(),
+                        hidden: false,
+                      }}
+                      asChild
+                      isActive={selectedSessionId === session.session_id}
+                      className="px-2.5 md:px-2"
+                      onClick={() => setSelectedSessionId(session.session_id)}
+                    >
+                      <Label>
+                        <FileClock className="h-4 w-4" />
+                        <div className="flex flex-col">
+                          <span className="text-sm">Agent: {session.agent_id}</span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(session.started_at).toLocaleString()}
+                          </span>
+                        </div>
+                      </Label>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+
+      {/* Main content area */}
+      <div className="flex-1 w-full overflow-hidden">
+        {error ? (
+          <div className="text-red-500 p-4">{error}</div>
+        ) : isLoading ? (
+          <div className="p-4">Loading sessions...</div>
+        ) : selectedSessionId ? (
+          <SessionHistory sessionId={selectedSessionId} />
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-500">
+            Select a session to view details
+          </div>
+        )}
       </div>
     </div>
+
   );
 }
