@@ -26,6 +26,8 @@ export interface Tool {
   parameters?: ToolParameters;
 }
 export interface AgentConfig {
+  id: string;
+  userId: string;
   name: string;
   instructions: string;
   firstMessage?: string;
@@ -35,8 +37,8 @@ export interface AgentConfig {
     (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any
   >;
   downstreamAgents?:
-    | AgentConfig[]
-    | { name: string; publicDescription: string }[];
+  | AgentConfig[]
+  | { name: string; publicDescription: string }[];
 }
 
 export type AllAgentConfigsType = Record<string, AgentConfig[]>;
