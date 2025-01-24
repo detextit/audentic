@@ -85,8 +85,8 @@ export async function POST(request: Request) {
       },
       temperature: 0.6,
       tools: agentConfig.tools || [],
-      max_response_output_tokens: 1024,
     };
+    // console.log("sessionSettings", sessionSettings);
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
         body: JSON.stringify(sessionSettings),
       }
     );
-
+    // console.log("response", response);
     if (!response.ok) {
       const error = await response.text();
       console.error("Token fetch error:", error);
@@ -119,7 +119,6 @@ export async function POST(request: Request) {
     return NextResponse.json(tokenResponse, { status: 200 });
   } catch (error) {
     console.error("Token route error:", error);
-    const origin = request.headers.get("Origin");
 
     return NextResponse.json(
       { error: "Failed to get token" },
