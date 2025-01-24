@@ -1,120 +1,113 @@
 "use client"
 
 import * as React from "react"
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react"
+import { Bot, Terminal, FileClock } from "lucide-react"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { Button } from "@/components/ui/button"
+
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarHeader,
-  SidebarRail,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import AgentsPage from "@/app/agents/page"
+import SessionsPage from "@/app/history/page"
 
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: "Google Forms",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "SurveyMonkey",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Qualtrics",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Agents",
-      url: "/",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Dashboard",
-          url: "/",
-        },
-        {
-          title: "History",
-          url: "/history",
-        },
-        {
-          title: "Starred",
-          url: "/starred",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "/docs",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Get Started",
-          url: "/docs",
-        },
-        {
-          title: "Tutorials",
-          url: "/docs/tutorials",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/settings/general",
-        },
-        {
-          title: "Team",
-          url: "/settings/team",
-        },
-        {
-          title: "Billing",
-          url: "/settings/billing",
-        },
-      ],
-    },
-  ],
-}
+// This is sample data
+export const navItems = [
+  {
+    title: "Agents",
+    url: "/agents",
+    icon: Bot,
+    size: 5,
+  },
+  {
+    title: "History",
+    url: "/history",
+    icon: FileClock,
+    size: 5,
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [selectedItem, setSelectedItem] = React.useState<string>("Agents")
+
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser/>
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <div className="flex h-screen">
+      <Sidebar
+        collapsible="none"
+        className="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r flex-shrink-0"
+      >
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0" tooltip={{ children: "VoiceAct", hidden: false }}>
+                <Link href="/">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Terminal className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">VoiceAct</span>
+                    <span className="truncate text-xs">Agent Builder</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent className="flex-1">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {navItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      tooltip={{
+                        children: item.title,
+                        hidden: false,
+                      }}
+                      asChild
+                      isActive={pathname.startsWith(item.url)}
+                      size="lg"
+                      className="md:h-8 md:p-0 flex aspect-square size-8 items-center justify-center rounded-lg"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedItem(item.title)
+                          window.history.pushState({}, '', item.url)
+                        }}
+                      >
+                        <item.icon className="size-5 min-w-5 min-h-5" />
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser />
+        </SidebarFooter>
+      </Sidebar>
+      <div>
+        {selectedItem === "History" && <SessionsPage />}
+        {selectedItem === "Agents" && <AgentsPage />}
+      </div>
+    </div>
   )
 }
