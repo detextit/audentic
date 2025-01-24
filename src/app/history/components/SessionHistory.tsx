@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-// Remove this import since we'll use the types from @voiceact/mabel
-// import { LoggedEvent, TranscriptItem } from "../../../../mabel/types";
 import { HistoryEvents } from "./HistoryEvents";
 import { HistoryTranscript } from "./HistoryTranscript";
-import { TranscriptItem, LoggedEvent } from "@voiceact/mabel";
+import { TranscriptItem, LoggedEvent } from "@audentic/react";
 
 interface SessionHistoryProps {
   sessionId?: string;

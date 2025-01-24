@@ -1,7 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TranscriptItem } from "@voiceact/mabel";
+import { TranscriptItem } from "@audentic/react";
 
 interface HistoryTranscriptProps {
   transcriptItems: TranscriptItem[];
