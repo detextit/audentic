@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { AgentConfig } from "@audentic/react";
 import { useAgents } from "@/hooks/useAgents";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,18 +14,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
-export default function AgentBuilder() {
-  const { id } = useParams();
+export default function AgentBuilder({ agentId }: { agentId: string }) {
+
   const { agents, updateAgent } = useAgents();
   const [agent, setAgent] = useState<AgentConfig | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    const currentAgent = agents.find((a) => a.id === id);
+    const currentAgent = agents.find((a) => a.id === agentId);
     if (currentAgent) {
       setAgent(currentAgent);
     }
-  }, [agents, id]);
+  }, [agents, agentId]);
 
   const handleUpdate = async () => {
     if (!agent) return;

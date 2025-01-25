@@ -17,3 +17,7 @@ export async function GET() {
     );
   }
 }
+
+
+//Add a get call to get all the sessions for a list of agents, use api/agents to 
+// get all agents for the user.
