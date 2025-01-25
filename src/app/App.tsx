@@ -15,8 +15,28 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SessionControls } from "@audentic/react";
+import AgentsPage from "./agents/page";
+import React, { useEffect, useState } from "react";
+import SessionsPage from "./history/page";
+import SessionContent from "./history/components/SessionContent";
+import { AgentConfig } from "@audentic/react";
+import { AgentFormDialog } from "@/components/agent-form-dialog";
+import AgentBuilder from "./agents/[id]/page";
 
 function App() {
+  const [selectedItem, setSelectedItem] = useState<string>("Agents");
+  const [selectedSessionId, setSelectedSessionId] = useState<string>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>();
+  const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedAgent) {
+      setSelectedAgentId(selectedAgent.id);
+    }
+  }, [selectedAgent]);
+
   return (
     <SidebarProvider
       style={
@@ -26,32 +46,29 @@ function App() {
       }
     >
       <div className="flex h-screen">
-        <AppSidebar />
-        {/* <div className="flex-1 flex flex-col min-h-screen">
-          <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-5">
+        <AppSidebar setSelectedItem={setSelectedItem} />
+        {selectedItem === "History" && <SessionsPage setSelectedSessionId={setSelectedSessionId} selectedSessionId={selectedSessionId} isLoading={isLoading} setIsLoading={setIsLoading} error={error} setError={setError} />}
+        {selectedItem === "Agents" && <AgentsPage setSelectedAgent={setSelectedAgent} selectedAgent={selectedAgent} />}
 
-            //TODO: Add dynamic breadcrumb based on selections
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">Agents</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Agent Builder</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </header>
-          <main className="flex-1">
-            <SidebarInset />
-          </main>
-        </div> */}
+        <main className="flex h-screen">
+          {selectedSessionId && selectedItem === "History" && (
+            <SessionContent
+              error={error || undefined}
+              isLoading={isLoading}
+              selectedSessionId={selectedSessionId}
+            />
+          )}
+
+          {selectedAgentId && selectedItem === "Agents" && (
+            <AgentBuilder agentId={selectedAgentId} />
+          )}
+        </main>
       </div>
       <div className="fixed right-8 bottom-8">
         <SessionControls />
       </div>
-    </SidebarProvider>
+
+    </SidebarProvider >
   );
 }
 
