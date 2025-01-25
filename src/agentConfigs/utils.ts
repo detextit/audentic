@@ -1,4 +1,14 @@
 import { AgentConfig, Tool } from "@audentic/react";
+import { z } from "zod";
+
+// Define Zod schemas for our tools
+const clipboardResponseSchema = z.object({
+  text: z.string(),
+});
+
+const clipboardSetSchema = z.object({
+  text: z.string().min(1, "Text must not be empty"),
+});
 
 const browserAPITools: Record<string, Tool> = {
   copyFromClipboardTool: {
@@ -10,18 +20,18 @@ const browserAPITools: Record<string, Tool> = {
     - Always inform the user before attempting to read from clipboard
     - Handle potential errors:
       * Permission denied: Guide user to enable clipboard permissions
-      * Unsupported browser: Suggest alternative methods
+      * Unsupported browser: Inform user that the browser does not support clipboard access
       * Empty clipboard: Inform user if no content is available
     - Returns: { text: string } containing the clipboard content`,
     parameters: {
       type: "object",
       properties: {},
+      required: [],
     },
-    errors: [
-      "PERMISSION_DENIED: User needs to grant clipboard access",
-      "API_NOT_SUPPORTED: Browser doesn't support clipboard API",
-      "OPERATION_FAILED: Failed to read from clipboard",
-    ],
+    handler: async () => {
+      // Implementation will be handled elsewhere
+      return {} as z.infer<typeof clipboardResponseSchema>;
+    },
   } as Tool,
 
   setToClipboardTool: {
@@ -33,7 +43,7 @@ const browserAPITools: Record<string, Tool> = {
     - Always inform the user before and after copying text to clipboard
     - Best practices:
       * Confirm success with user
-      * Provide the text being copied in the message
+      * Provide a summary of the text being copied in the message
       * Suggest next steps after copying
     - Handle potential errors:
       * Permission denied: Guide user to enable clipboard permissions
@@ -50,11 +60,10 @@ const browserAPITools: Record<string, Tool> = {
       },
       required: ["text"],
     },
-    errors: [
-      "PERMISSION_DENIED: User needs to grant clipboard access",
-      "API_NOT_SUPPORTED: Browser doesn't support clipboard API",
-      "OPERATION_FAILED: Failed to write to clipboard",
-    ],
+    handler: async (params: z.infer<typeof clipboardSetSchema>) => {
+      // Implementation will be handled elsewhere
+      return { success: true };
+    },
   } as Tool,
 
   // Example of how to add a new browser API tool:
@@ -102,21 +111,25 @@ export function injectDefaultTools(
   browserTools: string | string[] = "all"
 ): AgentConfig {
   // Create the end_conversation tool specific to this agent
-  const endConversationTool: Tool = {
+  const endConversationTool = {
     type: "function",
     name: "end_conversation",
-    description: "Triggers a call hang up with the user.",
+    description: "Ends the current conversation",
     parameters: {
       type: "object",
       properties: {
         rationale_for_hangup: {
           type: "string",
-          description: "The context or reason for ending the conversation.",
+          description: "Reason for ending the conversation",
         },
       },
       required: ["rationale_for_hangup"],
     },
-  };
+    handler: async (params: { rationale_for_hangup: string }) => {
+      // Implementation will be handled elsewhere
+      return { success: true };
+    },
+  } as Tool;
 
   // Ensure the agent has a tools array
   if (!agentDef.tools) {
