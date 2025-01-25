@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const tools = agentConfig.tools || [];
 
     const sessionSettings = {
-      model: "gpt-4o-mini-realtime-preview",
+      model: "gpt-4o-realtime-preview",
       modalities: ["text", "audio"],
       instructions,
       voice: "alloy",
