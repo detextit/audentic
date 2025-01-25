@@ -1,5 +1,5 @@
-import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
+import { sql } from "@vercel/postgres";
+import { NextResponse } from "next/server";
 
 // Add this before the POST handler to ensure tables exist
 async function createTablesIfNotExist() {
@@ -8,12 +8,12 @@ async function createTablesIfNotExist() {
     CREATE TABLE IF NOT EXISTS sessions (
       session_id VARCHAR(255) PRIMARY KEY,
       agent_id VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       ended_at TIMESTAMP
     );
   `;
 
-  // Create events table - simplified
+  // Create events table with session reference
   await sql`
     CREATE TABLE IF NOT EXISTS events (
       id VARCHAR(255) PRIMARY KEY,
@@ -21,11 +21,12 @@ async function createTablesIfNotExist() {
       direction VARCHAR(50),
       event_name TEXT,
       event_data JSONB,
-      created_at TIMESTAMP
+      timestamp TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
-  // Create transcript table - simplified further
+  // Create transcript table with session reference
   await sql`
     CREATE TABLE IF NOT EXISTS transcript_items (
       item_id VARCHAR(255) PRIMARY KEY,
@@ -34,8 +35,11 @@ async function createTablesIfNotExist() {
       role VARCHAR(50),
       title TEXT,
       data JSONB,
+      timestamp VARCHAR(255),
       created_at_ms BIGINT,
-      is_hidden BOOLEAN DEFAULT false
+      status VARCHAR(50),
+      is_hidden BOOLEAN,
+      last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
 }
@@ -52,7 +56,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error creating session:', error);
-    return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
+    console.error("Error creating session:", error);
+    return NextResponse.json(
+      { error: "Failed to create session" },
+      { status: 500 }
+    );
   }
-} 
+}
