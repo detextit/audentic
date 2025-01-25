@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { AgentConfig } from "@voiceact/mabel/types";
+import { AgentConfig } from "@audentic/react";
 import { useAgents } from "@/hooks/useAgents";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {

@@ -1,5 +1,5 @@
 import { sql } from "@vercel/postgres";
-import { AgentConfig } from "@voiceact/mabel/types";
+import { AgentConfig } from "@audentic/react";
 import { CreateAgentInput } from "../agentConfigs/types";
 import { setupDatabase } from "@/db/setup";
 

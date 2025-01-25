@@ -1,5 +1,5 @@
 import React from "react";
-import { LoggedEvent } from "@voiceact/mabel";
+import { LoggedEvent } from "@audentic/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface HistoryEventsProps {
