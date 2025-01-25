@@ -14,7 +14,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { SessionControls } from "@voiceact/mabel";
+import { SessionControls } from "@audentic/react";
 
 function App() {
   return (
@@ -51,7 +51,7 @@ function App() {
       <div className="fixed right-8 bottom-8">
         <SessionControls />
       </div>
-    </SidebarProvider >
+    </SidebarProvider>
   );
 }
 

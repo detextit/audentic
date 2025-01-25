@@ -66,10 +66,12 @@ export async function POST(request: Request) {
           ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}`
           : "");
 
+    const tools = agentConfig.tools || [];
+
     const sessionSettings = {
-      model: "gpt-4o-mini-realtime-preview",
+      model: "gpt-4o-realtime-preview",
       modalities: ["text", "audio"],
-      instructions: instructions,
+      instructions,
       voice: "alloy",
       input_audio_format: "pcm16",
       output_audio_format: "pcm16",
@@ -78,15 +80,16 @@ export async function POST(request: Request) {
       },
       turn_detection: {
         type: "server_vad",
-        threshold: 0.5,
+        threshold: 0.6,
         prefix_padding_ms: 300,
         silence_duration_ms: 500,
         create_response: true,
       },
       temperature: 0.6,
-      tools: agentConfig.tools || [],
-      max_response_output_tokens: 1024,
+      tools,
+      tool_choice: "auto",
     };
+    console.log("sessionSettings", JSON.stringify(sessionSettings));
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
@@ -107,6 +110,9 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
+    const toolLogic = agentConfig.toolLogic ? agentConfig.toolLogic : {};
+    console.log("toolLogic", toolLogic);
+
     console.log("Token data:", data);
     const tokenResponse = {
       client_secret: data.client_secret,
@@ -114,12 +120,11 @@ export async function POST(request: Request) {
       initiate_conversation: agentConfig.firstMessage ? true : false,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
-      tool_logic: agentConfig.toolLogic ? agentConfig.toolLogic : {},
+      tool_logic: toolLogic,
     };
     return NextResponse.json(tokenResponse, { status: 200 });
   } catch (error) {
     console.error("Token route error:", error);
-    const origin = request.headers.get("Origin");
 
     return NextResponse.json(
       { error: "Failed to get token" },
