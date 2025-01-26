@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const agentId = searchParams.get("id");
 
     if (agentId) {
-      const agent = await getAgentById(agentId, userId);
+      const agent = await getAgentById(agentId);
       if (!agent) {
         return new NextResponse("Agent not found", { status: 404 });
       }

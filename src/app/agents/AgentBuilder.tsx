@@ -12,15 +12,21 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { SessionControls } from "@audentic/react";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
   const [isDirty, setIsDirty] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentConfig | null>(null);
-
+  const [showTestDialog, setShowTestDialog] = useState(false);
   // Add console logs to track state changes
   useEffect(() => {
-
     if (loading) return; // Don't do anything while loading
 
     if (agents.length > 0 && agentId) {
@@ -50,44 +56,49 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   };
 
-  if (loading) return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-32 bg-muted animate-pulse rounded mt-1" />
+  if (loading)
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-32 bg-muted animate-pulse rounded mt-1" />
+          </div>
+          <div className="flex gap-3">
+            <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+          </div>
         </div>
-        <div className="flex gap-3">
-          <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
 
-      <div className="space-y-6">
-        {[1, 2, 3].map((i) => (
-          <Card key={i}>
-            <CardHeader>
-              <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-              <div className="h-4 w-full bg-muted animate-pulse rounded opacity-50 mt-1" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-[100px] w-full bg-muted animate-pulse rounded" />
-            </CardContent>
-          </Card>
-        ))}
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+                <div className="h-4 w-full bg-muted animate-pulse rounded opacity-50 mt-1" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[100px] w-full bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
   if (!currentAgent) return null;
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{currentAgent.name}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {currentAgent.name}
+          </h1>
           <p className="text-muted-foreground mt-1">Agent Configuration</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" size="lg">Test Agent</Button>
+          <Button variant="outline" onClick={() => setShowTestDialog(true)}>
+            Test Agent
+          </Button>
           {isDirty && (
             <Button size="lg" onClick={handleUpdate}>
               Save Changes
@@ -96,14 +107,33 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </div>
       </div>
 
+      <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
+        <DialogContent className="max-w-xl h-[40vh]">
+          <DialogHeader>
+            <DialogTitle>Testing Agent: {currentAgent.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Test your agent configuration in a live session
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <SessionControls agentId={currentAgent.id} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-6">
-
-
         <Card>
           <CardHeader>
             <CardTitle>First Message</CardTitle>
             <CardDescription>
-              The first message the agent will say. If empty, the agent will wait for the user to start the conversation.
+              The first message the agent will say. If empty, the agent will
+              wait for the user to start the conversation.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -112,7 +142,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               onChange={(e) => {
                 setCurrentAgent({
                   ...currentAgent,
-                  firstMessage: e.target.value
+                  firstMessage: e.target.value,
                 });
                 setIsDirty(true);
               }}
@@ -126,7 +156,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardHeader>
             <CardTitle>System Prompt</CardTitle>
             <CardDescription>
-              The system prompt is used to determine the persona of the agent and the context of the conversation.
+              The system prompt is used to determine the persona of the agent
+              and the context of the conversation.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -135,7 +166,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               onChange={(e) => {
                 setCurrentAgent({
                   ...currentAgent,
-                  instructions: e.target.value
+                  instructions: e.target.value,
                 });
                 setIsDirty(true);
               }}
@@ -149,16 +180,14 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardHeader>
             <CardTitle>Dynamic Variables</CardTitle>
             <CardDescription>
-              Variables like {"{{user_name}}"} in your prompts and first message and dynamic variables in tool parameters will be replaced with actual values when the conversation starts.
+              Variables like {"{{user_name}}"} in your prompts and first message
+              and dynamic variables in tool parameters will be replaced with
+              actual values when the conversation starts.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {/* Add dynamic variables configuration */}
-          </CardContent>
+          <CardContent>{/* Add dynamic variables configuration */}</CardContent>
         </Card>
       </div>
-
-
-    </div >
+    </div>
   );
 }
