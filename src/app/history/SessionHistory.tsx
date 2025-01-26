@@ -48,14 +48,27 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
     return <div className="p-4">Loading session data...</div>;
   }
 
+  // return (
+  //   <div className="h-full flex flex-col">
+  //     <div className="grid grid-cols-2 flex-1 divide-x">
+  //       <div className="flex flex-col">
+  //         <HistoryTranscript transcriptItems={transcriptItems} />
+  //       </div>
+  //       <div className="flex flex-col">
+  //         <HistoryEvents events={events} />
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+
   return (
-    <div className="grid grid-cols-2 h-full divide-x w-full">
-      <div className="h-full w-full overflow-hidden">
-        <HistoryTranscript transcriptItems={transcriptItems} />
-      </div>
-      <div className="h-full w-full overflow-hidden">
-        <HistoryEvents events={events} />
-      </div>
+    <div className="h-full flex">
+
+
+      <HistoryTranscript transcriptItems={transcriptItems} />
+
+
+
     </div>
   );
 }
