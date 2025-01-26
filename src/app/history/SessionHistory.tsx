@@ -23,7 +23,9 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
       setError(undefined);
 
       try {
-        const response = await fetch(`/api/sessions/${sessionId}`);
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
         if (!response.ok) throw new Error("Failed to fetch session data");
 
         const data = await response.json();
