@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "@/agentConfigs/types";
+import { CreateAgentInput } from "@/agentBuilder/types";
 export function useAgents() {
   const { userId } = useAuth();
   const [agents, setAgents] = useState<AgentConfig[]>([]);

@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "../agentConfigs/types";
+import { CreateAgentInput } from "../agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
 
 // Create agent
