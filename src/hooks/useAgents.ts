@@ -18,8 +18,10 @@ export function useAgents() {
       }
       const data = await response.json();
       setAgents(data);
+      return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      return [];
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,8 @@ export function useAgents() {
       const newAgent = await response.json();
       console.log("Created agent:", newAgent); // Debug log
 
-      setAgents((prev) => [newAgent, ...prev]);
+      await fetchAgents();
+
       return newAgent;
     } catch (err: any) {
       console.error("Detailed error:", {

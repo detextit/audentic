@@ -2,19 +2,15 @@
 
 import { UserButton } from "@clerk/nextjs"
 
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-} from "@/components/ui/sidebar"
+interface NavUserProps {
+  userName: string;
+}
 
-export function NavUser() {
+export function NavUser({ userName }: NavUserProps) {
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <UserButton/>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  )
+    <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-[hsl(var(--sidebar-accent))] cursor-pointer">
+      <UserButton />
+      <span className="text-sm font-medium truncate">{userName}</span>
+    </div>
+  );
 }

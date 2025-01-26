@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import './globals.css'
+import { Montserrat } from 'next/font/google';
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  variable: '--font-montserrat'
+});
 
 export const metadata: Metadata = {
   title: "VoiceAct",
@@ -10,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider afterSignOutUrl="/">
-      <html lang="en">
+      <html lang="en" className={`${montserrat.variable} font-sans`}>
         <body>
           <header>
             <SignedOut>

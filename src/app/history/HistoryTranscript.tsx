@@ -9,24 +9,24 @@ interface HistoryTranscriptProps {
 
 export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
   return (
-    <div className="w-full rounded-xl transition-all flex flex-col bg-white h-full">
-      <div className="font-semibold px-6 py-4 sticky top-0 z-10 text-base border-b bg-white">
-        Transcript
+    <div className="flex flex-col h-full">
+      <div className="px-6 py-3 border-b bg-white">
+        <h2 className="font-semibold text-sm">Transcript</h2>
       </div>
-      <ScrollArea className="flex-1">
-        <div className="p-6">
+      <ScrollArea className="flex-1 px-6">
+        <div className="py-4 space-y-4">
           {transcriptItems.map((item) => {
             if (item.type === "MESSAGE") {
               return (
                 <div
                   key={item.itemId}
-                  className={`py-2 ${item.isHidden ? "opacity-50" : ""}`}
+                  className={`${item.isHidden ? "opacity-50" : ""}`}
                 >
-                  <div className="flex items-center gap-x-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-x-2 text-xs text-gray-500 mb-1">
                     <span>{item.timestamp}</span>
                     <span>{item.role}</span>
                   </div>
-                  <div className="prose max-w-none">
+                  <div className="prose prose-sm max-w-none">
                     <ReactMarkdown>{item.title || ""}</ReactMarkdown>
                   </div>
                 </div>

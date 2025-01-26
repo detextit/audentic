@@ -30,12 +30,12 @@ export function HistoryEvents({ events }: HistoryEventsProps) {
   };
 
   return (
-    <div className="w-full rounded-xl transition-all flex flex-col bg-white h-full">
-      <div className="font-semibold px-6 py-4 sticky top-0 z-10 text-base border-b bg-white">
-        Logs
+    <div className="flex flex-col h-full">
+      <div className="px-6 py-3 border-b bg-white">
+        <h2 className="font-semibold text-sm">Logs</h2>
       </div>
       <ScrollArea className="flex-1">
-        <div className="p-6">
+        <div className="py-4">
           {events.map((log) => {
             const arrowInfo = getDirectionArrow(log.direction);
             const isError =
@@ -45,36 +45,28 @@ export function HistoryEvents({ events }: HistoryEventsProps) {
             return (
               <div
                 key={log.id}
-                className="border-t border-gray-200 py-2 px-6 font-mono"
+                className="hover:bg-gray-50"
               >
                 <div
-                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                  className="px-6 py-2 flex items-center justify-between cursor-pointer"
                   onClick={() => toggleEventExpansion(log.id)}
                 >
-                  <div className="flex items-center flex-1">
-                    <span
-                      style={{ color: arrowInfo.color }}
-                      className="ml-1 mr-2"
-                    >
+                  <div className="flex items-center flex-1 min-w-0">
+                    <span style={{ color: arrowInfo.color }} className="mr-2">
                       {arrowInfo.symbol}
                     </span>
-                    <span
-                      className={
-                        "flex-1 text-xs " +
-                        (isError ? "text-red-600" : "text-gray-800")
-                      }
-                    >
+                    <span className={`text-xs truncate ${isError ? "text-red-600" : "text-gray-800"}`}>
                       {log.eventName}
                     </span>
                   </div>
-                  <div className="text-gray-500 ml-1 text-xs whitespace-nowrap">
+                  <div className="text-gray-500 text-xs ml-2 shrink-0">
                     {log.timestamp}
                   </div>
                 </div>
 
                 {log.eventData && expandedEvents.has(log.id) && (
-                  <div className="text-gray-800 text-left">
-                    <pre className="border-l-2 ml-1 border-gray-200 whitespace-pre-wrap break-words font-mono text-xs mb-2 mt-2 pl-2">
+                  <div className="px-6 pb-2">
+                    <pre className="text-xs bg-gray-50 p-3 rounded-md overflow-x-auto">
                       {JSON.stringify(log.eventData, null, 2)}
                     </pre>
                   </div>
