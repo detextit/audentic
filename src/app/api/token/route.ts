@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AgentConfig } from "@audentic/react";
 import { getAgentById } from "@/db";
+import { injectDefaultTools } from "@/agentBuilder/utils";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -63,15 +64,15 @@ export async function POST(request: Request) {
         }
       );
     }
-
+    const agentConfigWithTools = injectDefaultTools(agentConfig);
     const instructions =
-      agentConfig.instructions ||
+      agentConfigWithTools.instructions ||
       "You are a helpful assistant." +
-        (agentConfig.firstMessage
-          ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}`
+        (agentConfigWithTools.firstMessage
+          ? `\n\nInitiate the conversation with: ${agentConfigWithTools.firstMessage}`
           : "");
 
-    const tools = agentConfig.tools || [];
+    const tools = agentConfigWithTools.tools || [];
 
     const sessionSettings = {
       model: "gpt-4o-realtime-preview",
