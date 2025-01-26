@@ -60,12 +60,11 @@ export async function getUserAgents(userId: string): Promise<AgentConfig[]> {
 
 // Get single agent by ID
 export async function getAgentById(
-  agentId: string,
-  userId: string
+  agentId: string
 ): Promise<AgentConfig | null> {
   const result = await sql`
     SELECT * FROM agents 
-    WHERE id = ${agentId} AND user_id = ${userId}
+    WHERE id = ${agentId}
   `;
   return result.rows.length ? transformDBAgent(result.rows[0]) : null;
 }
