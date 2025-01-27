@@ -28,8 +28,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const { toast } = useToast();
   const [isDirty, setIsDirty] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentConfig | null>(null);
-  const [showTestDialog, setShowTestDialog] = useState(false);
-  // Add console logs to track state changes
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdatingInstructions, setIsUpdatingInstructions] = useState(false);
+
   useEffect(() => {
     if (loading) return; // Don't do anything while loading
 
@@ -48,36 +49,36 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleUpdate = async () => {
     if (!currentAgent) return;
+    setIsUpdating(true);
+    setIsUpdatingInstructions(true);
     try {
-      const updatedAgent = await updateAgent(currentAgent.id, {
+      // Do the main update first
+      await updateAgent(currentAgent.id, {
         name: currentAgent.name,
         description: currentAgent.description,
         personality: currentAgent.personality,
         initiateConversation: currentAgent.initiateConversation,
       });
-      console.log("updatedAgent", updatedAgent);
+
+      setIsUpdating(false);
       setIsDirty(false);
-      // TODO: fix this
-      // if (updatedAgent.status === "success") {
-      //   setIsDirty(false);
-      //   toast({
-      //     title: "Success",
-      //     description: "Agent updated successfully",
-      //   });
-      // } else {
-      //   console.error("Failed to update agent:", updatedAgent.error);
-      //   toast({
-      //     variant: "destructive",
-      //     title: "Error",
-      //     description: "Failed to update agent. Please try again.",
-      //   });
-      // }
-      updateAgent(currentAgent.id, {
-        instructions: await getVoiceAgentInstruction(
-          currentAgent.description,
-          currentAgent.personality
-        ),
+      toast({
+        title: "Success",
+        description: "Agent updated successfully",
       });
+
+      // Update instructions in the background
+      getVoiceAgentInstruction(
+        currentAgent.description,
+        currentAgent.personality
+      ).then(async (instructions) => {
+        await updateAgent(currentAgent.id, { instructions });
+        setIsUpdatingInstructions(false);
+      }).catch(error => {
+        console.error("Failed to update instructions:", error);
+        setIsUpdatingInstructions(false);
+      });
+
     } catch (error) {
       console.error("Failed to update agent:", error);
       toast({
@@ -85,7 +86,14 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         title: "Error",
         description: "Failed to update agent. Please try again.",
       });
+      setIsUpdating(false);
+      setIsUpdatingInstructions(false);
     }
+  };
+
+  const handleTestClick = () => {
+    // Open in new tab
+    window.open(`/agents/${agentId}/test`, '_blank');
   };
 
   if (loading)
@@ -128,40 +136,22 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <p className="text-muted-foreground mt-1">Agent Configuration</p>
         </div>
         <div className="flex gap-3">
-          {isDirty && (
-            <Button size="lg" onClick={handleUpdate}>
-              Save Changes
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => setShowTestDialog(true)}>
-            {/* TODO: This needs to be disabled when the update is happening */}
-            Test Agent
+          <Button
+            size="lg"
+            onClick={handleUpdate}
+            disabled={isUpdating || !isDirty}
+          >
+            {isUpdating ? "Saving..." : "Save Changes"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleTestClick}
+            disabled={isUpdatingInstructions}
+          >
+            {isUpdatingInstructions ? "Deploying Agent..." : "Test Agent"}
           </Button>
         </div>
       </div>
-
-      {/* Test Agent Dialog 
-      TODO: This needs to be not closed when the user is chatting with the agent
-      */}
-      <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
-        <DialogContent className="max-w-xl h-[40vh]">
-          <DialogHeader>
-            <DialogTitle>Testing Agent: {currentAgent.name}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Test your agent configuration in a live session
-                </p>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <SessionControls agentId={currentAgent.id} />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Agent Configuration */}
       <div className="space-y-6">
