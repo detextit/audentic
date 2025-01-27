@@ -1,5 +1,6 @@
 import { FileClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
 
 interface Session {
     session_id: string;
@@ -15,6 +16,13 @@ interface HistorySidebarProps {
 }
 
 export function HistorySidebar({ isOpen, sessions, onSessionClick }: HistorySidebarProps) {
+    const router = useRouter();
+
+    const handleSessionClick = (sessionId: string) => {
+        router.push(`/history/${sessionId}`);
+        onSessionClick?.(sessionId);
+    };
+
     return (
         <div
             className={`h-full bg-[hsl(var(--sidebar-background))] ${isOpen ? 'w-[350px] border-l border-r' : 'hidden'
@@ -30,7 +38,7 @@ export function HistorySidebar({ isOpen, sessions, onSessionClick }: HistorySide
                     {sessions.map((session) => (
                         <li
                             key={session.session_id}
-                            onClick={() => onSessionClick?.(session.session_id)}
+                            onClick={() => handleSessionClick(session.session_id)}
                             className="p-2 hover:bg-[hsl(var(--sidebar-accent))] rounded-md cursor-pointer transition-colors"
                         >
                             <Label className="flex items-start gap-3 cursor-pointer">
