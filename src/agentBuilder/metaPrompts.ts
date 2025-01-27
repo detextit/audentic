@@ -353,7 +353,10 @@ META_SCHEMA = {
   }
 }`;
 
-export const voiceAgentInstruction = async (description: string) => {
+export const getVoiceAgentInstruction = async (
+  description: string,
+  personality?: string
+): Promise<string> => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const response = await fetch(`${baseUrl}/api/chat/completions`, {
     method: "POST",
@@ -363,7 +366,12 @@ export const voiceAgentInstruction = async (description: string) => {
     body: JSON.stringify({
       messages: [
         { role: "system", content: voiceAgentMetaPrompt },
-        { role: "user", content: description },
+        {
+          role: "user",
+          content:
+            `Agent Description: ${description}\n` +
+            (personality ? `Personality Description: ${personality}` : ""),
+        },
       ],
     }),
   });
@@ -373,5 +381,6 @@ export const voiceAgentInstruction = async (description: string) => {
   }
 
   const data = await response.json();
+  console.log(data);
   return data.choices[0].message.content;
 };

@@ -66,11 +66,7 @@ export async function POST(request: Request) {
     }
     const agentConfigWithTools = injectDefaultTools(agentConfig);
     const instructions =
-      agentConfigWithTools.instructions ||
-      "You are a helpful assistant." +
-        (agentConfigWithTools.firstMessage
-          ? `\n\nInitiate the conversation with: ${agentConfigWithTools.firstMessage}`
-          : "");
+      agentConfigWithTools.instructions || "You are a helpful assistant.";
 
     const tools = agentConfigWithTools.tools || [];
 
@@ -121,7 +117,7 @@ export async function POST(request: Request) {
     const tokenResponse = {
       client_secret: data.client_secret,
       session_id: data.id,
-      initiate_conversation: agentConfig.firstMessage ? true : false,
+      initiate_conversation: agentConfig.initiateConversation,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
       tool_logic: toolLogic,
