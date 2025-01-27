@@ -1,17 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "@/agentConfigs/types";
+import { CreateAgentInput } from "@/agentBuilder/types";
 export function useAgents() {
   const { userId } = useAuth();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/agents");
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/agents`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch agents");
@@ -25,13 +27,15 @@ export function useAgents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createAgent = async (input: CreateAgentInput) => {
     try {
       console.log("Creating agent with input:", input); // Debug log
 
-      const response = await fetch("/api/agents", {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/agents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -77,7 +81,9 @@ export function useAgents() {
     updates: Partial<CreateAgentInput>
   ) => {
     try {
-      const response = await fetch(`/api/agents?id=${agentId}`, {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/agents?id=${agentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
@@ -103,7 +109,9 @@ export function useAgents() {
 
   const deleteAgent = async (agentId: string) => {
     try {
-      const response = await fetch(`/api/agents?id=${agentId}`, {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const response = await fetch(`${baseUrl}/api/agents?id=${agentId}`, {
         method: "DELETE",
       });
 
@@ -125,7 +133,7 @@ export function useAgents() {
     if (userId) {
       fetchAgents();
     }
-  }, [userId]);
+  }, [userId, fetchAgents]);
 
   return {
     agents,
