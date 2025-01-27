@@ -10,6 +10,7 @@ import { useUser } from "@clerk/nextjs";
 import { AgentBuilder } from '@/app/agents/AgentBuilder';
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import SessionHistory from "@/app/history/SessionHistory";
+import { useRouter, usePathname } from 'next/navigation';
 
 interface Session {
     session_id: string;
@@ -28,6 +29,8 @@ export default function Home() {
     const { user } = useUser();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [selectedSessionId, setSelectedSessionId] = useState<string>();
+    const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         async function fetchSessions() {
@@ -45,26 +48,48 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        setIsAgentsSidebarOpen(true);
-        setIsHistorySidebarOpen(false);
-    }, []);
+        if (agents.length > 0) {
+            if (pathname === '/' || pathname.startsWith('/agents')) {
+                const urlAgentId = pathname.startsWith('/agents/')
+                    ? pathname.split('/agents/')[1]
+                    : null;
+
+                if (urlAgentId && agents.some(agent => agent.id === urlAgentId)) {
+                    setSelectedAgentId(urlAgentId);
+                } else {
+                    setSelectedAgentId(agents[0].id);
+                    router.push(`/agents/${agents[0].id}`);
+                }
+            }
+        }
+    }, [agents, pathname]);
 
     useEffect(() => {
-        if (agents.length > 0 && !selectedAgentId) {
-            setSelectedAgentId(agents[0].id);
+        if (pathname.startsWith('/history/')) {
+            const urlSessionId = pathname.split('/history/')[1];
+            if (urlSessionId) {
+                setIsHistorySidebarOpen(true);
+                setIsAgentsSidebarOpen(false);
+                setSelectedSessionId(urlSessionId);
+            }
         }
-    }, [agents]);
+    }, [pathname]);
 
     const handleCreateAgent = () => {
         setIsCreateDialogOpen(true);
     };
 
+    const handleAgentClick = (agentId: string) => {
+        setSelectedAgentId(agentId);
+        router.push(`/agents/${agentId}`);
+    };
+
     const handleDialogClose = async () => {
         setIsCreateDialogOpen(false);
         const updatedAgents = await refreshAgents();
-        // Select the most recently created agent (first in the list)
         if (updatedAgents && updatedAgents.length > 0) {
             setSelectedAgentId(updatedAgents[0].id);
+            router.push(`/agents/${updatedAgents[0].id}`);
         }
     };
 
@@ -120,7 +145,7 @@ export default function Home() {
                     isOpen={isAgentsSidebarOpen}
                     onClose={() => setIsAgentsSidebarOpen(false)}
                     agents={agents}
-                    onAgentClick={(agentId) => setSelectedAgentId(agentId)}
+                    onAgentClick={handleAgentClick}
                     selectedAgentId={selectedAgentId}
                     onCreateClick={handleCreateAgent}
                 />
