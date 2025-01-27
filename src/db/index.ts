@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "../agentConfigs/types";
+import { CreateAgentInput } from "../agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
 
 // Create agent
@@ -10,22 +10,24 @@ export async function createAgent(
 ): Promise<AgentConfig> {
   const result = await sql`
     INSERT INTO agents (
-      user_id, 
-      name, 
-      instructions, 
-      first_message, 
+      user_id,
+      name,
+      description,
+      personality,
+      initiate_conversation,
+      instructions,
       tools,
-      tool_logic,
-      downstream_agents
+      tool_logic
     )
     VALUES (
-      ${userId}, 
-      ${agent.name}, 
-      ${agent.instructions}, 
-      ${agent.firstMessage}, 
+      ${userId},
+      ${agent.name},
+      ${agent.description},
+      ${agent.personality || ""},
+      ${agent.initiateConversation},
+      ${agent.instructions},
       ${JSON.stringify(agent.tools || [])},
-      ${JSON.stringify(agent.toolLogic || {})},
-      ${JSON.stringify(agent.downstreamAgents || [])}
+      ${JSON.stringify(agent.toolLogic || {})}
     )
     RETURNING *;
   `;
@@ -60,12 +62,11 @@ export async function getUserAgents(userId: string): Promise<AgentConfig[]> {
 
 // Get single agent by ID
 export async function getAgentById(
-  agentId: string,
-  userId: string
+  agentId: string
 ): Promise<AgentConfig | null> {
   const result = await sql`
     SELECT * FROM agents 
-    WHERE id = ${agentId} AND user_id = ${userId}
+    WHERE id = ${agentId}
   `;
   return result.rows.length ? transformDBAgent(result.rows[0]) : null;
 }
@@ -122,11 +123,12 @@ function transformDBAgent(dbAgent: any): AgentConfig {
     id: dbAgent.id,
     userId: dbAgent.user_id,
     name: dbAgent.name,
+    description: dbAgent.description,
+    personality: dbAgent.personality || "",
+    initiateConversation: dbAgent.initiate_conversation,
     instructions: dbAgent.instructions,
-    firstMessage: dbAgent.first_message,
     tools: dbAgent.tools || [],
     toolLogic: dbAgent.tool_logic || {},
-    downstreamAgents: dbAgent.downstream_agents || [],
   };
 }
 

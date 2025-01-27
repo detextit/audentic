@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { allAgentSets } from "@/agentConfigs";
+import { AgentConfig } from "@audentic/react";
+import { getAgentById } from "@/db";
+import { injectDefaultTools } from "@/agentBuilder/utils";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     const isValidApiKey = await verifyApiKey(origin, apiKey);
     const corsHeaders = getCorsHeaders(isValidApiKey);
 
-    if (!isValidApiKey || !corsHeaders) {
+    if (!apiKey || !isValidApiKey || !corsHeaders) {
       return NextResponse.json(
         { error: "Unauthorized" },
         {
@@ -49,24 +51,24 @@ export async function POST(request: Request) {
         }
       );
     }
-    if (!apiKey || !allAgentSets[apiKey]) {
+
+    // Get agent config from allAgentSets
+    const agentConfig = await getAgentConfig(apiKey);
+
+    if (!agentConfig) {
       return NextResponse.json(
-        { error: "Invalid API key" },
+        { error: "Agent configuration not found - Invalid Agent ID" },
         {
-          status: 401,
-          headers: getCorsHeaders(false) || {},
+          status: 404,
+          headers: corsHeaders,
         }
       );
     }
-    const agentConfig = allAgentSets[apiKey][0];
+    const agentConfigWithTools = injectDefaultTools(agentConfig);
     const instructions =
-      agentConfig.instructions ||
-      "You are a helpful assistant." +
-        (agentConfig.firstMessage
-          ? `\n\nInitiate the conversation with: ${agentConfig.firstMessage}`
-          : "");
+      agentConfigWithTools.instructions || "You are a helpful assistant.";
 
-    const tools = agentConfig.tools || [];
+    const tools = agentConfigWithTools.tools || [];
 
     const sessionSettings = {
       model: "gpt-4o-realtime-preview",
@@ -89,7 +91,6 @@ export async function POST(request: Request) {
       tools,
       tool_choice: "auto",
     };
-    console.log("sessionSettings", JSON.stringify(sessionSettings));
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
@@ -110,22 +111,24 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-    const toolLogic = agentConfig.toolLogic ? agentConfig.toolLogic : {};
-    console.log("toolLogic", toolLogic);
+    const toolLogic = agentConfig.toolLogic || {};
 
     console.log("Token data:", data);
     const tokenResponse = {
       client_secret: data.client_secret,
       session_id: data.id,
-      initiate_conversation: agentConfig.firstMessage ? true : false,
+      initiate_conversation: agentConfig.initiateConversation,
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
       tool_logic: toolLogic,
     };
-    return NextResponse.json(tokenResponse, { status: 200 });
+
+    return NextResponse.json(tokenResponse, {
+      status: 200,
+      headers: corsHeaders,
+    });
   } catch (error) {
     console.error("Token route error:", error);
-
     return NextResponse.json(
       { error: "Failed to get token" },
       {
@@ -133,6 +136,17 @@ export async function POST(request: Request) {
         headers: getCorsHeaders(false) || {},
       }
     );
+  }
+}
+
+// Function to get agent config using the agents API
+async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
+  try {
+    const agent = await getAgentById(agentId);
+    return agent;
+  } catch (error) {
+    console.error("Error fetching agent config:", error);
+    return null;
   }
 }
 
@@ -144,7 +158,7 @@ async function verifyApiKey(
   if (!apiKey && !origin) return false;
 
   try {
-    console.log(origin, apiKey);
+    console.log("Verify API key", origin, apiKey);
     return true; // Replace with actual verification
   } catch (error) {
     console.error("API key verification error:", error);
