@@ -15,8 +15,9 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
   const { createAgent, updateAgent } = useAgents();
   const [formData, setFormData] = useState<CreateAgentInput>({
     name: agent?.name ?? "",
+    description: agent?.description ?? "",
     instructions: agent?.instructions ?? "",
-    firstMessage: agent?.firstMessage ?? "",
+    initiateConversation: agent?.initiateConversation ?? false,
     tools: agent?.tools ?? [],
   });
 
@@ -43,25 +44,6 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
-        />
-      </div>
-      <div>
-        <Textarea
-          placeholder="Instructions"
-          value={formData.instructions}
-          onChange={(e) =>
-            setFormData({ ...formData, instructions: e.target.value })
-          }
-          required
-        />
-      </div>
-      <div>
-        <Input
-          placeholder="First Message"
-          value={formData.firstMessage}
-          onChange={(e) =>
-            setFormData({ ...formData, firstMessage: e.target.value })
-          }
         />
       </div>
       <div className="flex justify-end gap-2">
