@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { AgentConfig } from "@audentic/react";
 import { CreateAgentInput } from "@/agentBuilder/types";
@@ -8,7 +8,7 @@ export function useAgents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
       const baseUrl =
@@ -27,7 +27,7 @@ export function useAgents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createAgent = async (input: CreateAgentInput) => {
     try {
@@ -133,7 +133,7 @@ export function useAgents() {
     if (userId) {
       fetchAgents();
     }
-  }, [userId]);
+  }, [userId, fetchAgents]);
 
   return {
     agents,
