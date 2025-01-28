@@ -1,5 +1,5 @@
-import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
+import { sql } from "@vercel/postgres";
+import { NextResponse } from "next/server";
 
 export async function GET(
   _request: Request,
@@ -25,27 +25,25 @@ export async function GET(
           item_id, type, role, title, data, created_at_ms, is_hidden
         FROM transcript_items 
         WHERE session_id = ${sessionId}
-          AND title IS NOT NULL  
-          AND title != ''
-          AND type = 'MESSAGE'
           AND (
             (role = 'user' AND title NOT ILIKE 'Transcribing%')  -- Skip "Transcribing..." messages
             OR role = 'assistant'
+            OR role IS NULL
           )
         ORDER BY created_at_ms ASC
-      `
+      `,
     ]);
 
     return NextResponse.json({
-      events: eventsResult.rows.map(row => ({
+      events: eventsResult.rows.map((row) => ({
         id: row.id,
         direction: row.direction,
         eventName: row.event_name,
         eventData: row.event_data,
         timestamp: new Date(row.created_at).toLocaleTimeString(),
-        expanded: false
+        expanded: false,
       })),
-      transcriptItems: transcriptResult.rows.map(row => ({
+      transcriptItems: transcriptResult.rows.map((row) => ({
         itemId: row.item_id,
         type: row.type,
         role: row.role,
@@ -55,11 +53,14 @@ export async function GET(
         createdAtMs: Number(row.created_at_ms),
         isHidden: row.is_hidden,
         expanded: false,
-        status: "DONE"
-      }))
+        status: "DONE",
+      })),
     });
   } catch (error) {
-    console.error('Error fetching session data:', error);
-    return NextResponse.json({ error: 'Failed to fetch session data' }, { status: 500 });
+    console.error("Error fetching session data:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch session data" },
+      { status: 500 }
+    );
   }
-} 
+}
