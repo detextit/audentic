@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SessionControls } from "@audentic/react";
+import { SessionControl } from "@audentic/react";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,14 +71,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       getVoiceAgentInstruction(
         currentAgent.description,
         currentAgent.personality
-      ).then(async (instructions) => {
-        await updateAgent(currentAgent.id, { instructions });
-        setIsUpdatingInstructions(false);
-      }).catch(error => {
-        console.error("Failed to update instructions:", error);
-        setIsUpdatingInstructions(false);
-      });
-
+      )
+        .then(async (instructions) => {
+          await updateAgent(currentAgent.id, { instructions });
+          setIsUpdatingInstructions(false);
+        })
+        .catch((error) => {
+          console.error("Failed to update instructions:", error);
+          setIsUpdatingInstructions(false);
+        });
     } catch (error) {
       console.error("Failed to update agent:", error);
       toast({
@@ -93,7 +94,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleTestClick = () => {
     // Open in new tab
-    window.open(`/agents/${agentId}/test`, '_blank');
+    window.open(`/agents/${agentId}/test`, "_blank");
   };
 
   if (loading)
