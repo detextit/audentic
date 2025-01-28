@@ -14,7 +14,6 @@ export async function GET() {
     const agents = await getUserAgents(userId);
     if (agents.length > 0) {
       const agentIds = agents.map((agent: AgentConfig) => agent.id);
-      console.log("agentIds", agentIds);
       //WHERE agent_id IN (${agentIds.join(',')})
       const result = await sql`
       SELECT * FROM sessions 
@@ -32,5 +31,5 @@ export async function GET() {
   }
 }
 
-//Add a get call to get all the sessions for a list of agents, use api/agents to 
+//Add a get call to get all the sessions for a list of agents, use api/agents to
 // get all agents for the user.
