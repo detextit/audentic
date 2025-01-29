@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ sessionId: string }> | { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const { sessionId } = await context.params;
+    const { sessionId } = await params;
 
     // Run both queries in parallel since they're independent
     const [eventsResult, transcriptResult] = await Promise.all([
