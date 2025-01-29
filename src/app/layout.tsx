@@ -9,8 +9,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "VoiceAct",
-  description: "A voice agent building platform.",
+  title: "Audentic",
+  description: "Enable voice agents for your website.",
 };
 
 export default function RootLayout({
