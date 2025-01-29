@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 interface AgentsSidebarProps {
   isOpen: boolean;
   agents: AgentConfig[];
-  onClose: () => void;
   onAgentClick: (agentId: string) => void;
   selectedAgentId?: string | null;
   onCreateClick: () => void;
@@ -14,7 +13,6 @@ interface AgentsSidebarProps {
 export function AgentsSidebar({
   isOpen,
   agents,
-  onClose,
   onAgentClick,
   selectedAgentId,
   onCreateClick,

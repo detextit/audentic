@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import './globals.css'
-import { Montserrat } from 'next/font/google';
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/nextjs";
+import "./globals.css";
+import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({
-  subsets: ['latin'],
-  variable: '--font-montserrat'
+  subsets: ["latin"],
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
@@ -13,20 +13,22 @@ export const metadata: Metadata = {
   description: "A voice agent building platform.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={`${montserrat.variable} font-sans`}>
         <body>
           <header>
-            <SignedOut>
-            </SignedOut>
-            <SignedIn>
-            </SignedIn>
+            <SignedOut></SignedOut>
+            <SignedIn></SignedIn>
           </header>
           <main>{children}</main>
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

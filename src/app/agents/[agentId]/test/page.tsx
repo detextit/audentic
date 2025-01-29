@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { use } from "react";
+import { JSX, use } from "react";
 import { TestAgent } from "../../TestAgent";
 
 export default function TestAgentPage({
-    params,
+  params,
 }: {
-    params: Promise<{ agentId: string }>;
+  params: Promise<{ agentId: string }>;
 }): JSX.Element {
-    const resolvedParams = use(params);
-    return <TestAgent agentId={resolvedParams.agentId} agentName="Agent Name" />;
-} 
+  const resolvedParams = use(params);
+  return <TestAgent agentId={resolvedParams.agentId} agentName="Agent Name" />;
+}

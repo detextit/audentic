@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { HistoryEvents } from "./HistoryEvents";
 import { HistoryTranscript } from "./HistoryTranscript";
-import { TranscriptItem, LoggedEvent } from "@audentic/react";
+import { TranscriptItem } from "@audentic/react";
 
 interface SessionHistoryProps {
   sessionId?: string;
 }
 
 export default function SessionHistory({ sessionId }: SessionHistoryProps) {
-  const [events, setEvents] = useState<LoggedEvent[]>([]);
+  // const [events, setEvents] = useState<LoggedEvent[]>([]);
   const [transcriptItems, setTranscriptItems] = useState<TranscriptItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -29,7 +28,7 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
         if (!response.ok) throw new Error("Failed to fetch session data");
 
         const data = await response.json();
-        setEvents(data.events);
+        // setEvents(data.events);
         setTranscriptItems(data.transcriptItems);
       } catch (error) {
         console.error("Error fetching session data:", error);
@@ -65,12 +64,7 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
 
   return (
     <div className="h-full flex">
-
-
       <HistoryTranscript transcriptItems={transcriptItems} />
-
-
-
     </div>
   );
 }
