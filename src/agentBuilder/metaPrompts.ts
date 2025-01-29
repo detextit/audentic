@@ -16,20 +16,11 @@ export const voiceAgentMetaPrompt = `
 ## Task
 // At a high level, what is the agent expected to do? (e.g. "you are an expert at accurately handling user returns")
 
-## Demeanor
+## Demeanor and Tone
 // Overall attitude or disposition (e.g., patient, upbeat, serious, empathetic)
-
-## Tone
-// Voice style (e.g., warm and conversational, polite and authoritative)
-
-## Level of Enthusiasm
-// Degree of energy in responses (e.g., highly enthusiastic vs. calm and measured)
 
 ## Level of Formality
 // Casual vs. professional language (e.g., “Hey, great to see you!” vs. “Good afternoon, how may I assist you?”)
-
-## Level of Emotion
-// How emotionally expressive or neutral the AI should be (e.g., compassionate vs. matter-of-fact)
 
 ## Other details
 // Any other information that helps guide the personality or tone of the agent.
@@ -40,8 +31,9 @@ export const voiceAgentMetaPrompt = `
 - If the caller corrects any detail, acknowledge the correction in a straightforward manner and confirm the new spelling or value.
 
 # Conversation States
-// Conversation state machine goes here, if user_agent_steps are provided
-// state_machine, populated with the state_machine_schema
+// Conversation state machine goes here
+// Generate this only if the agent is complex and requires a long state machine
+// state_machine, populated with the state_machine_schem
 </output_format>
 
 <state_machine_info>
@@ -74,7 +66,6 @@ export const voiceAgentMetaPrompt = `
       "Inform them about the need to collect personal information for their record."
     ],
     "examples": [
-      "Hi, I'm an authentication AI assistant. Are you ready to proceed?",
       "Let me know when you are ready to get started with the verification."
     ],
     "transitions": [{
@@ -83,39 +74,22 @@ export const voiceAgentMetaPrompt = `
     }]
   },
   {
-    "id": "2_get_first_name",
-    "description": "Ask for and confirm the caller's first name.",
+    "id": "2_get_name",
+    "description": "Ask for and confirm the caller's first and last name.",
     "instructions": [
-      "Request: 'Could you please provide your first name?'",
+      "Request: 'Could you please provide your first and last name?'",
       "Spell it out letter-by-letter back to the caller to confirm."
     ],
     "examples": [
-      "May I have your first name, please?",
-      "You spelled that as J-A-N-E, is that correct?"
+      "May I have your name, please?",
     ],
     "transitions": [{
-      "next_step": "3_get_last_name",
-      "condition": "Once first name is confirmed."
+      "next_step": "3_next_steps",
+      "condition": "Once name is confirmed."
     }]
   },
   {
-    "id": "3_get_last_name",
-    "description": "Ask for and confirm the caller's last name.",
-    "instructions": [
-      "Request: 'Thank you. Could you please provide your last name?'",
-      "Spell it out letter-by-letter back to the caller to confirm."
-    ],
-    "examples": [
-      "And your last name, please?",
-      "Let me confirm: D-O-E, is that correct?"
-    ],
-    "transitions": [{
-      "next_step": "4_next_steps",
-      "condition": "Once last name is confirmed."
-    }]
-  },
-  {
-    "id": "4_next_steps",
+    "id": "3_next_steps",
     "description": "Attempt to verify the caller's information and proceed with next steps.",
     "instructions": [
       "Inform the caller that you will now attempt to verify their information.",
@@ -124,13 +98,8 @@ export const voiceAgentMetaPrompt = `
     ],
     "examples": [
       "Thank you for providing your details. I will now verify your information.",
-      "Attempting to authenticate your information now.",
-      "I'll transfer you to our agent who can give you an overview of our facilities. Just to help demonstrate different agent personalities, she's instructed to act a little crabby."
-    ],
-    "transitions": [{
-      "next_step": "transferAgents",
-      "condition": "Once verification is complete, transfer to tourGuide agent."
-    }]
+      ],
+    "transitions": []
   }
 ]
 </state_machine_example>
