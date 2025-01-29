@@ -1,14 +1,4 @@
 import { AgentConfig, Tool } from "@audentic/react";
-import { z } from "zod";
-
-// Define Zod schemas for our tools
-const clipboardResponseSchema = z.object({
-  text: z.string(),
-});
-
-const clipboardSetSchema = z.object({
-  text: z.string().min(1, "Text must not be empty"),
-});
 
 const browserAPITools: Record<string, Tool> = {
   copyFromClipboardTool: {
@@ -27,10 +17,6 @@ const browserAPITools: Record<string, Tool> = {
       type: "object",
       properties: {},
       required: [],
-    },
-    handler: async () => {
-      // Implementation will be handled elsewhere
-      return {} as z.infer<typeof clipboardResponseSchema>;
     },
   } as Tool,
 
@@ -59,10 +45,6 @@ const browserAPITools: Record<string, Tool> = {
         },
       },
       required: ["text"],
-    },
-    handler: async (params: z.infer<typeof clipboardSetSchema>) => {
-      // Implementation will be handled elsewhere
-      return { success: true };
     },
   } as Tool,
 
@@ -132,13 +114,6 @@ export function injectDefaultTools(
         },
       },
       required: ["rationale_for_hangup", "conversation_summary"],
-    },
-    handler: async (params: {
-      rationale_for_hangup: string;
-      conversation_summary: string;
-    }) => {
-      // Implementation will be handled elsewhere
-      return { success: true };
     },
   } as Tool;
 
