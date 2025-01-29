@@ -3,7 +3,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI();
 
-export const maxDuration = 25;
+export const maxDuration = 30; // This is the time in seconds that this function is allowed to execute within. Setting it to 30s.
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
