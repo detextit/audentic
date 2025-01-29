@@ -13,13 +13,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { SessionControl } from "@audentic/react";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { useToast } from "@/hooks/use-toast";
 
@@ -160,8 +153,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardHeader>
             <CardTitle>Agent Description</CardTitle>
             <CardDescription>
-              The description is used to build the agent's task instructions and
-              the step-by-step flow for the agent.
+              The description is used to build the agent&apos;s task
+              instructions and the step-by-step flow for the agent.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -174,7 +167,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 });
                 setIsDirty(true);
               }}
-              placeholder="Enter the role as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'"
+              placeholder={`Enter the role as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
               className="min-h-[100px] resize-none focus-visible:ring-1"
             />
           </CardContent>
@@ -184,7 +177,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardHeader>
             <CardTitle>Personality</CardTitle>
             <CardDescription>
-              Setup the agent's tone, demeanor, and other personality traits.
+              Setup the agent&apos;s tone, demeanor, and other personality
+              traits.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -216,9 +210,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 id="initiate"
                 checked={!!currentAgent.initiateConversation}
                 onCheckedChange={(checked) => {
-                  let newAgent = currentAgent;
-                  newAgent.initiateConversation = checked ? true : false;
-                  setCurrentAgent(newAgent);
+                  setCurrentAgent({
+                    ...currentAgent,
+                    initiateConversation: checked ? true : false,
+                  });
                   setIsDirty(true);
                 }}
               />
