@@ -55,10 +55,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       setIsUpdating(false);
       setIsDirty(false);
-      toast({
-        title: "Success",
-        description: "Agent updated successfully",
-      });
 
       // Update instructions in the background
       getVoiceAgentInstruction(
@@ -73,12 +69,16 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           console.error("Failed to update instructions:", error);
           setIsUpdatingInstructions(false);
         });
+      toast({
+        title: "Success! Update Complete",
+        description: "Your agent is deployed and ready to go!",
+      });
     } catch (error) {
       console.error("Failed to update agent:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update agent. Please try again.",
+        title: "Uh oh! Something went wrong.",
+        description: "Failed to update. Contact support.",
       });
       setIsUpdating(false);
       setIsUpdatingInstructions(false);
