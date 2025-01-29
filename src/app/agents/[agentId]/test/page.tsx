@@ -9,5 +9,5 @@ export default function TestAgentPage({
     params: Promise<{ agentId: string }>;
 }): JSX.Element {
     const resolvedParams = use(params);
-    return <TestAgent agentId={resolvedParams.agentId} agentName="Agent Name" />;
+    return <TestAgent agentId={resolvedParams.agentId} agentName={resolvedParams.agentId} />;
 } 

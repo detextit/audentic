@@ -1,6 +1,6 @@
 "use client";
 
-import { History, PanelLeftClose, PanelLeft, Terminal, Bot } from 'lucide-react';
+import { History, PanelLeftClose, PanelLeft, Bot } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { NavUser } from '@/components/nav-user';
 import { AgentsSidebar } from '@/components/agents-sidebar';
@@ -101,37 +101,37 @@ export default function Home() {
                         } p-4 flex flex-col h-screen`}
                 >
                     <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} mb-8`}>
-                        <div className="bg-black rounded p-1">
-                            <Terminal size={24} className="text-white" />
+                        <div className="rounded p-1">
+                            <img src="/icon.png" alt="Logo" className="w-6 h-6" />
                         </div>
                         {!isCollapsed && (
-                            <span className="font-semibold text-lg">Audentic</span>
+                            <span className="font-semibold text-4lg">AUDENTIC</span>
                         )}
                     </div>
 
                     <div className="space-y-4">
                         <div
-                            className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} 
-                            cursor-pointer hover:text-[hsl(var(--sidebar-primary))] rounded-md p-2
+                            className={`flex ${isCollapsed ? 'justify-center' : 'space-x-3'} 
+                            cursor-pointer hover:text-[hsl(var(--sidebar-primary))] rounded-md ${isCollapsed ? 'p-2' : 'pl-1 pr-2 py-2'}
                             ${isAgentsSidebarOpen ? 'bg-[hsl(var(--sidebar-accent))]' : ''}`}
                             onClick={() => {
                                 setIsAgentsSidebarOpen(true);
                                 setIsHistorySidebarOpen(false);
                             }}
                         >
-                            <Bot size={24} className="text-[hsl(var(--sidebar-foreground))]" />
+                            <Bot size={24} className="min-w-6" />
                             {!isCollapsed && <span>Agents</span>}
                         </div>
                         <div
-                            className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} 
-                            cursor-pointer hover:text-[hsl(var(--sidebar-primary))] rounded-md p-2
+                            className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'space-x-3'} 
+                            cursor-pointer hover:text-[hsl(var(--sidebar-primary))] rounded-md ${isCollapsed ? 'p-2' : 'pl-1 pr-2 py-2'}
                             ${isHistorySidebarOpen ? 'bg-[hsl(var(--sidebar-accent))]' : ''}`}
                             onClick={() => {
                                 setIsHistorySidebarOpen(true);
                                 setIsAgentsSidebarOpen(false);
                             }}
                         >
-                            <History size={24} className="text-[hsl(var(--sidebar-foreground))]" />
+                            <History size={24} className="min-w-6" />
                             {!isCollapsed && <span>History</span>}
                         </div>
                     </div>
