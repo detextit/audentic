@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { UserButton, useClerk } from "@clerk/nextjs"
+import { UserButton, useClerk } from "@clerk/nextjs";
 
 interface NavUserProps {
   userName: string;
@@ -8,7 +8,7 @@ interface NavUserProps {
 
 export function NavUser({ userName }: NavUserProps) {
   const { openUserProfile } = useClerk();
-  //{userName}
+
   return (
     <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-[hsl(var(--sidebar-accent))] cursor-pointer">
       <UserButton />
@@ -16,7 +16,7 @@ export function NavUser({ userName }: NavUserProps) {
         onClick={() => openUserProfile()}
         className="text-sm font-medium truncate"
       >
-        Jane Doe
+        {userName}
       </span>
     </div>
   );
