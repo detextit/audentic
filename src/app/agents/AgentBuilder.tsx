@@ -131,11 +131,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </div>
         <div className="flex gap-3">
           <Button
-            size="lg"
             onClick={handleUpdate}
             disabled={isUpdating || !isDirty}
           >
-            {isUpdating ? "Saving..." : "Save Changes"}
+            Save
           </Button>
           <Button
             variant="outline"
@@ -192,7 +191,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 setIsDirty(true);
               }}
               placeholder="Enter personality... e.g. 'friendly, patient, professional language'"
-              className="min-h-[200px] resize-none focus-visible:ring-1"
+              className="min-h-[100px] resize-none focus-visible:ring-1"
             />
           </CardContent>
         </Card>
