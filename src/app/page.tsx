@@ -13,7 +13,6 @@ import { SessionControl } from "@audentic/react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Home from "./Home";
 
 export default function LandingPage() {
   const { isSignedIn } = useAuth();
