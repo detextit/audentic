@@ -64,14 +64,18 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         .then(async (instructions) => {
           await updateAgent(currentAgent.id, { instructions });
           setIsUpdatingInstructions(false);
+          toast({
+            title: `${currentAgent.name} Updated`,
+            description: "Your agent is deployed and ready to go!",
+          });
         })
         .catch((error) => {
           console.error("Failed to update instructions:", error);
           setIsUpdatingInstructions(false);
         });
       toast({
-        title: "Success! Update Complete",
-        description: "Your agent is deployed and ready to go!",
+        title: "Agent Deploying...",
+        description: "Your agent is being deployed and will be ready soon!",
       });
     } catch (error) {
       console.error("Failed to update agent:", error);
@@ -130,10 +134,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <p className="text-muted-foreground mt-1">Agent Configuration</p>
         </div>
         <div className="flex gap-3">
-          <Button
-            onClick={handleUpdate}
-            disabled={isUpdating || !isDirty}
-          >
+          <Button onClick={handleUpdate} disabled={isUpdating || !isDirty}>
             Save
           </Button>
           <Button
