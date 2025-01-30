@@ -22,7 +22,7 @@ interface Session {
 
 export default function Home() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isAgentsSidebarOpen, setIsAgentsSidebarOpen] = useState(true);
+  const [isAgentsSidebarOpen, setIsAgentsSidebarOpen] = useState(false);
   const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { agents, refreshAgents } = useAgents();
@@ -52,15 +52,16 @@ export default function Home() {
 
   useEffect(() => {
     if (agents.length > 0) {
-      if (pathname === "/" || pathname.startsWith("/agents")) {
-        const urlAgentId = pathname.startsWith("/agents/")
-          ? pathname.split("/agents/")[1]
-          : null;
+      if (pathname.startsWith("/agents")) {
+        setIsAgentsSidebarOpen(true);
+        setIsHistorySidebarOpen(false);
+        const urlAgentId = pathname.split("/agents/")?.[1] || null;
 
         if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
           setSelectedAgentId(urlAgentId);
         } else {
           setSelectedAgentId(agents[0].id);
+
           router.push(`/agents/${agents[0].id}`);
         }
       }
@@ -68,15 +69,36 @@ export default function Home() {
   }, [agents, pathname]);
 
   useEffect(() => {
-    if (pathname.startsWith("/history/")) {
-      const urlSessionId = pathname.split("/history/")[1];
-      if (urlSessionId) {
-        setIsHistorySidebarOpen(true);
-        setIsAgentsSidebarOpen(false);
-        setSelectedSessionId(urlSessionId);
+    if (sessions.length > 0) {
+      if (pathname.startsWith("/history")) {
+        const urlSessionId = pathname.split("/history/")?.[1] || null;
+        if (urlSessionId) {
+          setIsHistorySidebarOpen(true);
+          setIsAgentsSidebarOpen(false);
+          setSelectedSessionId(urlSessionId);
+        } else {
+          setIsAgentsSidebarOpen(false);
+          setIsHistorySidebarOpen(true);
+          setSelectedSessionId(sessions[0]?.session_id);
+          router.push(`/history/${sessions[0]?.session_id}`);
+        }
       }
     }
-  }, [pathname]);
+  }, [pathname, sessions]);
+
+  useEffect(() => {
+    if (sessions.length > 0 && isHistorySidebarOpen) {
+      setSelectedSessionId(sessions[0]?.session_id);
+      router.push(`/history/${sessions[0]?.session_id}`);
+    }
+  }, [isHistorySidebarOpen, sessions]);
+
+  useEffect(() => {
+    if (agents.length > 0 && isAgentsSidebarOpen) {
+      setSelectedAgentId(agents[0]?.id);
+      router.push(`/agents/${agents[0]?.id}`);
+    }
+  }, [isAgentsSidebarOpen, agents]);
 
   const handleCreateAgent = () => {
     setIsCreateDialogOpen(true);
@@ -85,6 +107,11 @@ export default function Home() {
   const handleAgentClick = (agentId: string) => {
     setSelectedAgentId(agentId);
     router.push(`/agents/${agentId}`);
+  };
+
+  const handleSessionClick = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    router.push(`/history/${sessionId}`);
   };
 
   const handleDialogClose = async () => {
@@ -180,10 +207,7 @@ export default function Home() {
         <HistorySidebar
           isOpen={isHistorySidebarOpen}
           sessions={sessions}
-          onSessionClick={(sessionId) => {
-            console.log("Session clicked:", sessionId);
-            setSelectedSessionId(sessionId);
-          }}
+          onSessionClick={handleSessionClick}
         />
       </div>
 
