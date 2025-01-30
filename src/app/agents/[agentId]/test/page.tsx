@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { use } from "react";
+import { JSX, use } from "react";
 import { TestAgent } from "../../TestAgent";
 
 export default function TestAgentPage({

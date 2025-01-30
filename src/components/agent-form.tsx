@@ -3,7 +3,6 @@ import { AgentConfig } from "@audentic/react";
 import { CreateAgentInput } from "@/agentBuilder/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useAgents } from "@/hooks/useAgents";
 
 interface AgentFormProps {

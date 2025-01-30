@@ -1,3 +1,3 @@
 # Audentic
 
-Enabling voice interaction with your website.
+Enable voice agents for your website.
