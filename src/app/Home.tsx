@@ -7,10 +7,10 @@ import { AgentsSidebar } from '@/components/agents-sidebar';
 import { useAgents } from '@/hooks/useAgents';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { useUser } from "@clerk/nextjs";
-import { AgentBuilder } from '@/app/agents/AgentBuilder';
+import { AgentBuilder } from "@/app/agents/AgentBuilder";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import SessionHistory from "@/app/history/SessionHistory";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from "next/navigation";
 
 interface Session {
     session_id: string;
@@ -35,7 +35,9 @@ export default function Home() {
     useEffect(() => {
         async function fetchSessions() {
             try {
-                const response = await fetch("/api/sessions");
+                const baseUrl =
+                    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+                const response = await fetch(`${baseUrl}/api/sessions`);
                 if (!response.ok) throw new Error("Failed to fetch sessions");
                 const data = await response.json();
                 setSessions(data);
@@ -49,12 +51,12 @@ export default function Home() {
 
     useEffect(() => {
         if (agents.length > 0) {
-            if (pathname === '/' || pathname.startsWith('/agents')) {
-                const urlAgentId = pathname.startsWith('/agents/')
-                    ? pathname.split('/agents/')[1]
+            if (pathname === "/" || pathname.startsWith("/agents")) {
+                const urlAgentId = pathname.startsWith("/agents/")
+                    ? pathname.split("/agents/")[1]
                     : null;
 
-                if (urlAgentId && agents.some(agent => agent.id === urlAgentId)) {
+                if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
                     setSelectedAgentId(urlAgentId);
                 } else {
                     setSelectedAgentId(agents[0].id);
@@ -65,8 +67,8 @@ export default function Home() {
     }, [agents, pathname]);
 
     useEffect(() => {
-        if (pathname.startsWith('/history/')) {
-            const urlSessionId = pathname.split('/history/')[1];
+        if (pathname.startsWith("/history/")) {
+            const urlSessionId = pathname.split("/history/")[1];
             if (urlSessionId) {
                 setIsHistorySidebarOpen(true);
                 setIsAgentsSidebarOpen(false);
@@ -137,13 +139,12 @@ export default function Home() {
                     </div>
 
                     <div className="mt-auto mb-4">
-                        <NavUser userName={user?.fullName || user?.username || ''} />
+                        <NavUser userName={user?.fullName || user?.username || ""} />
                     </div>
                 </div>
 
                 <AgentsSidebar
                     isOpen={isAgentsSidebarOpen}
-                    onClose={() => setIsAgentsSidebarOpen(false)}
                     agents={agents}
                     onAgentClick={handleAgentClick}
                     selectedAgentId={selectedAgentId}
@@ -154,7 +155,7 @@ export default function Home() {
                     isOpen={isHistorySidebarOpen}
                     sessions={sessions}
                     onSessionClick={(sessionId) => {
-                        console.log('Session clicked:', sessionId);
+                        console.log("Session clicked:", sessionId);
                         setSelectedSessionId(sessionId);
                     }}
                 />
@@ -166,7 +167,11 @@ export default function Home() {
                         onClick={() => setIsCollapsed(!isCollapsed)}
                         className="text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-primary))]"
                     >
-                        {isCollapsed ? <PanelLeft size={20} /> : <PanelLeftClose size={20} />}
+                        {isCollapsed ? (
+                            <PanelLeft size={20} />
+                        ) : (
+                            <PanelLeftClose size={20} />
+                        )}
                     </button>
                 </header>
                 <main className="flex-1 p-6 overflow-auto">
