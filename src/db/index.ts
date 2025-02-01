@@ -1,13 +1,12 @@
 import { sql } from "@vercel/postgres";
-import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "../agentBuilder/types";
+import { AgentDBConfig } from "../agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
 
 // Create agent
 export async function createAgent(
   userId: string,
-  agent: CreateAgentInput
-): Promise<AgentConfig> {
+  agent: AgentDBConfig
+): Promise<AgentDBConfig> {
   const result = await sql`
     INSERT INTO agents (
       user_id,
@@ -17,7 +16,7 @@ export async function createAgent(
       initiate_conversation,
       instructions,
       tools,
-      tool_logic
+      tool_logic,
     )
     VALUES (
       ${userId},
@@ -35,7 +34,7 @@ export async function createAgent(
 }
 
 // Get all agents for a user
-export async function getUserAgents(userId: string): Promise<AgentConfig[]> {
+export async function getUserAgents(userId: string): Promise<AgentDBConfig[]> {
   try {
     const result = await sql`
       SELECT * FROM agents 
@@ -63,7 +62,7 @@ export async function getUserAgents(userId: string): Promise<AgentConfig[]> {
 // Get single agent by ID
 export async function getAgentById(
   agentId: string
-): Promise<AgentConfig | null> {
+): Promise<AgentDBConfig | null> {
   const result = await sql`
     SELECT * FROM agents 
     WHERE id = ${agentId}
@@ -75,8 +74,8 @@ export async function getAgentById(
 export async function updateAgent(
   agentId: string,
   userId: string,
-  updates: Partial<CreateAgentInput>
-): Promise<AgentConfig | null> {
+  updates: Partial<AgentDBConfig>
+): Promise<AgentDBConfig | null> {
   const updates_array = [];
   const values = [];
   let i = 1;
@@ -118,7 +117,7 @@ export async function deleteAgent(
   return result.rows.length > 0;
 }
 
-function transformDBAgent(dbAgent: any): AgentConfig {
+function transformDBAgent(dbAgent: any): AgentDBConfig {
   return {
     id: dbAgent.id,
     userId: dbAgent.user_id,
@@ -129,6 +128,8 @@ function transformDBAgent(dbAgent: any): AgentConfig {
     instructions: dbAgent.instructions,
     tools: dbAgent.tools || [],
     toolLogic: dbAgent.tool_logic || {},
+    createdAt: dbAgent.created_at,
+    updatedAt: dbAgent.updated_at,
   };
 }
 

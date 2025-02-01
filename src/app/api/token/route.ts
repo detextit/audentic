@@ -124,7 +124,16 @@ export async function POST(request: Request) {
 async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
   try {
     const agent = await getAgentById(agentId);
-    return agent;
+    if (agent) {
+      return {
+        name: agent.name,
+        initiateConversation: agent.initiateConversation,
+        instructions: agent.instructions,
+        tools: agent.tools,
+        toolLogic: agent.toolLogic,
+      } as AgentConfig;
+    }
+    return null;
   } catch (error) {
     console.error("Error fetching agent config:", error);
     return null;
