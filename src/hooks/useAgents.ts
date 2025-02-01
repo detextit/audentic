@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/agentBuilder/types";
 export function useAgents() {
   const { userId } = useAuth();
-  const [agents, setAgents] = useState<AgentConfig[]>([]);
+  const [agents, setAgents] = useState<AgentDBConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +28,7 @@ export function useAgents() {
     }
   }, []);
 
-  const createAgent = async (input: CreateAgentInput) => {
+  const createAgent = async (input: AgentDBConfig) => {
     try {
       console.log("Creating agent with input:", input); // Debug log
 
@@ -78,7 +77,7 @@ export function useAgents() {
 
   const updateAgent = async (
     agentId: string,
-    updates: Partial<CreateAgentInput>
+    updates: Partial<AgentDBConfig>
   ) => {
     try {
       const baseUrl =

@@ -17,8 +17,8 @@ export async function setupDatabase() {
         instructions TEXT NOT NULL,
         tools JSONB DEFAULT '[]',
         tool_logic JSONB DEFAULT '{}',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
