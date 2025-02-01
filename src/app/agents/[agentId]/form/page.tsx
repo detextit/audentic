@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TalkAgent } from "@/app/agents/TalkAgent";
+import { FormAgent } from "@/app/agents/FormAgent";
 import { usePathname } from "next/navigation";
 import { AgentDBConfig } from "@/agentBuilder/types";
 
-export default function TalkAgentPage(): JSX.Element {
+export default function FormPage() {
   const pathname = usePathname();
   const agentId = pathname.split("/").slice(-2)[0];
   const [agent, setAgent] = useState<AgentDBConfig | null>(null);
@@ -20,7 +20,7 @@ export default function TalkAgentPage(): JSX.Element {
   }, [agentId]);
 
   return agent ? (
-    <TalkAgent agentId={agentId} agent={agent} />
+    <FormAgent agentId={agentId} agent={agent} />
   ) : (
     <div className="animate-pulse space-y-4 p-4">
       <div className="h-8 bg-gray-200 rounded w-1/4"></div>
