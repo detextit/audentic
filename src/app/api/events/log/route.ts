@@ -1,12 +1,11 @@
-import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
+import { sql } from "@vercel/postgres";
+import { NextResponse } from "next/server";
+import { LoggedEvent } from "@audentic/react";
 
 export async function POST(request: Request) {
   try {
-    const { event, sessionId } = await request.json();
-    
-    // Convert timestamp to ISO string for proper PostgreSQL timestamp
-    const timestamp = new Date().toISOString();
+    const { event, sessionId }: { event: LoggedEvent; sessionId: string } =
+      await request.json();
 
     await sql`
       INSERT INTO events (
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
         direction, 
         event_name, 
         event_data,
-        created_at
+        timestamp
       )
       VALUES (
         ${event.id}, 
@@ -23,13 +22,13 @@ export async function POST(request: Request) {
         ${event.direction}, 
         ${event.eventName}, 
         ${JSON.stringify(event.eventData)},
-        ${timestamp}
+        ${event.timestamp}
       )
     `;
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error logging event:', error);
-    return NextResponse.json({ error: 'Failed to log event' }, { status: 500 });
+    console.error("Error logging event:", error);
+    return NextResponse.json({ error: "Failed to log event" }, { status: 500 });
   }
-} 
+}
