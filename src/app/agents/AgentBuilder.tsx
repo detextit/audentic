@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AgentConfig } from "@audentic/react";
+import { AgentDBConfig } from "@/agentBuilder/types";
 import { useAgents } from "@/hooks/useAgents";
 import {
   Card,
@@ -20,7 +20,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
   const { toast } = useToast();
   const [isDirty, setIsDirty] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<AgentConfig | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingInstructions, setIsUpdatingInstructions] = useState(false);
 

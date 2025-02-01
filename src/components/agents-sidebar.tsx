@@ -1,10 +1,10 @@
 import { Plus } from "lucide-react";
-import { AgentConfig } from "@audentic/react";
+import { AgentDBConfig } from "@/agentBuilder/types";
 import { Button } from "@/components/ui/button";
 
 interface AgentsSidebarProps {
   isOpen: boolean;
-  agents: AgentConfig[];
+  agents: AgentDBConfig[];
   onAgentClick: (agentId: string) => void;
   selectedAgentId?: string | null;
   onCreateClick: () => void;

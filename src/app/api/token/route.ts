@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { AgentConfig } from "@audentic/react";
 import { getAgentById } from "@/db";
 import { injectDefaultTools } from "@/agentBuilder/utils";
+import { AgentConfig } from "@/agentBuilder/types";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -13,25 +13,6 @@ const getCorsHeaders = (isAllowed: boolean) => {
   }
   return null;
 };
-
-// Add this to handle OPTIONS preflight requests
-export async function OPTIONS(request: Request) {
-  const origin = request.headers.get("Origin");
-  const apiKey = request.headers.get("X-API-Key");
-
-  // Verify API key for OPTIONS request
-  const isValidApiKey = await verifyApiKey(origin, apiKey);
-  const corsHeaders = getCorsHeaders(isValidApiKey);
-
-  if (!corsHeaders) {
-    return new NextResponse(null, { status: 403 });
-  }
-
-  return new NextResponse(null, {
-    status: 200,
-    headers: corsHeaders,
-  });
-}
 
 export async function POST(request: Request) {
   try {
@@ -143,7 +124,16 @@ export async function POST(request: Request) {
 async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
   try {
     const agent = await getAgentById(agentId);
-    return agent;
+    if (agent) {
+      return {
+        name: agent.name,
+        initiateConversation: agent.initiateConversation,
+        instructions: agent.instructions,
+        tools: agent.tools,
+        toolLogic: agent.toolLogic,
+      } as AgentConfig;
+    }
+    return null;
   } catch (error) {
     console.error("Error fetching agent config:", error);
     return null;

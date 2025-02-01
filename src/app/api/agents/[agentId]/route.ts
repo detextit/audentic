@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
-
+import { AgentDBConfig } from "@/agentBuilder/types";
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ agentId: string }> }
@@ -18,14 +18,9 @@ export async function GET(
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
-    const agent = result.rows[0];
+    const agent = result.rows[0] as AgentDBConfig;
     return NextResponse.json({
-      id: agent.id,
-      name: agent.name,
-      description: agent.description,
-      instructions: agent.instructions,
-      seed: agent.seed,
-      createdAt: new Date(agent.created_at).toISOString(),
+      ...agent,
     });
   } catch (error) {
     console.error("Error fetching agent:", error);

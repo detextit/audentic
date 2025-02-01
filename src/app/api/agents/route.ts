@@ -7,7 +7,7 @@ import {
   updateAgent,
   deleteAgent,
 } from "@/db";
-import { CreateAgentInput } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/agentBuilder/types";
 
 export async function GET(request: Request) {
   try {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body: CreateAgentInput = await request.json();
+    const body: AgentDBConfig = await request.json();
     const agent = await createAgent(userId, body);
 
     return NextResponse.json(agent);
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
       return new NextResponse("Agent ID is required", { status: 400 });
     }
 
-    const updates: Partial<CreateAgentInput> = await request.json();
+    const updates: Partial<AgentDBConfig> = await request.json();
     const agent = await updateAgent(agentId, userId, updates);
 
     if (!agent) {
