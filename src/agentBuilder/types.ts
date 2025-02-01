@@ -36,6 +36,7 @@ export interface AgentDBConfig extends AgentConfig {
   userId: string;
   description: string;
   personality?: string;
+  settings?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
