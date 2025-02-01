@@ -16,24 +16,24 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
       <ScrollArea className="flex-1 px-6">
         <div className="py-4 space-y-4">
           {transcriptItems.map((item) => {
-            if (item.type === "MESSAGE") {
+            if (item.role === "user" || item.role === "assistant") {
               return (
                 <div
                   key={item.itemId}
-                  className={`${item.isHidden ? "opacity-50" : ""}`}
+                  className={`${item.role === "user" ? "bg-gray-50" : ""}`}
                 >
                   <div className="flex items-center gap-x-2 text-xs text-gray-500 mb-1">
                     <span>{item.timestamp}</span>
                     <span>{item.role}</span>
                   </div>
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown>{item.title || ""}</ReactMarkdown>
-                  </div>
+                  {item.content.type === "text" && (
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown>{item.content.text || ""}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               );
-            }
-
-            if (item.type === "BREADCRUMB") {
+            } else {
               return (
                 <div
                   key={item.itemId}
@@ -41,18 +41,16 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
                 >
                   <div className="flex items-center gap-x-2">
                     <span>{item.timestamp}</span>
-                    <span className="font-medium">{item.title}</span>
+                    <span className="font-medium">{item.role}</span>
                   </div>
-                  {item.data && (
+                  {item.content && (
                     <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded mt-1">
-                      {JSON.stringify(item.data, null, 2)}
+                      {JSON.stringify(item.content, null, 2)}
                     </pre>
                   )}
                 </div>
               );
             }
-
-            return null;
           })}
         </div>
       </ScrollArea>

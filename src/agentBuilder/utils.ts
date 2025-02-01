@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "@audentic/react";
+import { AgentConfig, Tool } from "./types";
 
 const browserAPITools: Record<string, Tool> = {
   copyFromClipboardTool: {

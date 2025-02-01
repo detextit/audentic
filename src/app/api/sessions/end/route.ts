@@ -1,14 +1,6 @@
-import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
-
-interface TranscriptItem {
-  type: string;
-  title?: string;
-  itemId: string;
-  role?: string;
-  data?: any;
-  isHidden: boolean;
-}
+import { sql } from "@vercel/postgres";
+import { NextResponse } from "next/server";
+import { TranscriptItem } from "@audentic/react";
 
 export async function POST(request: Request) {
   try {
@@ -23,19 +15,16 @@ export async function POST(request: Request) {
 
     // Then, if transcript items are provided, log the final transcript
     if (transcriptItems) {
-      const createdAtMs = Date.now();
-      
       // Filter and log completed messages and breadcrumbs
       const itemsToLog = transcriptItems.filter(
-        (item: TranscriptItem) => 
-          // Include complete messages
-          (item.type === "MESSAGE" && 
-           item.title && 
-           item.title.trim() !== "" &&
-           !item.title.startsWith("Transcribing")) ||
-          // Include all breadcrumbs
-          (item.type === "BREADCRUMB" && 
-           item.title)
+        (item: TranscriptItem) =>
+          // Exclude complete messages
+          !(
+            item.role === "user" &&
+            item.content.type === "text" &&
+            item.content.text.trim() !== "" &&
+            !item.content.text.includes("Transcribing")
+          )
       );
 
       for (const item of itemsToLog) {
@@ -43,36 +32,32 @@ export async function POST(request: Request) {
           INSERT INTO transcript_items (
             item_id,
             session_id,
-            type,
             role,
-            title,
-            data,
-            created_at_ms,
-            is_hidden
+            content,
+            timestamp
           )
           VALUES (
             ${item.itemId},
             ${sessionId},
-            ${item.type},
-            ${item.role || null},
-            ${item.title},
-            ${item.data ? JSON.stringify(item.data) : null},
-            ${createdAtMs},
-            ${item.isHidden}
+            ${item.role},
+            ${item.content ? JSON.stringify(item.content) : null},
+            ${item.timestamp}
           )
           ON CONFLICT (item_id) 
           DO UPDATE SET
-            title = EXCLUDED.title,
-            data = EXCLUDED.data,
-            created_at_ms = EXCLUDED.created_at_ms,
-            is_hidden = EXCLUDED.is_hidden
+            role = EXCLUDED.role,
+            content = EXCLUDED.content,
+            timestamp = EXCLUDED.timestamp
         `;
       }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error ending session:', error);
-    return NextResponse.json({ error: 'Failed to end session' }, { status: 500 });
+    console.error("Error ending session:", error);
+    return NextResponse.json(
+      { error: "Failed to end session" },
+      { status: 500 }
+    );
   }
-} 
+}

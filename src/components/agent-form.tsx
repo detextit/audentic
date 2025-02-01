@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { AgentConfig } from "@audentic/react";
-import { CreateAgentInput } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/agentBuilder/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAgents } from "@/hooks/useAgents";
 
 interface AgentFormProps {
-  agent?: AgentConfig;
+  agent?: AgentDBConfig;
   onClose: () => void;
 }
 
 export function AgentForm({ agent, onClose }: AgentFormProps) {
   const { createAgent, updateAgent } = useAgents();
-  const [formData, setFormData] = useState<CreateAgentInput>({
+  const date = new Date();
+  const [formData, setFormData] = useState<AgentDBConfig>({
+    id: agent?.id ?? "",
+    userId: agent?.userId ?? "",
+    createdAt: agent?.createdAt ?? date,
+    updatedAt: agent?.updatedAt ?? date,
     name: agent?.name ?? "",
     description: agent?.description ?? "",
     instructions: agent?.instructions ?? "",

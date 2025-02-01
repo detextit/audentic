@@ -3,12 +3,12 @@
 import { JSX, useEffect, useState } from "react";
 import { TestAgent } from "../../TestAgent";
 import { usePathname } from "next/navigation";
-import { AgentConfig } from "@audentic/react";
+import { AgentDBConfig } from "@/agentBuilder/types";
 
 export default function TestAgentPage(): JSX.Element {
   const pathname = usePathname();
   const agentId = pathname.split("/").slice(-2)[0];
-  const [agent, setAgent] = useState<AgentConfig | null>(null);
+  const [agent, setAgent] = useState<AgentDBConfig | null>(null);
 
   useEffect(() => {
     if (agentId) {
