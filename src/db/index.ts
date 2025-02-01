@@ -16,7 +16,7 @@ export async function createAgent(
       initiate_conversation,
       instructions,
       tools,
-      tool_logic,
+      tool_logic
     )
     VALUES (
       ${userId},
