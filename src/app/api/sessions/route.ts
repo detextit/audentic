@@ -1,5 +1,5 @@
 import { getUserAgents } from "@/db";
-import { AgentConfig } from "@audentic/react";
+import { AgentDBConfig } from "@/agentBuilder/types";
 import { auth } from "@clerk/nextjs/server";
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
@@ -13,7 +13,7 @@ export async function GET() {
     }
     const agents = await getUserAgents(userId);
     if (agents.length > 0) {
-      const agentIds = agents.map((agent: AgentConfig) => agent.id);
+      const agentIds = agents.map((agent: AgentDBConfig) => agent.id);
       const agentIdsQuoted = agentIds.map((id) => `'${id}'`).join(",");
       const query = `
         SELECT * FROM sessions WHERE agent_id IN (${agentIdsQuoted})

@@ -22,7 +22,6 @@ async function createTablesIfNotExist() {
       event_name TEXT,
       event_data JSONB,
       timestamp TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
@@ -31,15 +30,9 @@ async function createTablesIfNotExist() {
     CREATE TABLE IF NOT EXISTS transcript_items (
       item_id VARCHAR(255) PRIMARY KEY,
       session_id VARCHAR(255) REFERENCES sessions(session_id),
-      type VARCHAR(50),
       role VARCHAR(50),
-      title TEXT,
-      data JSONB,
-      timestamp VARCHAR(255),
-      created_at_ms BIGINT,
-      status VARCHAR(50),
-      is_hidden BOOLEAN,
-      last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      content JSONB,
+      timestamp TIMESTAMP,
     );
   `;
 }
