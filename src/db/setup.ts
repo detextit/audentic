@@ -58,7 +58,7 @@ export async function setupDatabase() {
     ];
 
     await Promise.all(setupOperations);
-    console.log("Database setup initiated");
+    console.log("Database setup - Agents, Sessions, Events, Transcript - initiated");
   } catch (error) {
     console.error("Error setting up database:", error);
     throw error;
