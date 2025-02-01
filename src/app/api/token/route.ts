@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAgentById } from "@/db";
-import { injectDefaultTools } from "@/agentBuilder/utils";
-import { AgentConfig } from "@/agentBuilder/types";
+import { injectBrowserTools } from "@/agentBuilder/browserUtils";
+import { AgentConfig, AgentDBConfig } from "@/agentBuilder/types";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -45,11 +45,10 @@ export async function POST(request: Request) {
         }
       );
     }
-    const agentConfigWithTools = injectDefaultTools(agentConfig);
     const instructions =
-      agentConfigWithTools.instructions || "You are a helpful assistant.";
+      agentConfig.instructions || "You are a helpful assistant.";
 
-    const tools = agentConfigWithTools.tools || [];
+    const tools = agentConfig.tools || [];
 
     const sessionSettings = {
       model: "gpt-4o-realtime-preview",
@@ -123,15 +122,19 @@ export async function POST(request: Request) {
 // Function to get agent config using the agents API
 async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
   try {
-    const agent = await getAgentById(agentId);
+    const agent: AgentDBConfig | null = await getAgentById(agentId);
     if (agent) {
-      return {
+      let agentConfig: AgentConfig = {
         name: agent.name,
         initiateConversation: agent.initiateConversation,
         instructions: agent.instructions,
         tools: agent.tools,
         toolLogic: agent.toolLogic,
       } as AgentConfig;
+      if (agent.settings?.useBrowserTools) {
+        agentConfig = injectBrowserTools(agentConfig);
+      }
+      return agentConfig;
     }
     return null;
   } catch (error) {
