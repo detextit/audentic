@@ -40,7 +40,7 @@ export async function setupDatabase() {
       direction VARCHAR(50),
       event_name TEXT,
       event_data JSONB,
-      timestamp TIMESTAMP,
+      timestamp TIMESTAMP
     );
   `;
 
@@ -51,7 +51,7 @@ export async function setupDatabase() {
       session_id VARCHAR(255) REFERENCES sessions(session_id),
       role VARCHAR(50),
       content JSONB,
-      timestamp TIMESTAMP,
+      timestamp TIMESTAMP
     );
   `;
 

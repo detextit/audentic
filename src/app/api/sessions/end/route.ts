@@ -23,7 +23,7 @@ export async function POST(request: Request) {
             item.role === "user" &&
             item.content.type === "text" &&
             item.content.text.trim() !== "" &&
-            !item.content.text("Transcribing")
+            !item.content.text.includes("Transcribing")
           )
       );
 
