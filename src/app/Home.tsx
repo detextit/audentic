@@ -5,21 +5,13 @@ import React, { useState, useEffect } from "react";
 import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { useAgents } from "@/hooks/useAgents";
-import { HistorySidebar } from "@/components/history-sidebar";
+import { HistorySidebar, Session } from "@/components/history-sidebar";
 import { useUser } from "@clerk/nextjs";
 import { AgentBuilder } from "@/app/agents/AgentBuilder";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import SessionHistory from "@/app/history/SessionHistory";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
-
-interface Session {
-  session_id: string;
-  agent_id: string;
-  started_at: string;
-  ended_at: string | null;
-}
-
 export default function Home() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAgentsSidebarOpen, setIsAgentsSidebarOpen] = useState(false);
@@ -51,67 +43,49 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (agents.length > 0) {
-      if (pathname.startsWith("/agents")) {
-        setIsAgentsSidebarOpen(true);
-        setIsHistorySidebarOpen(false);
-        const urlAgentId = pathname.split("/agents/")?.[1] || null;
+    if (pathname.startsWith("/agents")) {
+      setIsAgentsSidebarOpen(true);
+      setIsHistorySidebarOpen(false);
 
+      if (agents.length > 0) {
+        const urlAgentId = pathname.split("/agents/")?.[1] || null;
         if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
           setSelectedAgentId(urlAgentId);
         } else {
           setSelectedAgentId(agents[0].id);
-
           router.push(`/agents/${agents[0].id}`);
         }
       }
-    }
-  }, [agents, pathname]);
+    } else if (pathname.startsWith("/history")) {
+      setIsHistorySidebarOpen(true);
+      setIsAgentsSidebarOpen(false);
 
-  useEffect(() => {
-    if (sessions.length > 0) {
-      if (pathname.startsWith("/history")) {
+      if (sessions.length > 0) {
         const urlSessionId = pathname.split("/history/")?.[1] || null;
         if (urlSessionId) {
-          setIsHistorySidebarOpen(true);
-          setIsAgentsSidebarOpen(false);
           setSelectedSessionId(urlSessionId);
         } else {
-          setIsAgentsSidebarOpen(false);
-          setIsHistorySidebarOpen(true);
           setSelectedSessionId(sessions[0]?.session_id);
           router.push(`/history/${sessions[0]?.session_id}`);
         }
       }
     }
-  }, [pathname, sessions]);
-
-  useEffect(() => {
-    if (sessions.length > 0 && isHistorySidebarOpen) {
-      setSelectedSessionId(sessions[0]?.session_id);
-      router.push(`/history/${sessions[0]?.session_id}`);
-    }
-  }, [isHistorySidebarOpen, sessions]);
-
-  useEffect(() => {
-    if (agents.length > 0 && isAgentsSidebarOpen) {
-      setSelectedAgentId(agents[0]?.id);
-      router.push(`/agents/${agents[0]?.id}`);
-    }
-  }, [isAgentsSidebarOpen, agents]);
+  }, [pathname, agents, sessions]);
 
   const handleCreateAgent = () => {
     setIsCreateDialogOpen(true);
   };
 
   const handleAgentClick = (agentId: string) => {
-    setSelectedAgentId(agentId);
-    router.push(`/agents/${agentId}`);
+    if (agentId !== selectedAgentId) {
+      setSelectedAgentId(agentId);
+      router.replace(`/agents/${agentId}`);
+    }
   };
 
   const handleSessionClick = (sessionId: string) => {
     setSelectedSessionId(sessionId);
-    router.push(`/history/${sessionId}`);
+    router.replace(`/history/${sessionId}`);
   };
 
   const handleDialogClose = async () => {
@@ -120,6 +94,22 @@ export default function Home() {
     if (updatedAgents && updatedAgents.length > 0) {
       setSelectedAgentId(updatedAgents[0].id);
       router.push(`/agents/${updatedAgents[0].id}`);
+    }
+  };
+
+  const handleHistoryClick = () => {
+    if (sessions.length > 0) {
+      router.push(`/history/${sessions[0].session_id}`);
+    } else {
+      router.push("/history");
+    }
+  };
+
+  const handleAgentsClick = () => {
+    if (agents.length > 0) {
+      router.push(`/agents/${agents[0].id}`);
+    } else {
+      router.push("/agents");
     }
   };
 
@@ -134,7 +124,8 @@ export default function Home() {
           <div
             className={`flex items-center ${
               isCollapsed ? "justify-center" : "space-x-3"
-            } mb-8`}
+            } mb-8 cursor-pointer hover:opacity-80`}
+            onClick={() => router.push("/")}
           >
             <div className="rounded p-1">
               <Image
@@ -161,10 +152,7 @@ export default function Home() {
                                 ? "bg-[hsl(var(--sidebar-accent))]"
                                 : ""
                             }`}
-              onClick={() => {
-                setIsAgentsSidebarOpen(true);
-                setIsHistorySidebarOpen(false);
-              }}
+              onClick={handleAgentsClick}
             >
               <Bot size={24} className="min-w-6" />
               {!isCollapsed && <span>Agents</span>}
@@ -181,10 +169,7 @@ export default function Home() {
                                 ? "bg-[hsl(var(--sidebar-accent))]"
                                 : ""
                             }`}
-              onClick={() => {
-                setIsHistorySidebarOpen(true);
-                setIsAgentsSidebarOpen(false);
-              }}
+              onClick={handleHistoryClick}
             >
               <History size={24} className="min-w-6" />
               {!isCollapsed && <span>History</span>}
