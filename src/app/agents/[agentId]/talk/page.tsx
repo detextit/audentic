@@ -1,11 +1,11 @@
 "use client";
 
-import { JSX, useEffect, useState } from "react";
-import { TalkAgent } from "../../TalkAgent";
+import { useEffect, useState } from "react";
+import { TalkAgent } from "@/app/agents/TalkAgent";
 import { usePathname } from "next/navigation";
 import { AgentDBConfig } from "@/agentBuilder/types";
 
-export default function TestAgentPage(): JSX.Element {
+export default function TalkAgentPage() {
   const pathname = usePathname();
   const agentId = pathname.split("/").slice(-2)[0];
   const [agent, setAgent] = useState<AgentDBConfig | null>(null);
