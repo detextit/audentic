@@ -91,7 +91,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleTestClick = () => {
     // Open in new tab
-    window.open(`/agents/${agentId}/test`, "_blank");
+    window.open(`/agents/${agentId}/talk`, "_blank");
   };
 
   if (loading)
