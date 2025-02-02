@@ -100,6 +100,7 @@ export async function fetchFormSchema(formUrl: string) {
 
     fields.forEach((field: any) => {
       try {
+        console.log("field", field);
         const [
           id,
           title,
@@ -113,8 +114,11 @@ export async function fetchFormSchema(formUrl: string) {
         ] = field;
 
         let questionType: FormQuestion["type"] = "TEXT";
-        const validationRules: FormQuestion["validation"] = {};
+        let validationRules: FormQuestion["validation"] = {};
         let options: string[] | undefined;
+
+        // Fix required field handling - Google Forms uses 1 for required fields
+        const isRequired = required === 1;
 
         // Enhanced type mapping
         switch (type) {
@@ -181,6 +185,7 @@ export async function fetchFormSchema(formUrl: string) {
         if (validation?.[0]) {
           const [validationData] = validation;
 
+          // Additional validation rules
           if (validationData[3]) {
             validationData[3].forEach((rule: any) => {
               switch (rule[0]) {
@@ -204,7 +209,7 @@ export async function fetchFormSchema(formUrl: string) {
           title,
           description,
           type: questionType,
-          required: !!required,
+          required: isRequired, // Use the corrected required value
           options,
           validation:
             Object.keys(validationRules).length > 0
@@ -215,7 +220,6 @@ export async function fetchFormSchema(formUrl: string) {
         });
       } catch (fieldError) {
         console.warn(`Failed to process field:`, field, fieldError);
-        // Continue processing other fields
       }
     });
 
@@ -337,20 +341,24 @@ function generateZodSchema(formItems: FormQuestion[]) {
           }
       }
 
+      // Handle required fields
       if (item.required) {
         fieldSchema = fieldSchema.refine(
           (val) => {
             if (Array.isArray(val)) return val.length > 0;
             if (typeof val === "string") return val.trim().length > 0;
+            if (typeof val === "number") return true; // Numbers are always valid if present
             return val !== undefined && val !== null;
           },
           {
             message: `${item.title} is required`,
           }
         );
+        acc[item.id] = fieldSchema;
+      } else {
+        acc[item.id] = fieldSchema.optional();
       }
 
-      acc[item.id] = item.required ? fieldSchema : fieldSchema.optional();
       return acc;
     },
     {}
