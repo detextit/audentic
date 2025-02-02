@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { getAgentById } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { AgentConfig, AgentDBConfig } from "@/agentBuilder/types";
-
+import {
+  createFormToolLogic,
+  FormToolState,
+  injectFormTools,
+  createFormFieldEnum,
+} from "@/agentBuilder/formUtils";
+import { injectCallTools } from "@/agentBuilder/callUtils";
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
     return {
@@ -50,6 +56,8 @@ export async function POST(request: Request) {
 
     const tools = agentConfig.tools || [];
 
+    console.log("Tools:", JSON.stringify(tools, null, 2));
+
     const sessionSettings = {
       model: "gpt-4o-realtime-preview",
       modalities: ["text", "audio"],
@@ -91,9 +99,11 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
+    // convert tooLogic values to strings
     const toolLogic = agentConfig.toolLogic || {};
 
-    console.log("Token data:", data);
+    console.log("Tool logic:", JSON.stringify(toolLogic, null, 2));
+
     const tokenResponse = {
       client_secret: data.client_secret,
       session_id: data.id,
@@ -131,9 +141,34 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
         tools: agent.tools,
         toolLogic: agent.toolLogic,
       } as AgentConfig;
+
+      agentConfig = injectCallTools(agentConfig);
+      // Add browser tools if enabled
       if (agent.settings?.useBrowserTools) {
         agentConfig = injectBrowserTools(agentConfig);
       }
+
+      // Add form tools if form data exists
+      if (agent.settings?.isFormAgent) {
+        const formFields = createFormFieldEnum(
+          agent.settings.formSchema.formItems
+        );
+        agentConfig = injectFormTools(agentConfig, formFields);
+        const formState: FormToolState = {
+          formFields,
+          formItems: agent.settings.formSchema.formItems,
+          formState: {},
+          zodSchema: agent.settings.formSchema.zodSchema,
+        };
+        const formToolLogic = createFormToolLogic(formState);
+        console.log("Form tool logic:", formToolLogic);
+        // Merge the form tool logic with existing tool logic
+        agentConfig.toolLogic = {
+          ...agentConfig.toolLogic,
+          ...formToolLogic,
+        };
+      }
+
       return agentConfig;
     }
     return null;
