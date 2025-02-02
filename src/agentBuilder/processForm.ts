@@ -113,7 +113,7 @@ export async function fetchFormSchema(formUrl: string) {
         ] = field;
 
         let questionType: FormQuestion["type"] = "TEXT";
-        let validationRules: FormQuestion["validation"] = {};
+        const validationRules: FormQuestion["validation"] = {};
         let options: string[] | undefined;
 
         // Enhanced type mapping
@@ -235,11 +235,6 @@ export async function fetchFormSchema(formUrl: string) {
       }`
     );
   }
-}
-
-function extractFormIdFromUrl(url: string): string {
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  return match ? match[1] : url;
 }
 
 function generateZodSchema(formItems: FormQuestion[]) {
