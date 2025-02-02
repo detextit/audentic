@@ -2,39 +2,34 @@
 
 import { SessionControlWithTranscript } from "@audentic/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-export function TestAgent({
+import { AgentDBConfig } from "@/agentBuilder/types";
+export function TalkAgent({
   agentId,
-  agentName,
+  agent,
 }: {
   agentId: string;
-  agentName: string;
+  agent: AgentDBConfig;
 }) {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-lg">
         <CardHeader className="items-center justify-between border-b">
           <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[hsl(210,29%,16%)] to-[hsl(210,29%,36%)]">
-            Testing Agent: {agentName}
+            {agent.name}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[70vh]">
-            <div className="flex items-center justify-between mb-8">
-              <div className="text-center">
-                <p className="text-lg text-muted-foreground mb-2">
-                  Test your agent configuration in a live session
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Use the controls below to interact with your agent
-                </p>
-              </div>
+          <div className="flex flex-col h-[70vh]">
+            <div className="flex-1 min-h-0 w-full">
+              <SessionControlWithTranscript
+                agentId={agentId}
+                transcriptHeight={380}
+                transcriptWidth={450}
+              />
             </div>
-
-            <SessionControlWithTranscript
-              agentId={agentId}
-              transcriptHeight={380}
-              transcriptWidth={450}
-            />
+            {/* <div>
+                            <SessionControl title="Get Started" width="300" backgroundColor="bg-neutral-50" callAgentButtonTitle="Build Agent" agentId={agentId} />
+                        </div> */}
           </div>
         </CardContent>
       </Card>
