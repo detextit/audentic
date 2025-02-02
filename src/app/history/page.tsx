@@ -1,5 +1,18 @@
-import Home from "../Home";
+"use client";
+
+import { useSessions } from "@/hooks/useSessions";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HistoryPage() {
-  return <Home />;
+  const { sessions } = useSessions();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (sessions.length > 0) {
+      router.replace(`/history/${sessions[0].session_id}`);
+    }
+  }, [sessions, router]);
+
+  return <></>;
 }
