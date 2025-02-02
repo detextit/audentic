@@ -1,7 +1,7 @@
 import { AgentConfig, Tool } from "./types";
 import { FormQuestion } from "./processForm";
 
-// This will be generated from the form fields
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 enum FormFields {}
 
 export const createFormFieldEnum = (

@@ -114,7 +114,7 @@ export async function fetchFormSchema(formUrl: string) {
         ] = field;
 
         let questionType: FormQuestion["type"] = "TEXT";
-        let validationRules: FormQuestion["validation"] = {};
+        const validationRules: FormQuestion["validation"] = {};
         let options: string[] | undefined;
 
         // Fix required field handling - Google Forms uses 1 for required fields
