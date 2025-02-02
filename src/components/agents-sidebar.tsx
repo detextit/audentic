@@ -1,27 +1,24 @@
 import { Plus } from "lucide-react";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { useAgents } from "@/hooks/useAgents";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface AgentsSidebarProps {
-  isOpen: boolean;
-  agents: AgentDBConfig[];
-  onAgentClick: (agentId: string) => void;
-  selectedAgentId?: string | null;
   onCreateClick: () => void;
 }
 
-export function AgentsSidebar({
-  isOpen,
-  agents,
-  onAgentClick,
-  selectedAgentId,
-  onCreateClick,
-}: AgentsSidebarProps) {
+export function AgentsSidebar({ onCreateClick }: AgentsSidebarProps) {
+  const router = useRouter();
+  const { agents } = useAgents();
+
+  const handleAgentClick = (agentId: string) => {
+    router.replace(`/agents/${agentId}`);
+  };
+
   return (
     <div
-      className={`h-full bg-[hsl(var(--sidebar-background))] flex flex-col ${
-        isOpen ? "w-[350px] border-l border-r" : "hidden"
-      } border-[hsl(var(--sidebar-border))]`}
+      className={`h-full bg-[hsl(var(--sidebar-background))] flex flex-col w-[350px] border-l border-r 
+      border-[hsl(var(--sidebar-border))]`}
     >
       {/* Fixed header */}
       <div className="h-[72px] px-6 flex items-center border-b border-[hsl(var(--sidebar-border))] shrink-0">
@@ -40,10 +37,11 @@ export function AgentsSidebar({
           {agents.map((agent) => (
             <div
               key={agent.id}
-              onClick={() => onAgentClick(agent.id)}
+              onClick={() => handleAgentClick(agent.id)}
               className={`bg-white rounded-lg p-4 border hover:border-gray-400 cursor-pointer transition-colors
                                 ${
-                                  agent.id === selectedAgentId
+                                  window.location.pathname ===
+                                  `/agents/${agent.id}`
                                     ? "border-gray-400"
                                     : "border-gray-200"
                                 }`}

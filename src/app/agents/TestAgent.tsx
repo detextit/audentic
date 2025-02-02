@@ -18,7 +18,7 @@ export function TestAgent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col h-[70vh]">
+          <div className="h-[70vh]">
             <div className="flex items-center justify-between mb-8">
               <div className="text-center">
                 <p className="text-lg text-muted-foreground mb-2">
@@ -29,12 +29,12 @@ export function TestAgent({
                 </p>
               </div>
             </div>
-            <div className="flex-1 min-h-0 w-full">
-              <SessionControlWithTranscript agentId={agentId} />
-            </div>
-            {/* <div>
-                            <SessionControl title="Get Started" width="300" backgroundColor="bg-neutral-50" callAgentButtonTitle="Build Agent" agentId={agentId} />
-                        </div> */}
+
+            <SessionControlWithTranscript
+              agentId={agentId}
+              transcriptHeight={380}
+              transcriptWidth={450}
+            />
           </div>
         </CardContent>
       </Card>
