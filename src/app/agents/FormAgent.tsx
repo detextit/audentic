@@ -1,6 +1,6 @@
 "use client";
 
-import { SessionControl } from "@audentic/react";
+import { SessionControlWithTranscript } from "@audentic/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentDBConfig } from "@/agentBuilder/types";
 import { useEffect, useState } from "react";
@@ -299,7 +299,7 @@ export function FormAgent({
             </Form>
           </div>
           <div className="fixed bottom-10 right-10">
-            <SessionControl agentId={agentId} />
+            <SessionControlWithTranscript agentId={agentId} />
           </div>
         </CardContent>
       </Card>
