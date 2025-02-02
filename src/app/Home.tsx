@@ -5,20 +5,28 @@ import React, { useState, useEffect } from "react";
 import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { useAgents } from "@/hooks/useAgents";
-import { HistorySidebar, Session } from "@/components/history-sidebar";
+import { HistorySidebar } from "@/components/history-sidebar";
 import { useUser } from "@clerk/nextjs";
 import { AgentBuilder } from "@/app/agents/AgentBuilder";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import SessionHistory from "@/app/history/SessionHistory";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import { useSessions } from "@/hooks/useSessions";
+
 export default function Home() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isAgentsSidebarOpen, setIsAgentsSidebarOpen] = useState(false);
-  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sidebarCollapsed");
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
+
+  const [sidebarOpen, setSidebarOpen] = useState("Agents");
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { agents, refreshAgents } = useAgents();
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const { sessions } = useSessions();
   const { user } = useUser();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
@@ -26,66 +34,35 @@ export default function Home() {
   const pathname = usePathname();
 
   useEffect(() => {
-    async function fetchSessions() {
-      try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(`${baseUrl}/api/sessions`);
-        if (!response.ok) throw new Error("Failed to fetch sessions");
-        const data = await response.json();
-        setSessions(data);
-      } catch (error) {
-        console.error("Error fetching sessions:", error);
-      }
-    }
-
-    fetchSessions();
-  }, []);
-
-  useEffect(() => {
     if (pathname.startsWith("/agents")) {
-      setIsAgentsSidebarOpen(true);
-      setIsHistorySidebarOpen(false);
-
+      setSidebarOpen("Agents");
       if (agents.length > 0) {
         const urlAgentId = pathname.split("/agents/")?.[1] || null;
         if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
           setSelectedAgentId(urlAgentId);
         } else {
           setSelectedAgentId(agents[0].id);
-          router.push(`/agents/${agents[0].id}`);
         }
       }
     } else if (pathname.startsWith("/history")) {
-      setIsHistorySidebarOpen(true);
-      setIsAgentsSidebarOpen(false);
-
+      setSidebarOpen("History");
       if (sessions.length > 0) {
         const urlSessionId = pathname.split("/history/")?.[1] || null;
         if (urlSessionId) {
           setSelectedSessionId(urlSessionId);
         } else {
           setSelectedSessionId(sessions[0]?.session_id);
-          router.push(`/history/${sessions[0]?.session_id}`);
         }
       }
     }
   }, [pathname, agents, sessions]);
 
+  useEffect(() => {
+    localStorage.setItem("sidebarCollapsed", JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
+
   const handleCreateAgent = () => {
     setIsCreateDialogOpen(true);
-  };
-
-  const handleAgentClick = (agentId: string) => {
-    if (agentId !== selectedAgentId) {
-      setSelectedAgentId(agentId);
-      router.replace(`/agents/${agentId}`);
-    }
-  };
-
-  const handleSessionClick = (sessionId: string) => {
-    setSelectedSessionId(sessionId);
-    router.replace(`/history/${sessionId}`);
   };
 
   const handleDialogClose = async () => {
@@ -93,23 +70,23 @@ export default function Home() {
     const updatedAgents = await refreshAgents();
     if (updatedAgents && updatedAgents.length > 0) {
       setSelectedAgentId(updatedAgents[0].id);
-      router.push(`/agents/${updatedAgents[0].id}`);
+      router.replace(`/agents/${updatedAgents[0].id}`);
     }
   };
 
   const handleHistoryClick = () => {
     if (sessions.length > 0) {
-      router.push(`/history/${sessions[0].session_id}`);
+      router.replace(`/history/${sessions[0].session_id}`);
     } else {
-      router.push("/history");
+      router.replace("/history");
     }
   };
 
   const handleAgentsClick = () => {
     if (agents.length > 0) {
-      router.push(`/agents/${agents[0].id}`);
+      router.replace(`/agents/${agents[0].id}`);
     } else {
-      router.push("/agents");
+      router.replace("/agents");
     }
   };
 
@@ -137,7 +114,7 @@ export default function Home() {
               />
             </div>
             {!isCollapsed && (
-              <span className="font-semibold text-4lg">AUDENTIC</span>
+              <span className="font-semibold text-4lg">Audentic</span>
             )}
           </div>
 
@@ -148,7 +125,7 @@ export default function Home() {
                               isCollapsed ? "p-2" : "pl-1 pr-2 py-2"
                             }
                             ${
-                              isAgentsSidebarOpen
+                              sidebarOpen === "Agents"
                                 ? "bg-[hsl(var(--sidebar-accent))]"
                                 : ""
                             }`}
@@ -165,7 +142,7 @@ export default function Home() {
                               isCollapsed ? "p-2" : "pl-1 pr-2 py-2"
                             }
                             ${
-                              isHistorySidebarOpen
+                              sidebarOpen === "History"
                                 ? "bg-[hsl(var(--sidebar-accent))]"
                                 : ""
                             }`}
@@ -181,19 +158,11 @@ export default function Home() {
           </div>
         </div>
 
-        <AgentsSidebar
-          isOpen={isAgentsSidebarOpen}
-          agents={agents}
-          onAgentClick={handleAgentClick}
-          selectedAgentId={selectedAgentId}
-          onCreateClick={handleCreateAgent}
-        />
+        {sidebarOpen === "Agents" && (
+          <AgentsSidebar onCreateClick={handleCreateAgent} />
+        )}
 
-        <HistorySidebar
-          isOpen={isHistorySidebarOpen}
-          sessions={sessions}
-          onSessionClick={handleSessionClick}
-        />
+        {sidebarOpen === "History" && <HistorySidebar />}
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-auto bg-white">
@@ -210,7 +179,7 @@ export default function Home() {
           </button>
         </header>
         <main className="flex-1 p-6 overflow-auto">
-          {isHistorySidebarOpen && selectedSessionId ? (
+          {sidebarOpen === "History" && selectedSessionId ? (
             <SessionHistory sessionId={selectedSessionId} />
           ) : (
             selectedAgentId && <AgentBuilder agentId={selectedAgentId} />

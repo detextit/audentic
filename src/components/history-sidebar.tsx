@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useAgents } from "@/hooks/useAgents";
+import { useSessions } from "@/hooks/useSessions";
 
 export interface Session {
   session_id: string;
@@ -12,42 +13,31 @@ export interface Session {
   agent_name?: string;
 }
 
-interface HistorySidebarProps {
-  isOpen: boolean;
-  sessions: Session[];
-  onSessionClick?: (sessionId: string) => void;
-}
-
-export const HistorySidebar = React.memo(function HistorySidebar({
-  isOpen,
-  sessions,
-  onSessionClick,
-}: HistorySidebarProps) {
+export const HistorySidebar = React.memo(function HistorySidebar() {
+  const { sessions } = useSessions();
   const router = useRouter();
   const { agents } = useAgents();
 
   const handleSessionClick = (sessionId: string) => {
-    router.push(`/history/${sessionId}`);
-    onSessionClick?.(sessionId);
+    router.replace(`/history/${sessionId}`);
   };
 
-  const sessionsWithAgentNames = sessions.map((session) => ({
+  const sessionsWithAgentNames = sessions.map((session: Session) => ({
     ...session,
     agent_name: agents.find((agent) => agent.id === session.agent_id)?.name,
   }));
 
   return (
     <div
-      className={`h-full bg-[hsl(var(--sidebar-background))] ${
-        isOpen ? "w-[350px] border-l border-r" : "hidden"
-      } border-[hsl(var(--sidebar-border))]`}
+      className={`h-full bg-[hsl(var(--sidebar-background))] flex flex-col w-[350px] border-l border-r
+      border-[hsl(var(--sidebar-border))]`}
     >
-      <div className="h-[72px] px-6 flex items-center border-b border-[hsl(var(--sidebar-border))]">
+      <div className="h-[72px] px-6 flex items-center border-b border-[hsl(var(--sidebar-border))] shrink-0">
         <div className="flex items-center justify-between w-full">
           <h2 className="text-xl font-semibold">History</h2>
         </div>
       </div>
-      <div className="p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
           {sessionsWithAgentNames.map((session) => (
             <li
