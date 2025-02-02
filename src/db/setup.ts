@@ -18,6 +18,7 @@ export async function setupDatabase() {
           instructions TEXT DEFAULT 'You are a helpful assistant.',
           tools JSONB DEFAULT '[]',
           tool_logic JSONB DEFAULT '{}',
+          settings JSONB DEFAULT '{}',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -58,7 +59,9 @@ export async function setupDatabase() {
     ];
 
     await Promise.all(setupOperations);
-    console.log("Database setup - Agents, Sessions, Events, Transcript - initiated");
+    console.log(
+      "Database setup - Agents, Sessions, Events, Transcript - initiated"
+    );
   } catch (error) {
     console.error("Error setting up database:", error);
     throw error;

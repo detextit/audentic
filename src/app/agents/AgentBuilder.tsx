@@ -12,17 +12,83 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { fetchFormSchema } from "@/agentBuilder/processForm";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
   const { toast } = useToast();
-  const [isDirty, setIsDirty] = useState(false);
+
+  // Replace single isDirty with granular dirty states
+  const [dirtyFields, setDirtyFields] = useState({
+    description: false,
+    personality: false,
+    instructions: false,
+    initiateConversation: false,
+    settings: {
+      useBrowserTools: false,
+      isFormAgent: false,
+      formSchema: false,
+    },
+  });
+
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isUpdatingInstructions, setIsUpdatingInstructions] = useState(false);
+  const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
+
+  // Helper to check if any fields are dirty
+  const hasChanges = Object.values(dirtyFields).some((value) =>
+    typeof value === "boolean" ? value : Object.values(value).some((v) => v)
+  );
+
+  // Helper to mark a field as dirty
+  const markFieldDirty = (field: string, subField?: string) => {
+    setDirtyFields((prev) => {
+      if (subField) {
+        return {
+          ...prev,
+          [field]: {
+            ...(prev[field as keyof typeof prev] as Record<string, boolean>),
+            [subField]: true,
+          },
+        };
+      }
+      return { ...prev, [field]: true };
+    });
+  };
+
+  const handleSettingChange = (setting: string, value: any) => {
+    setCurrentAgent((prev) =>
+      prev
+        ? {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              [setting]: value,
+            },
+          }
+        : null
+    );
+    markFieldDirty("settings", setting);
+  };
+
+  const resetDirtyFields = () => {
+    setDirtyFields({
+      description: false,
+      personality: false,
+      instructions: false,
+      initiateConversation: false,
+      settings: {
+        useBrowserTools: false,
+        isFormAgent: false,
+        formSchema: false,
+      },
+    });
+  };
 
   useEffect(() => {
     if (loading) return; // Don't do anything while loading
@@ -32,7 +98,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       if (foundAgent) {
         setCurrentAgent(foundAgent);
-        setIsDirty(false);
+        resetDirtyFields();
       } else {
         // If agent not found, trigger a refresh
         refreshAgents();
@@ -40,43 +106,122 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   }, [agents, agentId, loading, refreshAgents]);
 
-  const handleUpdate = async () => {
+  const handleInstructionUpdate = async () => {
     if (!currentAgent) return;
-    setIsUpdating(true);
-    setIsUpdatingInstructions(true);
-    try {
-      // Do the main update first
-      await updateAgent(currentAgent.id, {
-        name: currentAgent.name,
-        description: currentAgent.description,
-        personality: currentAgent.personality,
-        initiateConversation: currentAgent.initiateConversation,
+    setIsUpdatingAgent(true);
+    getVoiceAgentInstruction(currentAgent.description, currentAgent.personality)
+      .then(async (instructions) => {
+        await updateAgent(currentAgent.id, { instructions });
+        setIsUpdatingAgent(false);
+        toast({
+          title: `${currentAgent.name} Updated`,
+          description: "Your agent is deployed and ready to go!",
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to update instructions:", error);
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "Failed to deploy agent. Contact support.",
+        });
+        setIsUpdatingAgent(false);
       });
 
-      setIsUpdating(false);
-      setIsDirty(false);
+    toast({
+      title: "Agent Deploying...",
+      description: "Your agent is being deployed and will be ready soon!",
+    });
+  };
 
-      // Update instructions in the background
-      getVoiceAgentInstruction(
-        currentAgent.description,
-        currentAgent.personality
-      )
-        .then(async (instructions) => {
-          await updateAgent(currentAgent.id, { instructions });
-          setIsUpdatingInstructions(false);
+  const handleFormSchemaUpdate = async () => {
+    if (!currentAgent) return;
+    if (!currentAgent.settings?.formSchema?.url) {
+      toast({
+        title: "Form agent without URL!",
+        description: "Reverting to non-form agent",
+      });
+
+      await updateAgent(currentAgent.id, {
+        settings: {
+          ...currentAgent.settings,
+          isFormAgent: false,
+        },
+      });
+    } else {
+      setIsUpdatingAgent(true);
+      fetchFormSchema(currentAgent.settings?.formSchema?.url)
+        .then(async (formSchema) => {
+          console.log("formSchema", formSchema);
+          await updateAgent(currentAgent.id, {
+            settings: {
+              ...currentAgent.settings,
+              formSchema: {
+                ...formSchema,
+                url: currentAgent.settings?.formSchema?.url,
+              },
+            },
+          });
+          setIsUpdatingAgent(false);
           toast({
             title: `${currentAgent.name} Updated`,
             description: "Your agent is deployed and ready to go!",
           });
         })
         .catch((error) => {
-          console.error("Failed to update instructions:", error);
-          setIsUpdatingInstructions(false);
+          console.error("Failed to update form schema:", error);
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Failed to update form schema. Contact support.",
+          });
+          setIsUpdatingAgent(false);
         });
+
       toast({
         title: "Agent Deploying...",
         description: "Your agent is being deployed and will be ready soon!",
       });
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!currentAgent) return;
+    setIsUpdating(true);
+
+    try {
+      // Only update fields that are dirty
+      const updates: Partial<AgentDBConfig> = {};
+
+      if (dirtyFields.description)
+        updates.description = currentAgent.description;
+      if (dirtyFields.personality)
+        updates.personality = currentAgent.personality;
+      if (dirtyFields.initiateConversation)
+        updates.initiateConversation = currentAgent.initiateConversation;
+
+      if (Object.values(dirtyFields.settings).some((v) => v)) {
+        updates.settings = currentAgent.settings;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await updateAgent(currentAgent.id, updates);
+      }
+
+      // Only update instructions if description or personality changed
+      if (dirtyFields.description || dirtyFields.personality) {
+        handleInstructionUpdate();
+      } else if (dirtyFields.settings.formSchema) {
+        handleFormSchemaUpdate();
+      } else {
+        toast({
+          title: `${currentAgent.name} Updated`,
+          description: "Your agent is deployed and ready to go!",
+        });
+      }
+
+      resetDirtyFields();
+      setIsUpdating(false);
     } catch (error) {
       console.error("Failed to update agent:", error);
       toast({
@@ -85,13 +230,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         description: "Failed to update. Contact support.",
       });
       setIsUpdating(false);
-      setIsUpdatingInstructions(false);
+      setIsUpdatingAgent(false);
     }
   };
 
   const handleTestClick = () => {
     // Open in new tab
-    window.open(`/agents/${agentId}/test`, "_blank");
+    window.open(`/agents/${agentId}/talk`, "_blank");
   };
 
   if (loading)
@@ -134,15 +279,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <p className="text-muted-foreground mt-1">Agent Configuration</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={handleUpdate} disabled={isUpdating || !isDirty}>
+          <Button onClick={handleUpdate} disabled={isUpdating || !hasChanges}>
             Save
           </Button>
           <Button
             variant="outline"
             onClick={handleTestClick}
-            disabled={isUpdatingInstructions}
+            disabled={isUpdatingAgent}
           >
-            {isUpdatingInstructions ? "Deploying Agent..." : "Test Agent"}
+            {isUpdatingAgent ? "Deploying Agent..." : "Test Agent"}
           </Button>
         </div>
       </div>
@@ -165,7 +310,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   ...currentAgent,
                   description: e.target.value,
                 });
-                setIsDirty(true);
+                markFieldDirty("description");
               }}
               placeholder={`Enter the role as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
               className="min-h-[100px] resize-none focus-visible:ring-1"
@@ -189,7 +334,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   ...currentAgent,
                   personality: e.target.value,
                 });
-                setIsDirty(true);
+                markFieldDirty("personality");
               }}
               placeholder="Enter personality... e.g. 'friendly, patient, professional language'"
               className="min-h-[100px] resize-none focus-visible:ring-1"
@@ -199,31 +344,79 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Conversation Settings</CardTitle>
+            <CardTitle>Settings</CardTitle>
             <CardDescription>
-              Configure how the agent handles conversation flow
+              Customize the agent&apos;s behavior and settings
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <Checkbox
+              <Switch
                 id="initiate"
-                checked={!!currentAgent.initiateConversation}
+                checked={currentAgent.initiateConversation}
                 onCheckedChange={(checked) => {
                   setCurrentAgent({
                     ...currentAgent,
-                    initiateConversation: checked ? true : false,
+                    initiateConversation: checked,
                   });
-                  setIsDirty(true);
+                  markFieldDirty("initiateConversation");
                 }}
               />
-              <label
+              <Label
                 htmlFor="initiate"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Agent initiates conversation
-              </label>
+                Auto-initiate conversation
+              </Label>
             </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <Switch
+                id="useBrowserTools"
+                checked={currentAgent.settings?.useBrowserTools}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("useBrowserTools", checked)
+                }
+              />
+              <Label
+                htmlFor="useBrowserTools"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Use browser tools
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <Switch
+                id="isFormAgent"
+                checked={currentAgent.settings?.isFormAgent}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("isFormAgent", checked)
+                }
+              />
+              <Label
+                htmlFor="isFormAgent"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Form Processing Agent
+              </Label>
+            </div>
+
+            {currentAgent.settings?.isFormAgent && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="formUrl">Google Form URL</Label>
+                <Input
+                  id="formUrl"
+                  type="url"
+                  placeholder="Enter Google Form URL"
+                  value={currentAgent.settings?.formSchema?.url || ""}
+                  onChange={(e) =>
+                    handleSettingChange("formSchema", {
+                      // if url is changed, everything in the schema is invalidated
+                      url: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
