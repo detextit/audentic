@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { FormQuestion } from "@/agentBuilder/processForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function FormAgent({
   agentId,
@@ -37,6 +40,7 @@ export function FormAgent({
   const [schema, setSchema] = useState<z.ZodObject<any> | null>(null);
   const [formItems, setFormItems] = useState<FormQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     resolver: schema ? zodResolver(schema) : undefined,
@@ -45,17 +49,32 @@ export function FormAgent({
   useEffect(() => {
     const loadForm = async () => {
       try {
-        if (!agent.settings?.formUrl) {
+        if (!agent.settings?.isFormAgent || !agent.settings?.formSchema?.url) {
           throw new Error("Agent is not configured for Form filling");
         }
-        const { zodSchema, formItems } = agent.settings.formContent;
+        const { zodSchema, formItems } = agent.settings.formSchema;
         setSchema(zodSchema);
         setFormItems(formItems);
 
-        // Set default values
+        // Set default values based on field types
         const defaults = formItems.reduce(
           (acc: Record<string, any>, item: FormQuestion) => {
-            acc[item.id] = item.type === "CHECKBOX" ? [] : "";
+            switch (item.type) {
+              case "CHECKBOX":
+                acc[item.id] = [];
+                break;
+              case "NUMBER":
+                acc[item.id] = null;
+                break;
+              case "DATE":
+                acc[item.id] = "";
+                break;
+              case "TIME":
+                acc[item.id] = "";
+                break;
+              default:
+                acc[item.id] = "";
+            }
             return acc;
           },
           {}
@@ -63,6 +82,9 @@ export function FormAgent({
 
         form.reset(defaults);
       } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Unknown error occurred"
+        );
         console.error("Error loading form:", error);
       } finally {
         setLoading(false);
@@ -70,9 +92,25 @@ export function FormAgent({
     };
 
     loadForm();
-  }, []);
+  }, [agent.settings?.formUrl]);
+
+  const onSubmit = async (data: any) => {
+    try {
+      // Handle form submission
+      console.log("Form submitted:", data);
+      // Add your submission logic here
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
 
   if (loading) return <div className="p-4 text-center">Loading form...</div>;
+  if (error)
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
 
   return (
     <div className="h-screen w-full p-6">
@@ -82,15 +120,15 @@ export function FormAgent({
             {agent.name} - Voice Form
           </CardTitle>
         </CardHeader>
-        <CardContent className="h-[calc(100%-5rem)] relative">
-          <div className="absolute inset-0 overflow-auto p-4">
-            <div className="border rounded-lg p-4 min-h-full">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(console.log)}
-                  className="space-y-6"
-                >
-                  {formItems.map((item) => (
+        <CardContent className="p-6">
+          <div className="max-w-2xl mx-auto">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                {formItems.map((item) =>
+                  item.type !== "INFO" ? (
                     <FormField
                       key={item.id}
                       control={form.control}
@@ -99,70 +137,166 @@ export function FormAgent({
                         <FormItem>
                           <FormLabel>
                             {item.title}
-                            {item.required && "*"}
+                            {item.required && " *"}
                           </FormLabel>
                           <FormControl>
-                            {item.type === "MULTIPLE_CHOICE" ||
-                            item.type === "DROPDOWN" ? (
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={`Select ${item.title.toLowerCase()}`}
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {item.options?.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : item.type === "CHECKBOX" ? (
-                              <div className="flex flex-col gap-2">
-                                {item.options?.map((option) => (
-                                  <div
-                                    key={option}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Checkbox
-                                      checked={field.value?.includes(option)}
-                                      onCheckedChange={(checked) => {
-                                        const newValue = checked
-                                          ? [...field.value, option]
-                                          : field.value.filter(
-                                              (v: string) => v !== option
-                                            );
-                                        field.onChange(newValue);
-                                      }}
+                            {(() => {
+                              switch (item.type) {
+                                case "TEXTAREA":
+                                  return (
+                                    <Textarea
+                                      placeholder={
+                                        item.placeholder ||
+                                        `Enter ${item.title.toLowerCase()}`
+                                      }
+                                      {...field}
                                     />
-                                    <label>{option}</label>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : item.type === "DATE" ? (
-                              <Input type="date" {...field} />
-                            ) : (
-                              <Input
-                                placeholder={`Enter ${item.title.toLowerCase()}`}
-                                {...field}
-                              />
-                            )}
+                                  );
+                                case "MULTIPLE_CHOICE":
+                                case "DROPDOWN":
+                                  return (
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue
+                                          placeholder={
+                                            item.placeholder ||
+                                            `Select ${item.title.toLowerCase()}`
+                                          }
+                                        />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {item.options?.map((option) => (
+                                          <SelectItem
+                                            key={option}
+                                            value={option}
+                                          >
+                                            {option}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  );
+                                case "CHECKBOX":
+                                  return (
+                                    <div className="flex flex-col gap-2">
+                                      {item.options?.map((option) => (
+                                        <div
+                                          key={option}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <Checkbox
+                                            checked={field.value?.includes(
+                                              option
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                              const newValue = checked
+                                                ? [
+                                                    ...(field.value || []),
+                                                    option,
+                                                  ]
+                                                : field.value?.filter(
+                                                    (v: string) => v !== option
+                                                  );
+                                              field.onChange(newValue);
+                                            }}
+                                          />
+                                          <label>{option}</label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                case "DATE":
+                                  return (
+                                    <Input
+                                      type="date"
+                                      min={item.validation?.minDate}
+                                      max={item.validation?.maxDate}
+                                      {...field}
+                                    />
+                                  );
+                                case "TIME":
+                                  return (
+                                    <Input
+                                      type="time"
+                                      min={item.validation?.minTime}
+                                      max={item.validation?.maxTime}
+                                      {...field}
+                                    />
+                                  );
+                                case "NUMBER":
+                                  return (
+                                    <Input
+                                      type="number"
+                                      min={item.validation?.minNumber}
+                                      max={item.validation?.maxNumber}
+                                      placeholder={
+                                        item.placeholder ||
+                                        `Enter ${item.title.toLowerCase()}`
+                                      }
+                                      {...field}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.valueAsNumber)
+                                      }
+                                    />
+                                  );
+                                case "EMAIL":
+                                  return (
+                                    <Input
+                                      type="email"
+                                      placeholder={
+                                        item.placeholder || "email@example.com"
+                                      }
+                                      {...field}
+                                    />
+                                  );
+                                case "URL":
+                                  return (
+                                    <Input
+                                      type="url"
+                                      placeholder={
+                                        item.placeholder ||
+                                        "https://example.com"
+                                      }
+                                      {...field}
+                                    />
+                                  );
+                                default:
+                                  return (
+                                    <Input
+                                      placeholder={
+                                        item.placeholder ||
+                                        `Enter ${item.title.toLowerCase()}`
+                                      }
+                                      {...field}
+                                    />
+                                  );
+                              }
+                            })()}
                           </FormControl>
+                          {item.description && (
+                            <FormDescription>
+                              {item.description}
+                            </FormDescription>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  ))}
-                  <Button type="submit" className="w-full">
-                    Submit
-                  </Button>
-                </form>
-              </Form>
-            </div>
+                  ) : (
+                    <div key={item.id} className="prose dark:prose-invert">
+                      <h3>{item.title}</h3>
+                      {item.description && <p>{item.description}</p>}
+                    </div>
+                  )
+                )}
+                <Button type="submit" className="w-full">
+                  Submit
+                </Button>
+              </form>
+            </Form>
           </div>
           <div className="fixed bottom-10 right-10">
             <SessionControl agentId={agentId} />
