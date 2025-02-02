@@ -28,7 +28,7 @@ export interface AgentConfig {
   initiateConversation: boolean;
   instructions: string;
   tools: Tool[];
-  toolLogic?: Record<string, any>;
+  toolLogic?: Record<string, string>;
 }
 
 export interface AgentDBConfig extends AgentConfig {
