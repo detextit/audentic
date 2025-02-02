@@ -12,9 +12,12 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { fetchFormSchema } from "@/agentBuilder/processForm";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
@@ -51,6 +54,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         description: currentAgent.description,
         personality: currentAgent.personality,
         initiateConversation: currentAgent.initiateConversation,
+        settings: currentAgent.settings,
       });
 
       setIsUpdating(false);
@@ -199,31 +203,103 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Conversation Settings</CardTitle>
+            <CardTitle>Settings</CardTitle>
             <CardDescription>
-              Configure how the agent handles conversation flow
+              Customize the agent&apos;s behavior and settings
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <Checkbox
+              <Switch
                 id="initiate"
-                checked={!!currentAgent.initiateConversation}
+                checked={currentAgent.initiateConversation}
                 onCheckedChange={(checked) => {
                   setCurrentAgent({
                     ...currentAgent,
-                    initiateConversation: checked ? true : false,
+                    initiateConversation: checked,
                   });
                   setIsDirty(true);
                 }}
               />
-              <label
+              <Label
                 htmlFor="initiate"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                Agent initiates conversation
-              </label>
+                Auto-initiate conversation
+              </Label>
             </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <Switch
+                id="useBrowserTools"
+                checked={currentAgent.settings?.useBrowserTools}
+                onCheckedChange={(checked) => {
+                  setCurrentAgent({
+                    ...currentAgent,
+                    settings: {
+                      ...currentAgent.settings,
+                      useBrowserTools: checked,
+                    },
+                  });
+                  setIsDirty(true);
+                }}
+              />
+              <Label
+                htmlFor="useBrowserTools"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Use browser tools
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <Switch
+                id="isFormAgent"
+                checked={currentAgent.settings?.isFormAgent}
+                onCheckedChange={(checked) => {
+                  setCurrentAgent({
+                    ...currentAgent,
+                    settings: {
+                      ...currentAgent.settings,
+                      isFormAgent: checked,
+                      formUrl: checked
+                        ? currentAgent.settings?.formUrl || ""
+                        : undefined,
+                    },
+                  });
+                  setIsDirty(true);
+                }}
+              />
+              <Label
+                htmlFor="isFormAgent"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Form Processing Agent
+              </Label>
+            </div>
+
+            {currentAgent.settings?.isFormAgent && (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="formUrl">Google Form URL</Label>
+                <Input
+                  id="formUrl"
+                  type="url"
+                  placeholder="Enter Google Form URL"
+                  value={currentAgent.settings?.formUrl || ""}
+                  onChange={(e) => {
+                    setCurrentAgent({
+                      ...currentAgent,
+                      settings: {
+                        ...currentAgent.settings,
+                        formUrl: e.target.value,
+                      },
+                    });
+                    fetchFormSchema(e.target.value).then((schema) => {
+                      console.log(schema);
+                    });
+                    setIsDirty(true);
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
