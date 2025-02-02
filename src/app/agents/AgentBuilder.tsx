@@ -32,13 +32,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     settings: {
       useBrowserTools: false,
       isFormAgent: false,
-      formUrl: false,
+      formSchema: false,
     },
   });
 
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isUpdatingInstructions, setIsUpdatingInstructions] = useState(false);
+  const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
 
   // Helper to check if any fields are dirty
   const hasChanges = Object.values(dirtyFields).some((value) =>
@@ -61,12 +61,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     });
   };
 
-  // Update the field change handlers
-  const handleDescriptionChange = (value: string) => {
-    setCurrentAgent((prev) => (prev ? { ...prev, description: value } : null));
-    markFieldDirty("description");
-  };
-
   const handleSettingChange = (setting: string, value: any) => {
     setCurrentAgent((prev) =>
       prev
@@ -82,6 +76,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     markFieldDirty("settings", setting);
   };
 
+  const resetDirtyFields = () => {
+    setDirtyFields({
+      description: false,
+      personality: false,
+      instructions: false,
+      initiateConversation: false,
+      settings: {
+        useBrowserTools: false,
+        isFormAgent: false,
+        formSchema: false,
+      },
+    });
+  };
+
   useEffect(() => {
     if (loading) return; // Don't do anything while loading
 
@@ -90,23 +98,92 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       if (foundAgent) {
         setCurrentAgent(foundAgent);
-        setDirtyFields({
-          description: false,
-          personality: false,
-          instructions: false,
-          initiateConversation: false,
-          settings: {
-            useBrowserTools: false,
-            isFormAgent: false,
-            formUrl: false,
-          },
-        });
+        resetDirtyFields();
       } else {
         // If agent not found, trigger a refresh
         refreshAgents();
       }
     }
   }, [agents, agentId, loading, refreshAgents]);
+
+  const handleInstructionUpdate = async () => {
+    if (!currentAgent) return;
+    setIsUpdatingAgent(true);
+    getVoiceAgentInstruction(currentAgent.description, currentAgent.personality)
+      .then(async (instructions) => {
+        await updateAgent(currentAgent.id, { instructions });
+        setIsUpdatingAgent(false);
+        toast({
+          title: `${currentAgent.name} Updated`,
+          description: "Your agent is deployed and ready to go!",
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to update instructions:", error);
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "Failed to deploy agent. Contact support.",
+        });
+        setIsUpdatingAgent(false);
+      });
+
+    toast({
+      title: "Agent Deploying...",
+      description: "Your agent is being deployed and will be ready soon!",
+    });
+  };
+
+  const handleFormSchemaUpdate = async () => {
+    if (!currentAgent) return;
+    if (!currentAgent.settings?.formSchema?.url) {
+      toast({
+        title: "Form agent without URL!",
+        description: "Reverting to non-form agent",
+      });
+
+      await updateAgent(currentAgent.id, {
+        settings: {
+          ...currentAgent.settings,
+          isFormAgent: false,
+        },
+      });
+    } else {
+      setIsUpdatingAgent(true);
+      fetchFormSchema(currentAgent.settings?.formSchema?.url)
+        .then(async (formSchema) => {
+          console.log("formSchema", formSchema);
+          await updateAgent(currentAgent.id, {
+            settings: {
+              ...currentAgent.settings,
+              formSchema: {
+                ...formSchema,
+                url: currentAgent.settings?.formSchema?.url,
+              },
+            },
+          });
+          setIsUpdatingAgent(false);
+          toast({
+            title: `${currentAgent.name} Updated`,
+            description: "Your agent is deployed and ready to go!",
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to update form schema:", error);
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Failed to update form schema. Contact support.",
+          });
+          setIsUpdatingAgent(false);
+        });
+
+      toast({
+        title: "Agent Deploying...",
+        description: "Your agent is being deployed and will be ready soon!",
+      });
+    }
+  };
 
   const handleUpdate = async () => {
     if (!currentAgent) return;
@@ -120,6 +197,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         updates.description = currentAgent.description;
       if (dirtyFields.personality)
         updates.personality = currentAgent.personality;
+      if (dirtyFields.initiateConversation)
+        updates.initiateConversation = currentAgent.initiateConversation;
 
       if (Object.values(dirtyFields.settings).some((v) => v)) {
         updates.settings = currentAgent.settings;
@@ -131,33 +210,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       // Only update instructions if description or personality changed
       if (dirtyFields.description || dirtyFields.personality) {
-        setIsUpdatingInstructions(true);
-        getVoiceAgentInstruction(
-          currentAgent.description,
-          currentAgent.personality
-        )
-          .then(async (instructions) => {
-            await updateAgent(currentAgent.id, { instructions });
-            setIsUpdatingInstructions(false);
-            toast({
-              title: `${currentAgent.name} Updated`,
-              description: "Your agent is deployed and ready to go!",
-            });
-          })
-          .catch((error) => {
-            console.error("Failed to update instructions:", error);
-            toast({
-              variant: "destructive",
-              title: "Uh oh! Something went wrong.",
-              description: "Failed to deploy agent. Contact support.",
-            });
-            setIsUpdatingInstructions(false);
-          });
-
-        toast({
-          title: "Agent Deploying...",
-          description: "Your agent is being deployed and will be ready soon!",
-        });
+        handleInstructionUpdate();
+      } else if (dirtyFields.settings.formSchema) {
+        handleFormSchemaUpdate();
       } else {
         toast({
           title: `${currentAgent.name} Updated`,
@@ -165,19 +220,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         });
       }
 
-      // Reset dirty states
-      setDirtyFields({
-        description: false,
-        personality: false,
-        instructions: false,
-        initiateConversation: false,
-        settings: {
-          useBrowserTools: false,
-          isFormAgent: false,
-          formUrl: false,
-        },
-      });
-
+      resetDirtyFields();
       setIsUpdating(false);
     } catch (error) {
       console.error("Failed to update agent:", error);
@@ -187,7 +230,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         description: "Failed to update. Contact support.",
       });
       setIsUpdating(false);
-      setIsUpdatingInstructions(false);
+      setIsUpdatingAgent(false);
     }
   };
 
@@ -242,9 +285,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <Button
             variant="outline"
             onClick={handleTestClick}
-            disabled={isUpdatingInstructions}
+            disabled={isUpdatingAgent}
           >
-            {isUpdatingInstructions ? "Deploying Agent..." : "Test Agent"}
+            {isUpdatingAgent ? "Deploying Agent..." : "Test Agent"}
           </Button>
         </div>
       </div>
@@ -262,7 +305,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardContent>
             <Textarea
               value={currentAgent.description || ""}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
+              onChange={(e) => {
+                setCurrentAgent({
+                  ...currentAgent,
+                  description: e.target.value,
+                });
+                markFieldDirty("description");
+              }}
               placeholder={`Enter the role as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
               className="min-h-[100px] resize-none focus-visible:ring-1"
             />
@@ -310,7 +359,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     ...currentAgent,
                     initiateConversation: checked,
                   });
-                  markFieldDirty("settings", "initiateConversation");
+                  markFieldDirty("initiateConversation");
                 }}
               />
               <Label
@@ -339,19 +388,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               <Switch
                 id="isFormAgent"
                 checked={currentAgent.settings?.isFormAgent}
-                onCheckedChange={(checked) => {
-                  setCurrentAgent({
-                    ...currentAgent,
-                    settings: {
-                      ...currentAgent.settings,
-                      isFormAgent: checked,
-                      formUrl: checked
-                        ? currentAgent.settings?.formUrl || ""
-                        : undefined,
-                    },
-                  });
-                  markFieldDirty("settings", "isFormAgent");
-                }}
+                onCheckedChange={(checked) =>
+                  handleSettingChange("isFormAgent", checked)
+                }
               />
               <Label
                 htmlFor="isFormAgent"
@@ -368,20 +407,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   id="formUrl"
                   type="url"
                   placeholder="Enter Google Form URL"
-                  value={currentAgent.settings?.formUrl || ""}
-                  onChange={(e) => {
-                    setCurrentAgent({
-                      ...currentAgent,
-                      settings: {
-                        ...currentAgent.settings,
-                        formUrl: e.target.value,
-                      },
-                    });
-                    fetchFormSchema(e.target.value).then((schema) => {
-                      console.log(schema);
-                    });
-                    markFieldDirty("settings", "formUrl");
-                  }}
+                  value={currentAgent.settings?.formSchema?.url || ""}
+                  onChange={(e) =>
+                    handleSettingChange("formSchema", {
+                      // if url is changed, everything in the schema is invalidated
+                      url: e.target.value,
+                    })
+                  }
                 />
               </div>
             )}
