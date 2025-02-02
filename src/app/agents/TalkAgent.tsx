@@ -21,7 +21,11 @@ export function TalkAgent({
         <CardContent>
           <div className="flex flex-col h-[70vh]">
             <div className="flex-1 min-h-0 w-full">
-              <SessionControlWithTranscript agentId={agentId} />
+              <SessionControlWithTranscript
+                agentId={agentId}
+                transcriptHeight={380}
+                transcriptWidth={450}
+              />
             </div>
             {/* <div>
                             <SessionControl title="Get Started" width="300" backgroundColor="bg-neutral-50" callAgentButtonTitle="Build Agent" agentId={agentId} />
