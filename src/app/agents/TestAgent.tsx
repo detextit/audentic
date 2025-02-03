@@ -1,7 +1,8 @@
 "use client";
 
-import { SessionControlWithTranscript } from "@audentic/react";
+import { SessionControl } from "@audentic/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export function TestAgent({
   agentId,
   agentName,
@@ -18,23 +19,23 @@ export function TestAgent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[70vh]">
-            <div className="flex items-center justify-between mb-8">
-              <div className="text-center">
-                <p className="text-lg text-muted-foreground mb-2">
-                  Test your agent configuration in a live session
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Use the controls below to interact with your agent
-                </p>
-              </div>
+          <div className="flex flex-col h-[70vh]">
+            <div className="text-center mb-8">
+              <p className="text-lg text-muted-foreground mb-2">
+                Test your agent configuration in a live session
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Use the controls below to interact with your agent
+              </p>
             </div>
 
-            <SessionControlWithTranscript
-              agentId={agentId}
-              transcriptHeight={380}
-              transcriptWidth={450}
-            />
+            <div className="flex-grow flex items-end justify-end">
+              <SessionControl
+                transcript={true}
+                agentId={agentId}
+                maxOutputTokens={200}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
