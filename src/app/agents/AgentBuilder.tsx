@@ -33,6 +33,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       useBrowserTools: false,
       isFormAgent: false,
       formSchema: false,
+      knowledgeBase: false,
     },
   });
 
@@ -86,6 +87,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         useBrowserTools: false,
         isFormAgent: false,
         formSchema: false,
+        knowledgeBase: false,
       },
     });
   };
@@ -106,81 +108,31 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   }, [agents, agentId, loading, refreshAgents]);
 
-  const handleInstructionUpdate = async () => {
-    if (!currentAgent) return;
-    setIsUpdatingAgent(true);
-    getVoiceAgentInstruction(currentAgent.description, currentAgent.personality)
-      .then(async (instructions) => {
-        await updateAgent(currentAgent.id, { instructions });
-        setIsUpdatingAgent(false);
-        toast({
-          title: `${currentAgent.name} Updated`,
-          description: "Your agent is deployed and ready to go!",
-        });
-      })
-      .catch((error) => {
-        console.error("Failed to update instructions:", error);
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong.",
-          description: "Failed to deploy agent. Contact support.",
-        });
-        setIsUpdatingAgent(false);
-      });
+  const handleAsyncUpdate = async ({
+    condition,
+    handler,
+    name,
+  }: {
+    condition: boolean;
+    handler: () => Promise<void>;
+    name: string;
+  }) => {
+    if (!condition) return;
 
+    setIsUpdatingAgent(true);
     toast({
       title: "Agent Deploying...",
-      description: "Your agent is being deployed and will be ready soon!",
+      description: `Updating ${name}...`,
     });
-  };
 
-  const handleFormSchemaUpdate = async () => {
-    if (!currentAgent) return;
-    if (!currentAgent.settings?.formSchema?.url) {
+    try {
+      await handler();
+    } catch (error) {
+      console.error(`Failed to update ${name}:`, error);
       toast({
-        title: "Form agent without URL!",
-        description: "Reverting to non-form agent",
-      });
-
-      await updateAgent(currentAgent.id, {
-        settings: {
-          ...currentAgent.settings,
-          isFormAgent: false,
-        },
-      });
-    } else {
-      setIsUpdatingAgent(true);
-      fetchFormSchema(currentAgent.settings?.formSchema?.url)
-        .then(async (formSchema) => {
-          console.log("formSchema", formSchema);
-          await updateAgent(currentAgent.id, {
-            settings: {
-              ...currentAgent.settings,
-              formSchema: {
-                ...formSchema,
-                url: currentAgent.settings?.formSchema?.url,
-              },
-            },
-          });
-          setIsUpdatingAgent(false);
-          toast({
-            title: `${currentAgent.name} Updated`,
-            description: "Your agent is deployed and ready to go!",
-          });
-        })
-        .catch((error) => {
-          console.error("Failed to update form schema:", error);
-          toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: "Failed to update form schema. Contact support.",
-          });
-          setIsUpdatingAgent(false);
-        });
-
-      toast({
-        title: "Agent Deploying...",
-        description: "Your agent is being deployed and will be ready soon!",
+        variant: "destructive",
+        title: "Update Failed",
+        description: `Failed to update ${name}. Contact support.`,
       });
     }
   };
@@ -199,36 +151,87 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         updates.personality = currentAgent.personality;
       if (dirtyFields.initiateConversation)
         updates.initiateConversation = currentAgent.initiateConversation;
-
-      if (Object.values(dirtyFields.settings).some((v) => v)) {
+      if (Object.values(dirtyFields.settings).some((v) => v))
         updates.settings = currentAgent.settings;
-      }
 
       if (Object.keys(updates).length > 0) {
         await updateAgent(currentAgent.id, updates);
       }
 
-      // Only update instructions if description or personality changed
-      if (dirtyFields.description || dirtyFields.personality) {
-        handleInstructionUpdate();
-      } else if (dirtyFields.settings.formSchema) {
-        handleFormSchemaUpdate();
-      } else {
-        toast({
-          title: `${currentAgent.name} Updated`,
-          description: "Your agent is deployed and ready to go!",
-        });
-      }
+      // Handle all async updates
+      const asyncUpdates = [
+        // Instruction update
+        {
+          condition: dirtyFields.description || dirtyFields.personality,
+          handler: async () => {
+            const instructions = await getVoiceAgentInstruction(
+              currentAgent.description,
+              currentAgent.personality
+            );
+            await updateAgent(currentAgent.id, { instructions });
+          },
+          name: "instructions",
+        },
+        // Form schema update
+        {
+          condition: dirtyFields.settings.formSchema,
+          handler: async () => {
+            if (!currentAgent.settings?.formSchema?.url) {
+              await updateAgent(currentAgent.id, {
+                settings: { ...currentAgent.settings, isFormAgent: false },
+              });
+              throw new Error("Form agent without URL");
+            }
+            const formSchema = await fetchFormSchema(
+              currentAgent.settings.formSchema.url
+            );
+            await updateAgent(currentAgent.id, {
+              settings: {
+                ...currentAgent.settings,
+                formSchema: {
+                  ...formSchema,
+                  url: currentAgent.settings.formSchema.url,
+                },
+              },
+            });
+          },
+          name: "form schema",
+        },
+        // Knowledge base update
+        {
+          condition: dirtyFields.settings.knowledgeBase,
+          handler: async () => {
+            await updateAgent(currentAgent.id, {
+              settings: {
+                ...currentAgent.settings,
+                knowledgeBase: currentAgent.settings?.knowledgeBase,
+              },
+            });
+          },
+          name: "knowledge base",
+        },
+      ];
+
+      // Execute all async updates in parallel
+      await Promise.all(
+        asyncUpdates.map((update) => handleAsyncUpdate(update))
+      );
+
+      // Show success toast only after all updates complete
+      toast({
+        title: `${currentAgent.name} Updated`,
+        description: "Your agent is deployed and ready to go!",
+      });
 
       resetDirtyFields();
-      setIsUpdating(false);
     } catch (error) {
       console.error("Failed to update agent:", error);
       toast({
         variant: "destructive",
-        title: "Uh oh! Something went wrong.",
+        title: "Update Failed",
         description: "Failed to update. Contact support.",
       });
+    } finally {
       setIsUpdating(false);
       setIsUpdatingAgent(false);
     }
@@ -296,10 +299,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Agent Description</CardTitle>
+            <CardTitle>Task Description</CardTitle>
             <CardDescription>
-              The description is used to build the agent&apos;s task
-              instructions and the step-by-step flow for the agent.
+              The description is used to build the instructions and the
+              step-by-step flow for the agent.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,7 +315,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 });
                 markFieldDirty("description");
               }}
-              placeholder={`Enter the role as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
+              placeholder={`Describe the agent's task as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
               className="min-h-[100px] resize-none focus-visible:ring-1"
             />
           </CardContent>
@@ -327,7 +330,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea
+            <Input
               value={currentAgent.personality || ""}
               onChange={(e) => {
                 setCurrentAgent({
@@ -337,11 +340,34 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 markFieldDirty("personality");
               }}
               placeholder="Enter personality... e.g. 'friendly, patient, professional language'"
-              className="min-h-[100px] resize-none focus-visible:ring-1"
             />
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Knowledge Base</CardTitle>
+            <CardDescription>
+              The information available to the agent for answering and
+              completing tasks.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={currentAgent.settings?.knowledgeBase || ""}
+              onChange={(e) => {
+                setCurrentAgent({
+                  ...currentAgent,
+                  settings: {
+                    ...currentAgent.settings,
+                    knowledgeBase: e.target.value,
+                  },
+                });
+                markFieldDirty("settings", "knowledgeBase");
+              }}
+            />
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Settings</CardTitle>
