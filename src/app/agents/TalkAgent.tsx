@@ -24,7 +24,7 @@ export function TalkAgent({
               <SessionControl
                 transcript={true}
                 agentId={agentId}
-                maxOutputTokens={200}
+                maxOutputTokens={8192}
               />
             </div>
           </div>
