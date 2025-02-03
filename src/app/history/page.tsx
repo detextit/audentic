@@ -3,6 +3,7 @@
 import { useSessions } from "@/hooks/useSessions";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Home from "../Home";
 
 export default function HistoryPage() {
   const { sessions } = useSessions();
@@ -14,5 +15,5 @@ export default function HistoryPage() {
     }
   }, [sessions, router]);
 
-  return <></>;
+  return <Home />;
 }
