@@ -1,6 +1,6 @@
 "use client";
 
-import { SessionControlWithTranscript } from "@audentic/react";
+import { SessionControl } from "@audentic/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentDBConfig } from "@/agentBuilder/types";
 export function TalkAgent({
@@ -20,16 +20,13 @@ export function TalkAgent({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col h-[70vh]">
-            <div className="flex-1 min-h-0 w-full">
-              <SessionControlWithTranscript
+            <div className="flex-grow flex items-end justify-end">
+              <SessionControl
+                transcript={true}
                 agentId={agentId}
-                transcriptHeight={380}
-                transcriptWidth={450}
+                maxOutputTokens={200}
               />
             </div>
-            {/* <div>
-                            <SessionControl title="Get Started" width="300" backgroundColor="bg-neutral-50" callAgentButtonTitle="Build Agent" agentId={agentId} />
-                        </div> */}
           </div>
         </CardContent>
       </Card>
