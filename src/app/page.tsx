@@ -39,7 +39,7 @@ export default function LandingPage() {
               height={24}
               className="w-6 h-6"
             />
-            <span className="font-semibold text-lg">AUDENTIC</span>
+            <span className="font-semibold text-lg">Audentic</span>
           </div>
           <div className="flex items-center space-x-4">
             <Button onClick={handleGetStarted}>Get Started</Button>
