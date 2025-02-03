@@ -1,6 +1,7 @@
 "use client";
 
 import { useAgents } from "@/hooks/useAgents";
+import Home from "../Home";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -14,5 +15,5 @@ export default function AgentsPage() {
     }
   }, [agents, router]);
 
-  return <></>;
+  return <Home />;
 }
