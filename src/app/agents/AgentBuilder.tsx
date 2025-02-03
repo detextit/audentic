@@ -23,7 +23,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
   const { toast } = useToast();
 
-  // Replace single isDirty with granular dirty states
   const [dirtyFields, setDirtyFields] = useState({
     description: false,
     personality: false,
@@ -239,7 +238,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleTestClick = () => {
     // Open in new tab
-    window.open(`/agents/${agentId}/talk`, "_blank");
+    if (currentAgent?.settings?.isFormAgent) {
+      window.open(`/agents/${agentId}/form`, "_blank");
+    } else {
+      window.open(`/agents/${agentId}/talk`, "_blank");
+    }
   };
 
   if (loading)
