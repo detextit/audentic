@@ -16,7 +16,8 @@ export async function createAgent(
       initiate_conversation,
       instructions,
       tools,
-      tool_logic
+      tool_logic,
+      settings
     )
     VALUES (
       ${userId},
@@ -26,7 +27,8 @@ export async function createAgent(
       ${agent.initiateConversation},
       ${agent.instructions},
       ${JSON.stringify(agent.tools || [])},
-      ${JSON.stringify(agent.toolLogic || {})}
+      ${JSON.stringify(agent.toolLogic || {})},
+      ${JSON.stringify(agent.settings || {})}
     )
     RETURNING *;
   `;
@@ -128,6 +130,7 @@ function transformDBAgent(dbAgent: any): AgentDBConfig {
     instructions: dbAgent.instructions,
     tools: dbAgent.tools || [],
     toolLogic: dbAgent.tool_logic || {},
+    settings: dbAgent.settings || {},
     createdAt: dbAgent.created_at,
     updatedAt: dbAgent.updated_at,
   };

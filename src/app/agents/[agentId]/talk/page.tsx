@@ -1,11 +1,11 @@
 "use client";
 
 import { JSX, useEffect, useState } from "react";
-import { TestAgent } from "../../TestAgent";
+import { TalkAgent } from "@/app/agents/TalkAgent";
 import { usePathname } from "next/navigation";
 import { AgentDBConfig } from "@/agentBuilder/types";
 
-export default function TestAgentPage(): JSX.Element {
+export default function TalkAgentPage(): JSX.Element {
   const pathname = usePathname();
   const agentId = pathname.split("/").slice(-2)[0];
   const [agent, setAgent] = useState<AgentDBConfig | null>(null);
@@ -20,7 +20,7 @@ export default function TestAgentPage(): JSX.Element {
   }, [agentId]);
 
   return agent ? (
-    <TestAgent agentId={agentId} agentName={agent.name} />
+    <TalkAgent agentId={agentId} agent={agent} />
   ) : (
     <div className="animate-pulse space-y-4 p-4">
       <div className="h-8 bg-gray-200 rounded w-1/4"></div>

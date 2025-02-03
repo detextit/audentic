@@ -18,12 +18,12 @@ export async function POST(request: Request) {
       // Filter and log completed messages and breadcrumbs
       const itemsToLog = transcriptItems.filter(
         (item: TranscriptItem) =>
-          // Exclude complete messages
+          // Exclude incomplete messages
           !(
             item.role === "user" &&
             item.content.type === "text" &&
-            item.content.text.trim() !== "" &&
-            !item.content.text.includes("Transcribing")
+            (item.content.text.trim() == "" ||
+              item.content.text.includes("Transcribing"))
           )
       );
 

@@ -28,7 +28,7 @@ export interface AgentConfig {
   initiateConversation: boolean;
   instructions: string;
   tools: Tool[];
-  toolLogic?: Record<string, any>;
+  toolLogic?: Record<string, string>;
 }
 
 export interface AgentDBConfig extends AgentConfig {
@@ -36,6 +36,7 @@ export interface AgentDBConfig extends AgentConfig {
   userId: string;
   description: string;
   personality?: string;
+  settings?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
