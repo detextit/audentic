@@ -152,7 +152,7 @@ export default function LandingPage() {
         {/* CTA Section */}
         <section className="border-t bg-slate-900 text-white">
           <div className="container mx-auto px-6 py-16 text-center items-center justify-center">
-            <h2 className="text-3xl font-bold mb-6">Learn more about us</h2>
+            <h2 className="text-3xl font-bold mb-6">Learn more about us?</h2>
             <div className="flex justify-center">
               <SessionControl agentId="0bdfa5f1-c1f9-42d6-8ee4-7b8826f79d12" />
             </div>
