@@ -67,8 +67,15 @@ export default function LandingPage() {
                   >
                     Start Building
                   </Button>
-                  <Button size="lg" variant="outline">
-                    View Demo
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() =>
+                      (window.location.href =
+                        "https://www.audentic.io/agents/94e2f732-6ef4-4089-a5bc-2bebdbc7818e/form")
+                    }
+                  >
+                    Try it out!
                   </Button>
                 </div>
               </div>
