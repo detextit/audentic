@@ -178,7 +178,7 @@ export default function LandingPage() {
 
       {/* Add SessionControl with fixed positioning */}
       <div className="fixed bottom-4 right-4 z-50">
-        <SessionControl agentId={process.env.AUDENTIC_PR_AGENT || ""} />
+        <SessionControl agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57" />
       </div>
     </div>
   );
