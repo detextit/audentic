@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Bot, Clipboard, Share2 } from "lucide-react";
+import { Bot, Clipboard, Share2, Mail } from "lucide-react";
 import { SessionControl } from "@audentic/react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -56,7 +56,7 @@ export default function LandingPage() {
                   Enable voice for your website
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  Create, test, and integrate AI voice agents into your
+                  Create, test, and integrate AI voice agents into your web
                   applications.
                 </p>
                 <div className="flex gap-4">
@@ -120,29 +120,42 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Coming Soon Section */}
+        {/* Markets & Use Cases Section */}
         <section className="container mx-auto px-6 py-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Coming Soon</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Transform Your Customer's Experience
+            </h2>
             <p className="text-muted-foreground">
-              New features to make your agents even more powerful
+              Revolutionizing how users interact with web applications across
+              industries
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card>
               <CardHeader>
-                <CardTitle>Custom Tools</CardTitle>
+                <CardTitle>Smart Forms</CardTitle>
                 <CardDescription>
-                  Configure and add your own tools to enhance your agent&apos;s
-                  capabilities
+                  Transform form filling into voice conversations. Perfect for
+                  applications, surveys, and data collection processes.
                 </CardDescription>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Knowledge Base Integration</CardTitle>
+                <CardTitle>Document Navigation</CardTitle>
                 <CardDescription>
-                  Connect your existing knowledge base to power your agents
+                  Enable users to navigate and interact with documentations,
+                  manuals, and web resources through voice.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Browser Use</CardTitle>
+                <CardDescription>
+                  Make your websites agentic with voice and enable the AI
+                  experience your customers want.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -152,13 +165,21 @@ export default function LandingPage() {
         {/* CTA Section */}
         <section className="border-t bg-slate-900 text-white">
           <div className="container mx-auto px-6 py-16 text-center items-center justify-center">
-            <h2 className="text-3xl font-bold mb-6">Learn more about us?</h2>
-            <div className="flex justify-center">
-              <SessionControl agentId="0bdfa5f1-c1f9-42d6-8ee4-7b8826f79d12" />
+            <div className="flex flex-row items-left space-x-10">
+              <div className="text-sm text-gray-400">© 2025 Audentic</div>
+              <div className="text-sm text-gray-400 flex flex-row items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <div>info@audentic.io</div>
+              </div>
             </div>
           </div>
         </section>
       </main>
+
+      {/* Add SessionControl with fixed positioning */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <SessionControl agentId={process.env.AUDENTIC_PR_AGENT || ""} />
+      </div>
     </div>
   );
 }
