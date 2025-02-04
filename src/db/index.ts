@@ -1,5 +1,5 @@
 import { sql } from "@vercel/postgres";
-import { AgentDBConfig } from "../agentBuilder/types";
+import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
 
 // Create agent
@@ -140,23 +140,35 @@ function snakeCase(str: string): string {
   return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-// Knowledge Base Article type
-export interface KnowledgeBaseArticle {
-  id: string;
-  agentId: string;
-  title: string;
-  content: string;
-  metadata?: Record<string, any>;
-  createdAt?: Date;
-  updatedAt?: Date;
+// Create knowledge base article
+export async function createKnowledgeBaseArticle(
+  agentId: string,
+  article: Partial<KnowledgeBaseDBArticle>
+): Promise<KnowledgeBaseDBArticle> {
+  const result = await sql`
+    INSERT INTO knowledge_base (
+      agent_id,
+      title,
+      content,
+      metadata  
+    )
+    VALUES (
+      ${agentId},
+      ${article.title},
+      ${article.content},
+      ${JSON.stringify(article.metadata || {})}
+    )
+    RETURNING *;
+  `;
+  return transformDBKnowledgeBaseArticle(result.rows[0]);
 }
 
 // Get all knowledge base articles for an agent
 export async function getAgentKnowledgeBase(
   agentId: string
-): Promise<KnowledgeBaseArticle[]> {
+): Promise<KnowledgeBaseDBArticle[]> {
   const result = await sql`
-    SELECT * FROM knowledge_base_articles 
+    SELECT * FROM knowledge_base 
     WHERE agent_id = ${agentId}
     ORDER BY created_at DESC;
   `;
@@ -168,7 +180,7 @@ export async function deleteKnowledgeBaseArticle(
   articleId: string
 ): Promise<boolean> {
   const result = await sql`
-    DELETE FROM knowledge_base_articles 
+    DELETE FROM knowledge_base 
     WHERE id = ${articleId}
     RETURNING id;
   `;
@@ -178,8 +190,8 @@ export async function deleteKnowledgeBaseArticle(
 // Update knowledge base article
 export async function updateKnowledgeBaseArticle(
   articleId: string,
-  updates: Partial<KnowledgeBaseArticle>
-): Promise<KnowledgeBaseArticle | null> {
+  updates: Partial<KnowledgeBaseDBArticle>
+): Promise<KnowledgeBaseDBArticle | null> {
   const updates_array = [];
   const values = [];
   let i = 1;
@@ -198,7 +210,7 @@ export async function updateKnowledgeBaseArticle(
   if (updates_array.length === 0) return null;
 
   const result = await sql.query(
-    `UPDATE knowledge_base_articles 
+    `UPDATE knowledge_base 
      SET ${updates_array.join(", ")}, updated_at = CURRENT_TIMESTAMP
      WHERE id = $${i}
      RETURNING *`,
@@ -210,7 +222,9 @@ export async function updateKnowledgeBaseArticle(
     : null;
 }
 
-function transformDBKnowledgeBaseArticle(dbArticle: any): KnowledgeBaseArticle {
+function transformDBKnowledgeBaseArticle(
+  dbArticle: any
+): KnowledgeBaseDBArticle {
   return {
     id: dbArticle.id,
     agentId: dbArticle.agent_id,
