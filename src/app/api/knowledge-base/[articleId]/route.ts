@@ -1,5 +1,5 @@
 import { updateKnowledgeBaseArticle, deleteKnowledgeBaseArticle } from "@/db";
-import { useAuth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
@@ -7,7 +7,7 @@ export async function PATCH(
   { params }: { params: { articleId: string } }
 ) {
   try {
-    const { userId } = useAuth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -31,7 +31,7 @@ export async function DELETE(
   { params }: { params: { articleId: string } }
 ) {
   try {
-    const { userId } = useAuth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

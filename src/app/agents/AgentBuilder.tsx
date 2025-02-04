@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig, KnowledgeBaseArticle } from "@/agentBuilder/types";
+import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
+import { fetchFormSchema } from "@/agentBuilder/processForm";
+
 import { useAgents } from "@/hooks/useAgents";
+import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
+
 import {
   Card,
   CardContent,
@@ -13,14 +18,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { fetchFormSchema } from "@/agentBuilder/processForm";
+
+import { KnowledgeBaseEditor } from "./KnowledgeBaseEditor";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const { agents, loading, updateAgent, refreshAgents } = useAgents();
+  const {
+    articles: existingArticles,
+    createArticles,
+    fetchArticles,
+    loading: loadingArticles,
+  } = useKnowledgeBase();
   const { toast } = useToast();
 
   const [dirtyFields, setDirtyFields] = useState({
@@ -39,6 +50,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
+  const [pendingKnowledgeBaseArticles, setPendingKnowledgeBaseArticles] =
+    useState<KnowledgeBaseArticle[]>([]);
 
   // Helper to check if any fields are dirty
   const hasChanges = Object.values(dirtyFields).some((value) =>
@@ -96,16 +109,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
     if (agents.length > 0 && agentId) {
       const foundAgent = agents.find((a) => a.id === agentId);
-
       if (foundAgent) {
         setCurrentAgent(foundAgent);
         resetDirtyFields();
       } else {
-        // If agent not found, trigger a refresh
         refreshAgents();
       }
     }
   }, [agents, agentId, loading, refreshAgents]);
+
+  useEffect(() => {
+    if (currentAgent?.id) {
+      fetchArticles(currentAgent.id);
+    }
+  }, [currentAgent?.id, fetchArticles]);
 
   const handleAsyncUpdate = async ({
     condition,
@@ -134,6 +151,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         description: `Failed to update ${name}. Contact support.`,
       });
     }
+  };
+
+  const handleKnowledgeBaseArticle = (article: KnowledgeBaseArticle) => {
+    setPendingKnowledgeBaseArticles((prev) => [...prev, article]);
+    markFieldDirty("settings", "knowledgeBase");
   };
 
   const handleUpdate = async () => {
@@ -167,7 +189,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               currentAgent.description,
               currentAgent.personality
             );
-            await updateAgent(currentAgent.id, { instructions });
+            updateAgent(currentAgent.id, { instructions });
           },
           name: "instructions",
         },
@@ -184,7 +206,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             const formSchema = await fetchFormSchema(
               currentAgent.settings.formSchema.url
             );
-            await updateAgent(currentAgent.id, {
+            updateAgent(currentAgent.id, {
               settings: {
                 ...currentAgent.settings,
                 formSchema: {
@@ -200,12 +222,29 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         {
           condition: dirtyFields.settings.knowledgeBase,
           handler: async () => {
-            await updateAgent(currentAgent.id, {
-              settings: {
-                ...currentAgent.settings,
-                knowledgeBase: currentAgent.settings?.knowledgeBase,
-              },
-            });
+            if (pendingKnowledgeBaseArticles.length > 0) {
+              const newArticles = await createArticles(
+                currentAgent.id,
+                pendingKnowledgeBaseArticles
+              );
+
+              // Update agent settings with all articles
+              updateAgent(currentAgent.id, {
+                settings: {
+                  ...currentAgent.settings,
+                  knowledgeBase: [
+                    ...(currentAgent.settings?.knowledgeBase || []),
+                    ...newArticles.map((article) => ({
+                      id: article.id,
+                      title: article.title,
+                      updatedAt: article.updatedAt,
+                    })),
+                  ],
+                },
+              });
+
+              setPendingKnowledgeBaseArticles([]);
+            }
           },
           name: "knowledge base",
         },
@@ -351,23 +390,16 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardHeader>
             <CardTitle>Knowledge Base</CardTitle>
             <CardDescription>
-              The information available to the agent for answering and
-              completing tasks.
+              Manage information that the agent can reference when answering
+              questions.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea
-              value={currentAgent.settings?.knowledgeBase || ""}
-              onChange={(e) => {
-                setCurrentAgent({
-                  ...currentAgent,
-                  settings: {
-                    ...currentAgent.settings,
-                    knowledgeBase: e.target.value,
-                  },
-                });
-                markFieldDirty("settings", "knowledgeBase");
-              }}
+            <KnowledgeBaseEditor
+              onArticleChange={handleKnowledgeBaseArticle}
+              pendingArticles={pendingKnowledgeBaseArticles}
+              existingArticles={existingArticles}
+              isLoading={loadingArticles}
             />
           </CardContent>
         </Card>
