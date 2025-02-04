@@ -40,3 +40,20 @@ export interface AgentDBConfig extends AgentConfig {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Knowledge Base Article type
+export interface KnowledgeBaseDBArticle {
+  id: string;
+  agentId: string;
+  title: string;
+  content: string;
+  metadata?: Record<string, any>;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export interface KnowledgeBaseArticle {
+  id?: string;
+  title: string;
+  content?: string;
+  updatedAt?: string;
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAgentById } from "@/db";
+import { getAgentById, getAgentKnowledgeBase } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { AgentConfig, AgentDBConfig } from "@/agentBuilder/types";
 import {
@@ -51,8 +51,22 @@ export async function POST(request: Request) {
         }
       );
     }
-    const instructions =
-      agentConfig.instructions || "You are a helpful assistant.";
+
+    // Fetch knowledge base articles
+    const knowledgeBase = await getAgentKnowledgeBase(apiKey);
+
+    // Prepare knowledge base content for instructions
+    let knowledgeBaseContent = "";
+    if (knowledgeBase.length > 0) {
+      knowledgeBaseContent =
+        "\n# Knowledge Base\n" +
+        knowledgeBase
+          .map((article) => `## ${article.title}\n${article.content}`)
+          .join("\n");
+    }
+
+    // Combine base instructions with knowledge base content
+    const instructions = agentConfig.instructions + knowledgeBaseContent;
 
     const tools = agentConfig.tools || [];
 
