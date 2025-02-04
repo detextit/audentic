@@ -124,7 +124,7 @@ export default function LandingPage() {
         <section className="container mx-auto px-6 py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              Transform Your Customer's Experience
+              Transform Your Customer&apos;s Experience
             </h2>
             <p className="text-muted-foreground">
               Revolutionizing how users interact with web applications across

@@ -1,10 +1,10 @@
-import { updateKnowledgeBaseArticle, deleteKnowledgeBaseArticle } from "@/db";
+import { deleteKnowledgeBaseArticle, updateKnowledgeBaseArticle } from "@/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { articleId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ articleId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -12,8 +12,9 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const updates = await request.json();
-    const article = await updateKnowledgeBaseArticle(params.articleId, updates);
+    const updates = await _request.json();
+    const { articleId } = await params;
+    const article = await updateKnowledgeBaseArticle(articleId, updates);
 
     if (!article) {
       return new NextResponse("Article not found", { status: 404 });
@@ -27,8 +28,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { articleId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ articleId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -36,7 +37,8 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const success = await deleteKnowledgeBaseArticle(params.articleId);
+    const { articleId } = await params;
+    const success = await deleteKnowledgeBaseArticle(articleId);
 
     if (!success) {
       return new NextResponse("Article not found", { status: 404 });
