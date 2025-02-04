@@ -57,9 +57,9 @@ export async function setupDatabase() {
         )
       `,
 
-      // Create knowledge_base_articles table
+      // Create knowledge_base table
       sql`
-        CREATE TABLE IF NOT EXISTS knowledge_base_articles (
+        CREATE TABLE IF NOT EXISTS knowledge_base (
           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
           title TEXT NOT NULL,
