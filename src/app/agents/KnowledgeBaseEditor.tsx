@@ -90,14 +90,14 @@ export function KnowledgeBaseEditor({
               className="text-sm border rounded-md p-3 hover:bg-muted"
             >
               <h4 className="font-medium">{article.title}</h4>
+              {article.updatedAt && (
+                <p className="text-muted-foreground text-xs mt-1">
+                  Updated on {new Date(article.updatedAt).toUTCString()}
+                </p>
+              )}
               {article.content && (
                 <p className="text-muted-foreground line-clamp-2 text-xs mt-1">
                   {article.content}
-                </p>
-              )}
-              {article.updatedAt && (
-                <p className="text-muted-foreground text-xs mt-1">
-                  {new Date(article.updatedAt).toLocaleDateString()}
                 </p>
               )}
             </div>
