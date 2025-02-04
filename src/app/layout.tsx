@@ -23,10 +23,6 @@ export default function RootLayout({
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={`${montserrat.variable} font-sans`}>
         <body>
-          <header>
-            <SignedOut></SignedOut>
-            <SignedIn></SignedIn>
-          </header>
           <main>{children}</main>
           <Toaster />
         </body>
