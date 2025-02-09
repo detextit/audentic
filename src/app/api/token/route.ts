@@ -9,6 +9,8 @@ import {
   createFormFieldEnum,
 } from "@/agentBuilder/formUtils";
 import { injectCallTools } from "@/agentBuilder/callUtils";
+import { getVoiceAgentDefaultInstructions } from "@/agentBuilder/metaPrompts";
+
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
     return {
@@ -66,14 +68,18 @@ export async function POST(request: Request) {
     }
 
     // Combine base instructions with knowledge base content
-    const instructions = agentConfig.instructions + knowledgeBaseContent;
+    const instructions =
+      getVoiceAgentDefaultInstructions(
+        agentConfig.name,
+        new Date().toLocaleString()
+      ) +
+      agentConfig.instructions +
+      knowledgeBaseContent;
 
     const tools = agentConfig.tools || [];
 
-    console.log("Tools:", JSON.stringify(tools, null, 2));
-
     const sessionSettings = {
-      model: "gpt-4o-realtime-preview",
+      model: agentConfig.model,
       modalities: ["text", "audio"],
       instructions,
       voice: "alloy",
@@ -93,6 +99,8 @@ export async function POST(request: Request) {
       tools,
       tool_choice: "auto",
     };
+
+    console.log("Session settings:", JSON.stringify(sessionSettings, null, 2));
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
@@ -150,6 +158,9 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
     if (agent) {
       let agentConfig: AgentConfig = {
         name: agent.name,
+        model: agent.settings?.isAdvancedModel
+          ? "gpt-4o-realtime-preview"
+          : "gpt-4o-mini-realtime-preview",
         initiateConversation: agent.initiateConversation,
         instructions: agent.instructions,
         tools: agent.tools,
