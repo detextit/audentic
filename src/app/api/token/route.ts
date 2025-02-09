@@ -78,8 +78,6 @@ export async function POST(request: Request) {
 
     const tools = agentConfig.tools || [];
 
-    console.log("Tools:", JSON.stringify(tools, null, 2));
-
     const sessionSettings = {
       model: agentConfig.model,
       modalities: ["text", "audio"],
@@ -101,6 +99,8 @@ export async function POST(request: Request) {
       tools,
       tool_choice: "auto",
     };
+
+    console.log("Session settings:", JSON.stringify(sessionSettings, null, 2));
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
