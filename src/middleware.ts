@@ -5,6 +5,7 @@ const isPublicTokenRoute = createRouteMatcher([
   "/api/token",
   "/api/sessions/create",
   "/api/sessions/end",
+  "/api/events/log",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
