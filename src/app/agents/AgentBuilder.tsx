@@ -413,7 +413,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mt-4">
               <Switch
                 id="agentType"
                 checked={currentAgent.settings?.isAdvancedModel}
@@ -435,7 +435,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 Use Advanced Model
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mt-4">
               <Switch
                 id="initiate"
                 checked={currentAgent.initiateConversation}
