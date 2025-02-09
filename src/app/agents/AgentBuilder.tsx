@@ -44,6 +44,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       isFormAgent: false,
       formSchema: false,
       knowledgeBase: false,
+      isAdvancedModel: false,
     },
   });
 
@@ -100,6 +101,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         isFormAgent: false,
         formSchema: false,
         knowledgeBase: false,
+        isAdvancedModel: false,
       },
     });
   };
@@ -411,7 +413,29 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mt-4">
+              <Switch
+                id="agentType"
+                checked={currentAgent.settings?.isAdvancedModel}
+                onCheckedChange={(checked) => {
+                  setCurrentAgent({
+                    ...currentAgent,
+                    settings: {
+                      ...currentAgent.settings,
+                      isAdvancedModel: checked,
+                    },
+                  });
+                  markFieldDirty("settings", "isAdvancedModel");
+                }}
+              />
+              <Label
+                htmlFor="agentType"
+                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Use Advanced Model
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-4">
               <Switch
                 id="initiate"
                 checked={currentAgent.initiateConversation}
