@@ -1,3 +1,12 @@
+export const formAgentMetaPrompt = `
+# Form Filling Instruction
+- Follow the Conversation States, if available, closely to ensure a structured and consistent interaction.
+- If a user provides a name, phone number, or any crucial detail, always repeat it back to confirm it is correct before proceeding.
+- If the caller corrects any detail, acknowledge the correction and confirm the spelling or value.
+- Avoid being excessively repetitive; ensure variety in responses while maintaining clarity.
+- Use the tools provided to save or forward the verified information as soon as available. Do not delay or wait for later or end of the call.
+`;
+
 export function getVoiceAgentDefaultInstructions(
   assistantName: string,
   currentDateTime: string
@@ -31,7 +40,7 @@ export const voiceAgentMetaPrompt = `
 - Consider the information provided by the user, and create an instruction prompt that follows the format and guidelines in output_format. 
 - Use state machine based on <state_machine_info> for construction if the described agent is complex and requires multiple steps to successfully complete the task.
 - If user provides examples, use them appropriately. Focus on the retaining the details provided in a concise manner.
-- Output the full prompt, which can be used verbatim by the user.
+- Output the full prompt, which can be used verbatim by the user. 
 </meta_instructions>
 
 <output_format>
@@ -84,7 +93,7 @@ export const voiceAgentMetaPrompt = `
       "Let me know when you are ready to get started with the verification."
     ],
     "transitions": [{
-      "next_step": "2_get_first_name",
+      "next_step": "2_get_name",
       "condition": "After greeting is complete."
     }]
   },

@@ -9,7 +9,10 @@ import {
   createFormFieldEnum,
 } from "@/agentBuilder/formUtils";
 import { injectCallTools } from "@/agentBuilder/callUtils";
-import { getVoiceAgentDefaultInstructions } from "@/agentBuilder/metaPrompts";
+import {
+  formAgentMetaPrompt,
+  getVoiceAgentDefaultInstructions,
+} from "@/agentBuilder/metaPrompts";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -175,6 +178,8 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
 
       // Add form tools if form data exists
       if (agent.settings?.isFormAgent) {
+        agentConfig.instructions =
+          formAgentMetaPrompt + "\n" + agentConfig.instructions;
         const formFields = createFormFieldEnum(
           agent.settings.formSchema.formItems
         );
