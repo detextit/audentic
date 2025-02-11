@@ -28,7 +28,7 @@ export interface FormToolState {
 
 export function createFormToolLogic(formState: FormToolState) {
   return {
-    set_form_field: `async function set_form_field(params) {
+    set_field: `async function set_field(params) {
       const formFields = ${JSON.stringify(formState.formFields)};
       const formItems = ${JSON.stringify(formState.formItems)};
       let formState = ${JSON.stringify(formState.formState)};
@@ -130,11 +130,10 @@ export function injectFormTools(
 ): AgentConfig {
   const formFieldTool: Tool = {
     type: "function",
-    name: "set_form_field",
-    description: `Sets the value of a form field.
-    - Use this tool to fill out form fields
+    name: "set_field",
+    description: `Sets the value of a field in a form.
+    - Use this tool to pass the value of a field as provided by the user.
     - Handles different field types (text, email, number, etc.)
-    - Validates input against field requirements
     - Returns validation results and current field value`,
     parameters: {
       type: "object",

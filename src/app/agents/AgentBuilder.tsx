@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AgentDBConfig, KnowledgeBaseArticle } from "@/agentBuilder/types";
+import {
+  AgentDBConfig,
+  KnowledgeBaseArticle,
+  KnowledgeBaseDBArticle,
+} from "@/agentBuilder/types";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { fetchFormSchema } from "@/agentBuilder/processForm";
 
@@ -23,12 +27,28 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 import { KnowledgeBaseEditor } from "./KnowledgeBaseEditor";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
-  const { agents, loading, updateAgent, refreshAgents } = useAgents();
+  const router = useRouter();
+  const { agents, loading, updateAgent, refreshAgents, deleteAgent } =
+    useAgents();
   const {
     articles: existingArticles,
     createArticles,
+    deleteArticle,
     fetchArticles,
     loading: loadingArticles,
   } = useKnowledgeBase();
@@ -53,6 +73,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
   const [pendingKnowledgeBaseArticles, setPendingKnowledgeBaseArticles] =
     useState<KnowledgeBaseArticle[]>([]);
+  const [pendingDeletions, setPendingDeletions] = useState<string[]>([]);
 
   // Helper to check if any fields are dirty
   const hasChanges = Object.values(dirtyFields).some((value) =>
@@ -160,6 +181,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     markFieldDirty("settings", "knowledgeBase");
   };
 
+  const handleDeleteArticle = (articleId: string) => {
+    setPendingDeletions((prev) => [...prev, articleId]);
+    markFieldDirty("settings", "knowledgeBase");
+  };
+
   const handleUpdate = async () => {
     if (!currentAgent) return;
     setIsUpdating(true);
@@ -224,29 +250,42 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         {
           condition: dirtyFields.settings.knowledgeBase,
           handler: async () => {
+            // Handle deletions first
+            for (const articleId of pendingDeletions) {
+              await deleteArticle(articleId);
+            }
+
+            // Handle new articles
+            let newArticles: KnowledgeBaseDBArticle[] = [];
             if (pendingKnowledgeBaseArticles.length > 0) {
-              const newArticles = await createArticles(
+              newArticles = await createArticles(
                 currentAgent.id,
                 pendingKnowledgeBaseArticles
               );
-
-              // Update agent settings with all articles
-              updateAgent(currentAgent.id, {
-                settings: {
-                  ...currentAgent.settings,
-                  knowledgeBase: [
-                    ...(currentAgent.settings?.knowledgeBase || []),
-                    ...newArticles.map((article) => ({
-                      id: article.id,
-                      title: article.title,
-                      updatedAt: article.updatedAt,
-                    })),
-                  ],
-                },
-              });
-
-              setPendingKnowledgeBaseArticles([]);
             }
+
+            // Update agent settings with filtered articles
+            const updatedKnowledgeBase = [
+              ...(currentAgent.settings?.knowledgeBase || []).filter(
+                (article: KnowledgeBaseDBArticle) =>
+                  !pendingDeletions.includes(article.id)
+              ),
+              ...newArticles.map((article) => ({
+                id: article.id,
+                title: article.title,
+                updatedAt: article.updatedAt,
+              })),
+            ];
+
+            await updateAgent(currentAgent.id, {
+              settings: {
+                ...currentAgent.settings,
+                knowledgeBase: updatedKnowledgeBase,
+              },
+            });
+
+            setPendingKnowledgeBaseArticles([]);
+            setPendingDeletions([]);
           },
           name: "knowledge base",
         },
@@ -283,6 +322,25 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       window.open(`/agents/${agentId}/form`, "_blank");
     } else {
       window.open(`/agents/${agentId}/talk`, "_blank");
+    }
+  };
+
+  const handleDeleteAgent = async () => {
+    try {
+      await deleteAgent(agentId);
+
+      // Find next available agent or default to main agents page
+      const remainingAgents = agents.filter((a) => a.id !== agentId);
+      const nextAgent = remainingAgents[0];
+
+      router.push(nextAgent ? `/agents/${nextAgent.id}` : "/agents");
+    } catch (error) {
+      console.error("Failed to delete agent:", error);
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Failed to delete agent. Please try again.",
+      });
     }
   };
 
@@ -336,6 +394,32 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           >
             {isUpdatingAgent ? "Deploying Agent..." : "Test Agent"}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  agent and all its associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAgent}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -399,7 +483,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <CardContent>
             <KnowledgeBaseEditor
               onArticleChange={handleKnowledgeBaseArticle}
+              onDeleteArticle={handleDeleteArticle}
               pendingArticles={pendingKnowledgeBaseArticles}
+              pendingDeletions={pendingDeletions}
               existingArticles={existingArticles}
               isLoading={loadingArticles}
             />

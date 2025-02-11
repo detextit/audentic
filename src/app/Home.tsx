@@ -6,7 +6,6 @@ import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { useAgents } from "@/hooks/useAgents";
 import { HistorySidebar } from "@/components/history-sidebar";
-import { useUser } from "@clerk/nextjs";
 import { AgentBuilder } from "@/app/agents/AgentBuilder";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import SessionHistory from "@/app/history/SessionHistory";
@@ -27,7 +26,6 @@ export default function Home() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { agents, refreshAgents } = useAgents();
   const { sessions } = useSessions();
-  const { user } = useUser();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const router = useRouter();
@@ -154,7 +152,7 @@ export default function Home() {
           </div>
 
           <div className="mt-auto mb-4">
-            <NavUser userName={user?.fullName || user?.username || ""} />
+            <NavUser userName="" />
           </div>
         </div>
 
