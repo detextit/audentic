@@ -15,23 +15,35 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Clock, Book, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Book,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import {
   KnowledgeBaseArticle,
   KnowledgeBaseDBArticle,
 } from "@/agentBuilder/types";
+import { cn } from "@/lib/utils";
 
 interface KnowledgeBaseEditorProps {
   onArticleChange: (article: KnowledgeBaseArticle) => void;
+  onDeleteArticle: (articleId: string) => void;
   pendingArticles: KnowledgeBaseArticle[];
+  pendingDeletions: string[];
   existingArticles: KnowledgeBaseDBArticle[];
   isLoading?: boolean;
 }
 
 export function KnowledgeBaseEditor({
   onArticleChange,
+  onDeleteArticle,
   pendingArticles = [],
+  pendingDeletions = [],
   existingArticles = [],
   isLoading = false,
 }: KnowledgeBaseEditorProps) {
@@ -144,24 +156,46 @@ export function KnowledgeBaseEditor({
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="px-8 py-2 space-y-2">
-          {articles.map((article, index) => (
-            <div
-              key={"id" in article ? article.id : index}
-              className="text-sm border rounded-md p-3 hover:bg-muted"
-            >
-              <h4 className="font-medium">{article.title}</h4>
-              {article.updatedAt && (
-                <p className="text-muted-foreground text-xs mt-1">
-                  Updated on {new Date(article.updatedAt).toUTCString()}
-                </p>
-              )}
-              {article.content && (
-                <p className="text-muted-foreground line-clamp-2 text-xs mt-1">
-                  {article.content}
-                </p>
-              )}
-            </div>
-          ))}
+          {articles.map((article, index) => {
+            const isExistingArticle = "id" in article;
+            const isPendingDeletion =
+              isExistingArticle && pendingDeletions.includes(article.id || "");
+
+            return (
+              <div
+                key={isExistingArticle ? article.id : index}
+                className={cn(
+                  "text-sm border rounded-md p-3 hover:bg-muted flex justify-between items-start",
+                  isPendingDeletion && "opacity-50 bg-muted"
+                )}
+              >
+                <div className="flex-1">
+                  <h4 className="font-medium">{article.title}</h4>
+                  {article.updatedAt && (
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Last updated:{" "}
+                      {new Date(article.updatedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                  {article.content && (
+                    <p className="text-muted-foreground line-clamp-2 text-xs mt-1">
+                      {article.content}
+                    </p>
+                  )}
+                </div>
+                {isExistingArticle && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteArticle(article.id || "")}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive ml-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </CollapsibleContent>
       </Collapsible>
     );
@@ -309,19 +343,21 @@ export function KnowledgeBaseEditor({
       ) : hasArticles ? (
         <div className="space-y-2 mt-4">
           <ArticleList
-            articles={pendingArticles}
-            icon={Clock}
-            isOpen={isPendingOpen}
-            onOpenChange={setIsPendingOpen}
-            title="Pending Save"
-          />
-          <ArticleList
             articles={existingArticles}
             icon={Book}
             isOpen={isExistingOpen}
             onOpenChange={setIsExistingOpen}
             title="Existing Items"
           />
+          {pendingArticles.length > 0 && (
+            <ArticleList
+              articles={pendingArticles}
+              icon={Clock}
+              isOpen={isPendingOpen}
+              onOpenChange={setIsPendingOpen}
+              title="Pending Save"
+            />
+          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
