@@ -40,12 +40,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -341,6 +335,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       router.push(nextAgent ? `/agents/${nextAgent.id}` : "/agents");
     } catch (error) {
+      console.error("Failed to delete agent:", error);
       toast({
         variant: "destructive",
         title: "Delete Failed",
