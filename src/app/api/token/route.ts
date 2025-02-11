@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAgentById, getAgentKnowledgeBase } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
+import { injectBrowserActions } from "@/agentBuilder/browserActions";
 import { AgentConfig, AgentDBConfig } from "@/agentBuilder/types";
 import {
   createFormToolLogic,
@@ -173,7 +174,10 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
       agentConfig = injectCallTools(agentConfig);
       // Add browser tools if enabled
       if (agent.settings?.useBrowserTools) {
-        agentConfig = injectBrowserTools(agentConfig);
+        agentConfig = injectBrowserActions(
+          injectBrowserTools(agentConfig, "all"),
+          "minimal"
+        );
       }
 
       // Add form tools if form data exists
