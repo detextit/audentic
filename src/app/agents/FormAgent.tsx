@@ -94,6 +94,27 @@ export function FormAgent({
     loadForm();
   }, [agent.settings?.formUrl]);
 
+  const updateForm = (updates: { id: string; value: any }[]) => {
+    const formUpdates = updates.reduce((acc: Record<string, any>, update) => {
+      acc[update.id] = update.value;
+      return acc;
+    }, {});
+
+    try {
+      form.reset(
+        {
+          ...form.getValues(),
+          ...formUpdates,
+        },
+        {
+          keepDefaultValues: true,
+        }
+      );
+    } catch (error) {
+      console.error(`Error updating form values:`, error);
+    }
+  };
+
   const onSubmit = async (data: any) => {
     try {
       // Handle form submission
@@ -303,6 +324,7 @@ export function FormAgent({
               agentId={agentId}
               transcript={true}
               maxOutputTokens={8192}
+              updateForm={updateForm}
             />
           </div>
         </CardContent>
