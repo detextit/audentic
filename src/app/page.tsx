@@ -8,7 +8,20 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Bot, Clipboard, Share2, Mail } from "lucide-react";
+import {
+  Bot,
+  Share2,
+  Mail,
+  Code,
+  Signature,
+  Heart,
+  ClipboardCheck,
+  Navigation,
+  HeadphonesIcon,
+  Users,
+  GraduationCap,
+  FileSignature,
+} from "lucide-react";
 import { SessionControl } from "@audentic/react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -98,68 +111,121 @@ export default function LandingPage() {
         <section className="border-t bg-slate-50/70 py-7">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-6">
-              Everything You Need to Build Voice Agents
+              Everything you need to build voice agents
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
               <FeatureCard
-                icon={<Bot className="h-8 w-8" />}
-                title="Voice Builder"
-                description="Create voice agents using our intuitive voice based agent. No keyboard required."
+                icon={<Code className="h-8 w-8" />}
+                title="No Code Required"
+                description="Build your voice agents in minutes with our intuitive interface. We handle all the technical complexities for you."
               />
               <FeatureCard
                 icon={<Share2 className="h-8 w-8" />}
                 title="Easy Integration"
-                description="Drop our React component into your app and get started in minutes."
+                description="Embed using our React component or choose from our add-ons for popular website builders."
               />
               <FeatureCard
-                icon={<Clipboard className="h-8 w-8" />}
-                title="Default tools"
-                description="Agents can access and share knowledge through clipboard interactions."
+                icon={<Signature className="h-8 w-8" />}
+                title="Built For You"
+                description="Import your documents in any format to ensure your agents have comprehensive knowledge of your business."
+              />
+              <FeatureCard
+                icon={<Bot className="h-8 w-8" />}
+                title="Truly Agentic"
+                description="Empower your agents with browser actions to enhance customer experience and automate interactions."
+              />
+              <FeatureCard
+                icon={<Heart className="h-8 w-8" />}
+                title="Emotionally Intelligent"
+                description="Create agents that understand customer emotions and embody your brand's values for truly human-centric interactions."
               />
             </div>
           </div>
         </section>
 
         {/* Markets & Use Cases Section */}
-        <section className=" bg-slate-50/70">
-          <div className="container mx-auto px-6 py-6">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold mb-1">
-                Transform Your Customer&apos;s Experience
+        <section className="bg-slate-50/70">
+          <div className="container mx-auto px-6 py-16">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-3">
+                Revolutionize how users interact with web applications
               </h2>
-              <p className="text-muted-foreground">
-                Revolutionizing how users interact with web applications across
-                industries
-              </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Smart Forms</CardTitle>
-                  <CardDescription>
-                    Transform form filling into voice conversations. Perfect for
-                    applications, surveys, and data collection processes.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Document Navigation</CardTitle>
-                  <CardDescription>
-                    Enable users to navigate and interact with documentations,
-                    manuals, and web resources through voice.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Browser Use</CardTitle>
-                  <CardDescription>
-                    Make your websites agentic with voice and enable the AI
-                    experience your customers want.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16 max-w-7xl mx-auto">
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <ClipboardCheck className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Smart Forms</h3>
+                <p className="text-muted-foreground">
+                  Transform data collection into natural conversations. Perfect
+                  for surveys, questionnaires, and feedback collection.
+                </p>
+              </div>
+
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <FileSignature className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Document Assistance
+                </h3>
+                <p className="text-muted-foreground">
+                  Simplify complex documents requiring e-signatures. From tax
+                  forms to mortgages, make understanding and completing legal
+                  documents effortless.
+                </p>
+              </div>
+
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <Navigation className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Website Navigation
+                </h3>
+                <p className="text-muted-foreground">
+                  Enable users to understand and navigate your website with
+                  voice. Help users get to know your business and products
+                  better.
+                </p>
+              </div>
+
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <HeadphonesIcon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Customer Support</h3>
+                <p className="text-muted-foreground">
+                  Enable customer inquiries and support right from your website.
+                  Agents can troubleshoot issues, provide solutions, and assist
+                  with tasks.
+                </p>
+              </div>
+
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Digital Twins</h3>
+                <p className="text-muted-foreground">
+                  Allow visitors to get to know you through your digital twin.
+                  Enhance your personal websites, blogs, and professional
+                  profiles.
+                </p>
+              </div>
+
+              <div className="relative pl-16">
+                <div className="absolute left-0 top-1 w-12 h-12 flex items-center justify-center rounded-full bg-primary/10">
+                  <GraduationCap className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Education</h3>
+                <p className="text-muted-foreground">
+                  Provide personalized learning experiences and explanations.
+                  From complex documents to new workflow onboarding, make
+                  learning more engaging.
+                </p>
+              </div>
             </div>
           </div>
         </section>
