@@ -27,9 +27,30 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 import { KnowledgeBaseEditor } from "./KnowledgeBaseEditor";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
-  const { agents, loading, updateAgent, refreshAgents } = useAgents();
+  const router = useRouter();
+  const { agents, loading, updateAgent, refreshAgents, deleteAgent } =
+    useAgents();
   const {
     articles: existingArticles,
     createArticles,
@@ -310,6 +331,24 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   };
 
+  const handleDeleteAgent = async () => {
+    try {
+      await deleteAgent(agentId);
+
+      // Find next available agent or default to main agents page
+      const remainingAgents = agents.filter((a) => a.id !== agentId);
+      const nextAgent = remainingAgents[0];
+
+      router.push(nextAgent ? `/agents/${nextAgent.id}` : "/agents");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Failed to delete agent. Please try again.",
+      });
+    }
+  };
+
   if (loading)
     return (
       <div className="max-w-5xl mx-auto">
@@ -360,6 +399,32 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           >
             {isUpdatingAgent ? "Deploying Agent..." : "Test Agent"}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  agent and all its associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAgent}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
