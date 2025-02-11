@@ -114,14 +114,14 @@ export function FormAgent({
 
   return (
     <div className="h-screen w-full p-6">
-      <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-lg">
+      <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-lg">
         <CardHeader className="items-center justify-between border-b">
           <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[hsl(210,29%,16%)] to-[hsl(210,29%,36%)]">
             {agent.name} - Voice Form
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto text-left">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
