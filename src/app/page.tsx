@@ -107,32 +107,36 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold text-center mb-6">
               Everything you need to build voice agents
             </h2>
-            <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
-              <FeatureCard
-                icon={<Code className="h-8 w-8" />}
-                title="No Code Required"
-                description="Build your voice agents in minutes with our intuitive interface. We handle all the technical complexities for you."
-              />
-              <FeatureCard
-                icon={<Share2 className="h-8 w-8" />}
-                title="Easy Integration"
-                description="Embed using our React component or choose from our add-ons for popular website builders."
-              />
-              <FeatureCard
-                icon={<Signature className="h-8 w-8" />}
-                title="Built For You"
-                description="Import your documents in any format to ensure your agents have comprehensive knowledge of your business."
-              />
-              <FeatureCard
-                icon={<Bot className="h-8 w-8" />}
-                title="Truly Agentic"
-                description="Empower your agents with browser actions to enhance customer experience and automate interactions."
-              />
-              <FeatureCard
-                icon={<Heart className="h-8 w-8" />}
-                title="Emotionally Intelligent"
-                description="Create agents that understand customer emotions and embody your brand's values for truly human-centric interactions."
-              />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 col-span-full">
+                <FeatureCard
+                  icon={<Code className="h-8 w-8" />}
+                  title="No Code Required"
+                  description="Build your voice agents in minutes with our intuitive interface. We handle all the technical complexities for you."
+                />
+                <FeatureCard
+                  icon={<Share2 className="h-8 w-8" />}
+                  title="Easy Integration"
+                  description="Embed using our React component or choose from our add-ons for popular website builders."
+                />
+                <FeatureCard
+                  icon={<Signature className="h-8 w-8" />}
+                  title="Built For You"
+                  description="Import your documents in any format to ensure your agents have comprehensive knowledge of your business."
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-6 col-span-full md:w-2/3 mx-auto">
+                <FeatureCard
+                  icon={<Bot className="h-8 w-8" />}
+                  title="Truly Agentic"
+                  description="Empower your agents with browser actions to enhance customer experience and automate interactions."
+                />
+                <FeatureCard
+                  icon={<Heart className="h-8 w-8" />}
+                  title="Emotionally Intelligent"
+                  description="Create agents that understand customer emotions and embody your brand's values for truly human-centric interactions."
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -142,7 +146,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-6 py-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-3">
-                Revolutionize how users interact with web applications
+                Revolutionize how users interact with your website
               </h2>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16 max-w-7xl mx-auto">
