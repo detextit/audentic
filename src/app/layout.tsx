@@ -62,6 +62,25 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={`${montserrat.variable} font-sans`}>
+        <head>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Audentic",
+                url: "https://audentic.io",
+                logo: "https://audentic.io/logo.png",
+                description: "No Code Voice AI Agents for Websites",
+                sameAs: [
+                  "https://twitter.com/audentic",
+                  // Add other social media URLs
+                ],
+              }),
+            }}
+          />
+        </head>
         <body>
           <main>{children}</main>
           <Toaster />
