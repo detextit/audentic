@@ -35,7 +35,7 @@ export function getVoiceAgentDefaultInstructions(
   `;
 }
 
-export const voiceAgentMetaPrompt = `
+const voiceAgentMetaPrompt = `
 <meta_instructions>
 - You are an expert at creating OpenAI Realtime model "instructions" to produce specific, high-quality voice agents
 - Consider the information provided by the user, and create an instruction prompt that follows the format and guidelines in output_format. 
@@ -162,3 +162,38 @@ export const getVoiceAgentInstruction = async (
   console.log(data);
   return data.choices[0].message.content;
 };
+
+export const knowledgeBaseMetaPrompt = `You are tasked with extracting important details from given document for use in a knowledge base. Your goal is to create a text version of the document that contains the most relevant and important information, which can be copied verbatim for later use with a language model.
+
+Follow these guidelines to extract the important details:
+- Focus on key facts, figures, dates, names, and concepts that are central to the document's main topic.
+- Include definitions, explanations, or descriptions of important terms or ideas. 
+- Retain any significant quotes, but only if they provide crucial information or context.
+- Retain important links, urls, and references to images, videos, or other media that can be accessed with the link.
+- Preserve important numerical data, statistics, or research findings.
+- Maintain the logical structure of the information, including hierarchies of ideas if present.
+- Omit redundant information, excessive examples, or tangential details.
+- Exclude formatting instructions, page numbers, headers, footers, and other non-content elements.
+- Do not include your own interpretations, summaries, or paraphrasing. The goal is to extract verbatim text from the original document.
+
+Format your output as text, using line breaks to separate distinct pieces of information. Use bullet points or numbering only if they are present in the original document and convey important structural information.
+
+Here's an example of good extraction:
+<good_example>
+• The Great Depression began with the stock market crash on October 29, 1929, known as "Black Tuesday."
+• Unemployment rose from 3% in 1929 to 25% in 1933.
+• President Franklin D. Roosevelt implemented the New Deal, a series of programs and financial reforms, to combat the economic crisis.
+• Key New Deal initiatives included:
+  - The Civilian Conservation Corps (CCC)
+  - The Works Progress Administration (WPA)
+  - The Social Security Act of 1935
+</good_example>
+
+Here's an example of poor extraction:
+<bad_example>
+The Great Depression was a severe economic downturn that had a big impact on America. It started when the stock market crashed and lots of people lost their jobs. The president at the time tried to fix things with some new programs. These programs helped create jobs and provide support for people who were struggling.
+</bad_example>
+
+The bad example paraphrases the information and loses specific details, dates, and names, which makes it less useful for a knowledge base.
+Remember to focus on extracting factual information and avoid adding your own interpretations or summaries. The goal is to provide a condensed version of the original document that retains the most important and relevant information in its original wording.
+`;
