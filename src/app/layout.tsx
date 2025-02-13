@@ -76,7 +76,11 @@ export default function RootLayout({
               }),
             }}
           />
-          <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+          <link
+            rel="icon"
+            type="image/x-icon"
+            href="https://audentic.io/favicon.ico"
+          />
         </head>
         <body>
           <main>{children}</main>
