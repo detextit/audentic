@@ -10,7 +10,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Audentic | No Code Voice AI Agents for Websites",
+  title: "Audentic",
   description:
     "Create, test, and integrate AI voice agents into your web applications. Enable natural voice interactions, smart forms, and customer support with no code required.",
   keywords:
@@ -24,19 +24,12 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/dashboard.png", // You'll need to create this
-        width: 1200,
-        height: 630,
+        url: "https://audentic.io/icon.png",
+        width: 16,
+        height: 16,
         alt: "Audentic Voice AI Platform",
       },
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Audentic | No Code Voice AI Agents for Websites",
-    description:
-      "Create and integrate AI voice agents into your website with no code required.",
-    images: ["/dashboard.png"],
   },
   robots: {
     index: true,
@@ -60,8 +53,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="/">
-      <html lang="en" className={`${montserrat.variable} font-sans`}>
+    <ClerkProvider afterSignOutUrl="https://audentic.io">
+      <html
+        lang="en"
+        className={`${montserrat.variable} font-sans suppressHydrationWarning`}
+      >
         <head>
           <script
             type="application/ld+json"
@@ -71,7 +67,7 @@ export default function RootLayout({
                 "@type": "Organization",
                 name: "Audentic",
                 url: "https://audentic.io",
-                logo: "https://audentic.io/logo.png",
+                logo: "https://audentic.io/icon.png",
                 description: "No Code Voice AI Agents for Websites",
                 sameAs: [
                   "https://twitter.com/audentic",
@@ -80,6 +76,7 @@ export default function RootLayout({
               }),
             }}
           />
+          <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         </head>
         <body>
           <main>{children}</main>
