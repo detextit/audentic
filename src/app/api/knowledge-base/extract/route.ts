@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
+import { knowledgeBaseMetaPrompt } from "@/agentBuilder/metaPrompts";
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({
@@ -128,10 +128,11 @@ export async function POST(request: NextRequest) {
       } else {
         // For PDFs, images, and other supported formats, use Gemini's built-in processing
         const generativePart = await fileToGenerativePart(file);
-        const prompt =
-          "Extract and summarize the main content from this document, preserving important details and removing any irrelevant or redundant information.";
 
-        const result = await model.generateContent([prompt, generativePart]);
+        const result = await model.generateContent([
+          knowledgeBaseMetaPrompt,
+          generativePart,
+        ]);
         content = result.response.text();
       }
     } else {
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
         const url = new URL(content);
         title = url.hostname + url.pathname;
 
-        const prompt = `Extract and clean up the main content from this HTML, removing any navigation, headers, footers, or irrelevant content. HTML: ${html}`;
+        const prompt = `${knowledgeBaseMetaPrompt}\n\n HTML page: ${html}`;
         const result = await model.generateContent(prompt);
         textContent = result.response.text();
       } catch (error: any) {
