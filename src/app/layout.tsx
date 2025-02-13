@@ -12,30 +12,39 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Audentic | No Code Voice AI Agents for Websites",
   description:
-    "Create, test, and integrate AI voice agents into your web applications. Enable natural voice interactions, smart forms, and customer support with no code required.",
+    "Build and deploy AI voice agents on your website in minutes. Enhance customer support, improve accessibility, and boost engagement with natural voice interactions - no coding required.",
   keywords:
-    "voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement",
+    "voice AI platform, website voice assistant, conversational AI, no-code AI, voice chatbot, AI customer service, website accessibility, voice user interface, virtual assistant, voice integration, AI automation, customer engagement",
+  alternates: {
+    canonical: "https://audentic.io",
+  },
+  authors: [{ name: "Audentic" }],
+  creator: "Audentic",
+  publisher: "Audentic",
   openGraph: {
     title: "Audentic | No Code Voice AI Agents for Websites",
     description:
-      "Create and integrate AI voice agents into your website with no code required. Enable natural conversations, smart forms, and enhanced customer support.",
+      "Build and deploy AI voice agents on your website in minutes. Enhance customer support, improve accessibility, and boost engagement with natural voice interactions.",
     url: "https://audentic.io",
     siteName: "Audentic",
     type: "website",
+    locale: "en_US",
     images: [
       {
-        url: "/dashboard.png", // You'll need to create this
+        url: "/dashboard.png",
         width: 1200,
         height: 630,
-        alt: "Audentic Voice AI Platform",
+        alt: "Audentic Voice AI Platform Dashboard",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Audentic | No Code Voice AI Agents for Websites",
+    title: "Audentic | Create Voice AI Agents for Your Website",
     description:
-      "Create and integrate AI voice agents into your website with no code required.",
+      "Build and deploy AI voice agents on your website in minutes. No coding required.",
+    creator: "@audentic",
     images: ["/dashboard.png"],
   },
   robots: {
@@ -47,6 +56,7 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
+      notranslate: false,
     },
   },
   verification: {
@@ -62,6 +72,22 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={`${montserrat.variable} font-sans`}>
+        <head>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Audentic",
+                url: "https://audentic.io",
+                logo: "https://audentic.io/logo.png",
+                description: "No Code Voice AI Agents for Websites",
+                sameAs: ["https://twitter.com/audentic"],
+              }),
+            }}
+          />
+        </head>
         <body>
           <main>{children}</main>
           <Toaster />
