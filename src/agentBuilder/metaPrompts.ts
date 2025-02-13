@@ -169,13 +169,14 @@ Follow these guidelines to extract the important details:
 - Focus on key facts, figures, dates, names, and concepts that are central to the document's main topic.
 - Include definitions, explanations, or descriptions of important terms or ideas. 
 - Retain any significant quotes, but only if they provide crucial information or context.
+- Retain important links, urls, and references to images, videos, or other media that can be accessed with the link.
 - Preserve important numerical data, statistics, or research findings.
 - Maintain the logical structure of the information, including hierarchies of ideas if present.
 - Omit redundant information, excessive examples, or tangential details.
 - Exclude formatting instructions, page numbers, headers, footers, and other non-content elements.
 - Do not include your own interpretations, summaries, or paraphrasing. The goal is to extract verbatim text from the original document.
 
-Format your output as plain text, using line breaks to separate distinct pieces of information. Use bullet points or numbering only if they are present in the original document and convey important structural information.
+Format your output as text, using line breaks to separate distinct pieces of information. Use bullet points or numbering only if they are present in the original document and convey important structural information.
 
 Here's an example of good extraction:
 <good_example>
