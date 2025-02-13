@@ -97,6 +97,8 @@ async function fileToGenerativePart(file: File) {
   };
 }
 
+export const maxDuration = 60; // This is the time in seconds that this function is allowed to execute within. Setting it to 30s.
+
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get("content-type") || "";
