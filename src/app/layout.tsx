@@ -10,26 +10,35 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Audentic",
+  title: "Audentic | AI Voice Agents for Websites | No-Code Voice Integration",
   description:
-    "Create, test, and integrate AI voice agents into your web applications. Enable natural voice interactions, smart forms, and customer support with no code required.",
+    "Transform your website with AI voice agents. Create natural conversations, smart forms, and 24/7 customer support - no coding required. Try Audentic today.",
   keywords:
-    "voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement",
+    "voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service",
   openGraph: {
-    title: "Audentic | No Code Voice AI Agents for Websites",
+    title: "Audentic | AI Voice Agents for Websites | No-Code Platform",
     description:
-      "Create and integrate AI voice agents into your website with no code required. Enable natural conversations, smart forms, and enhanced customer support.",
+      "Transform your website with AI voice agents. Enable natural conversations and 24/7 customer support without coding. Start your free trial today.",
     url: "https://audentic.io",
     siteName: "Audentic",
     type: "website",
     images: [
       {
-        url: "https://audentic.io/icon.png",
-        width: 16,
-        height: 16,
-        alt: "Audentic Voice AI Platform",
+        url: "https://audentic.io/dashboard.png",
+        width: 2940,
+        height: 1658,
+        alt: "Audentic - AI Voice Agents Platform",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Audentic | AI Voice Agents for Websites | No-Code Platform",
+    description:
+      "Transform your website with AI voice agents. Create natural conversations and 24/7 customer support without coding. Get started with Audentic today.",
+    site: "@audentic_io",
+    creator: "@audentic_io",
+    images: ["https://audentic.io/cover.png"],
   },
   robots: {
     index: true,
@@ -44,6 +53,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "lIr3-vVrCTgSE3Maioh0xU-TkH5ck2q5vCUcz-dyNGo",
+  },
+  alternates: {
+    canonical: "https://audentic.io",
   },
 };
 
@@ -62,25 +74,37 @@ export default function RootLayout({
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Organization",
-                name: "Audentic",
-                url: "https://audentic.io",
-                logo: "https://audentic.io/icon.png",
-                description: "No Code Voice AI Agents for Websites",
-                sameAs: [
-                  "https://twitter.com/audentic",
-                  // Add other social media URLs
-                ],
-              }),
+              __html: JSON.stringify([
+                {
+                  "@context": "https://schema.org",
+                  "@type": "Organization",
+                  name: "Audentic",
+                  url: "https://audentic.io",
+                  logo: "https://audentic.io/icon.png",
+                  description: "No Code Voice AI Agents for Websites",
+                  sameAs: [
+                    "https://x.com/audentic_io",
+                    // Add other social media URLs
+                  ],
+                },
+                {
+                  "@context": "https://schema.org",
+                  "@type": "SoftwareApplication",
+                  name: "Audentic",
+                  applicationCategory: "Voice AI Platform",
+                  description:
+                    "No-code platform for creating and integrating AI voice agents into websites",
+                  offers: {
+                    "@type": "Offer",
+                    availability: "https://schema.org/InStock",
+                  },
+                  category: "Voice AI Software",
+                  operatingSystem: "Web-based",
+                },
+              ]),
             }}
           />
-          <link
-            rel="icon"
-            type="image/x-icon"
-            href="https://audentic.io/favicon.ico"
-          />
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         </head>
         <body>
           <main>{children}</main>
