@@ -1,0 +1,102 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "willow",
+  "name": "Audentic",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#07C983",
+    "dark": "#15803D"
+  },
+  "favicon": "logo/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Build with Audentic",
+            "pages": [
+              "use-cases/chatbot",
+              "use-cases/form-filling",
+              "use-cases/document-assistant",
+              "use-cases/code-assistant"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Roadmap",
+        "groups": [
+          {
+            "group": "Model Context Protocol",
+            "pages": ["roadmap/model-context-protocol"]
+          },
+          {
+            "group": "Integration",
+            "pages": ["integration/wix", "integration/shopify"]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Community",
+          "href": "https://audentic.io",
+          "icon": "slack"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://audentic.io/blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "logo/dark.svg",
+    "dark": "logo/light.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:info@audentic.io"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Agent Builder",
+      "href": "https://audentic.io/agents"
+    }
+  },
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "og:site_name": "Audentic",
+      "og:title": "Audentic | AI Voice Agents for Websites | No-Code Platform",
+      "og:description": "Transform your website with AI voice agents. Enable natural conversations and 24/7 customer support without coding. Start your free trial today.",
+      "og:url": "https://audentic.io",
+      "og:image": "https://audentic.io/dashboard.png",
+      "og:image:width": "2940",
+      "og:image:height": "1658",
+      "og:logo": "https://audentic.io/icon.png",
+      "twitter:title": "Audentic | AI Voice Agents for Websites | No-Code Platform",
+      "twitter:description": "Transform your website with AI voice agents. Create natural conversations and 24/7 customer support without coding. Get started with Audentic today.",
+      "twitter:url": "https://audentic.io",
+      "twitter:image": "https://audentic.io/cover.png",
+      "twitter:site": "@audentic_io",
+      "robots": "index, follow"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/audentic_io",
+      "github": "https://github.com/detextit"
+    }
+  }
+}
