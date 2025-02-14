@@ -49,6 +49,14 @@ export default function LandingPage() {
             <span className="font-semibold text-lg">Audentic</span>
           </div>
           <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                window.open("https://audentic.mintlify.app", "_blank")
+              }
+            >
+              Docs
+            </Button>
             <Button onClick={handleGetStarted}>Get Started</Button>
           </div>
         </div>
