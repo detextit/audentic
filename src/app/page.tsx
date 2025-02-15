@@ -250,6 +250,34 @@ export default function LandingPage() {
         </section>
       </main>
 
+      {/* Hidden SEO content - visible to search engines but not users */}
+      <div className="sr-only">
+        <h2>About Audentic AI Voice Agents</h2>
+        <p>
+          Audentic provides cutting-edge AI voice agent technology that
+          transforms how users interact with websites. Our platform enables
+          businesses to create intelligent, conversational agents that
+          understand natural language and can perform complex tasks like form
+          filling, document assistance, and customer support.
+        </p>
+        <h3>Advanced Voice AI Technology</h3>
+        <p>
+          Built on state-of-the-art end to end speech technology, Audentic's
+          voice agents deliver human-like interactions while maintaining high
+          accuracy and reliability. Our agents can understand context, remember
+          conversation history, and adapt their responses based on user needs.
+        </p>
+        <h3>Seamless Integration</h3>
+        <p>
+          Whether you're using React, popular website builders, or custom
+          solutions, Audentic's voice agents can be integrated into your website
+          with minimal effort. Our platform handles the complex technical
+          aspects, allowing you to focus on creating engaging voice experiences
+          for your users.
+        </p>
+        a
+      </div>
+
       {/* Add SessionControl with fixed positioning */}
       <motion.div
         className="fixed bottom-4 right-4 z-50"

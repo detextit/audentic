@@ -5,5 +5,13 @@ Disallow: /sign-in
 Disallow: /sign-up
 Disallow: /dashboard
 
-Sitemap: https://audentic.io/sitemap.xml
-Host: https://audentic.io 
+# Allow important files
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+# Add longer crawl delay to prevent rate limiting
+Crawl-delay: 10
+
+# Specify sitemap
+Sitemap: https://www.audentic.io/sitemap.xml
+Host: https://www.audentic.io 
