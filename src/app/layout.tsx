@@ -10,15 +10,15 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Audentic | AI Voice Agents for Websites",
+  title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
   description:
-    "Transform your website with intelligent AI voice agents that revolutionize user interaction. Create natural, engaging conversations, streamline form filling, and provide comprehensive 24/7 customer support - all without any coding knowledge. Our advanced voice AI technology enhances website accessibility, improves user engagement, and delivers personalized experiences. Try Audentic today and join the future of web interaction.",
+    "Transform your website with AI voice agents that enable natural conversations and 24/7 customer support. No coding required. Enhance user engagement today.",
   keywords:
     "audentic, elevenlabs, openai realtime, voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service, natural language processing, voice recognition, speech synthesis, virtual assistant",
   openGraph: {
-    title: "Audentic | AI Voice Agents for Websites",
+    title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
     description:
-      "Transform your website with cutting-edge AI voice agents. Enable natural, human-like conversations and comprehensive 24/7 customer support without any coding requirements. Our intelligent voice assistants enhance user experience, improve accessibility, and streamline customer interactions. Start your free trial today and experience the power of voice AI.",
+      "Create intelligent voice interactions for your website. Our AI agents provide natural conversations and automated support, improving user experience instantly.",
     url: "https://audentic.io",
     siteName: "Audentic",
     type: "website",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Audentic | AI Voice Agents for Websites",
+    title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
     description:
-      "Transform your website with sophisticated AI voice agents. Create natural conversations, automate customer support, and enhance user engagement without coding. Our platform offers seamless integration, advanced voice recognition, and intelligent conversation management. Get started with Audentic today for a more interactive web presence.",
+      "Enhance your website with AI voice agents. Enable natural conversations and automated support without coding. Start improving engagement today.",
     site: "@audentic_io",
     creator: "@audentic_io",
     images: ["https://audentic.io/cover.png"],
