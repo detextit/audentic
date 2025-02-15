@@ -89,7 +89,6 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  cleanUrls: true,
   trailingSlash: false,
   async redirects() {
     return [
