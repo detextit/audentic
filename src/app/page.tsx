@@ -262,18 +262,19 @@ export default function LandingPage() {
         </p>
         <h3>Advanced Voice AI Technology</h3>
         <p>
-          Built on state-of-the-art end to end speech technology, Audentic's
-          voice agents deliver human-like interactions while maintaining high
-          accuracy and reliability. Our agents can understand context, remember
-          conversation history, and adapt their responses based on user needs.
+          Built on state-of-the-art end to end speech technology,
+          Audentic&apos;s voice agents deliver human-like interactions while
+          maintaining high accuracy and reliability. Our agents can understand
+          context, remember conversation history, and adapt their responses
+          based on user needs.
         </p>
         <h3>Seamless Integration</h3>
         <p>
-          Whether you're using React, popular website builders, or custom
-          solutions, Audentic's voice agents can be integrated into your website
-          with minimal effort. Our platform handles the complex technical
-          aspects, allowing you to focus on creating engaging voice experiences
-          for your users.
+          Whether you&apos;re using React, popular website builders, or custom
+          solutions, Audentic&apos;s voice agents can be integrated into your
+          website with minimal effort. Our platform handles the complex
+          technical aspects, allowing you to focus on creating engaging voice
+          experiences for your users.
         </p>
         a
       </div>
