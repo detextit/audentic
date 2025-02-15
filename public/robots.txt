@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /dashboard
+
+Sitemap: https://audentic.io/sitemap.xml
+Host: https://audentic.io 

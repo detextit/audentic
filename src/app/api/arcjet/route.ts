@@ -13,10 +13,10 @@ const aj = arcjet({
       // Block all bots except the following
       allow: [
         "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
-        // Uncomment to allow these other common bot categories
-        // See the full list at https://arcjet.com/bot-list
-        //"CATEGORY:MONITOR", // Uptime monitoring services
-        //"CATEGORY:PREVIEW", // Link previews e.g. Slack, Discord
+        "CATEGORY:MONITOR", // Uptime monitoring services
+        "CATEGORY:PREVIEW", // Link previews e.g. Slack, Discord
+        "CATEGORY:SOCIAL", // Social media crawlers
+        "CATEGORY:AI", // AI crawlers
       ],
     }),
     // Create a token bucket rate limit. Other algorithms are supported.
@@ -37,17 +37,17 @@ export async function GET(req: Request) {
     if (decision.reason.isRateLimit()) {
       return NextResponse.json(
         { error: "Too Many Requests", reason: decision.reason },
-        { status: 429 },
+        { status: 429 }
       );
     } else if (decision.reason.isBot()) {
       return NextResponse.json(
         { error: "No bots allowed", reason: decision.reason },
-        { status: 403 },
+        { status: 403 }
       );
     } else {
       return NextResponse.json(
         { error: "Forbidden", reason: decision.reason },
-        { status: 403 },
+        { status: 403 }
       );
     }
   }
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
   if (decision.reason.isBot() && decision.reason.isSpoofed()) {
     return NextResponse.json(
       { error: "Forbidden", reason: decision.reason },
-      { status: 403 },
+      { status: 403 }
     );
   }
 

@@ -10,15 +10,15 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Audentic | AI Voice Agents for Websites | No-Code Voice Integration",
+  title: "Audentic | AI Voice Agents for Websites",
   description:
-    "Transform your website with AI voice agents. Create natural conversations, smart forms, and 24/7 customer support - no coding required. Try Audentic today.",
+    "Transform your website with intelligent AI voice agents that revolutionize user interaction. Create natural, engaging conversations, streamline form filling, and provide comprehensive 24/7 customer support - all without any coding knowledge. Our advanced voice AI technology enhances website accessibility, improves user engagement, and delivers personalized experiences. Try Audentic today and join the future of web interaction.",
   keywords:
-    "voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service",
+    "audentic, elevenlabs, openai realtime, voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service, natural language processing, voice recognition, speech synthesis, virtual assistant",
   openGraph: {
-    title: "Audentic | AI Voice Agents for Websites | No-Code Platform",
+    title: "Audentic | AI Voice Agents for Websites",
     description:
-      "Transform your website with AI voice agents. Enable natural conversations and 24/7 customer support without coding. Start your free trial today.",
+      "Transform your website with cutting-edge AI voice agents. Enable natural, human-like conversations and comprehensive 24/7 customer support without any coding requirements. Our intelligent voice assistants enhance user experience, improve accessibility, and streamline customer interactions. Start your free trial today and experience the power of voice AI.",
     url: "https://audentic.io",
     siteName: "Audentic",
     type: "website",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Audentic | AI Voice Agents for Websites | No-Code Platform",
+    title: "Audentic | AI Voice Agents for Websites",
     description:
-      "Transform your website with AI voice agents. Create natural conversations and 24/7 customer support without coding. Get started with Audentic today.",
+      "Transform your website with sophisticated AI voice agents. Create natural conversations, automate customer support, and enhance user engagement without coding. Our platform offers seamless integration, advanced voice recognition, and intelligent conversation management. Get started with Audentic today for a more interactive web presence.",
     site: "@audentic_io",
     creator: "@audentic_io",
     images: ["https://audentic.io/cover.png"],
@@ -81,7 +81,8 @@ export default function RootLayout({
                   name: "Audentic",
                   url: "https://audentic.io",
                   logo: "https://audentic.io/icon.png",
-                  description: "No Code Voice AI Agents for Websites",
+                  description:
+                    "Leading provider of No-Code Voice AI Agents for Websites. We specialize in creating intelligent, conversational AI solutions that enhance website functionality and user experience. Our platform enables businesses to implement sophisticated voice interactions without technical expertise.",
                   sameAs: [
                     "https://x.com/audentic_io",
                     // Add other social media URLs
@@ -93,7 +94,7 @@ export default function RootLayout({
                   name: "Audentic",
                   applicationCategory: "Voice AI Platform",
                   description:
-                    "No-code platform for creating and integrating AI voice agents into websites",
+                    "Advanced no-code platform for creating and integrating AI voice agents into websites. Our solution offers natural language processing, real-time voice recognition, and intelligent conversation management to transform website interactions. Perfect for businesses seeking to enhance customer engagement and support capabilities.",
                   offers: {
                     "@type": "Offer",
                     availability: "https://schema.org/InStock",
