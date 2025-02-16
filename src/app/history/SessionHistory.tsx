@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { HistoryTranscript } from "./HistoryTranscript";
+import { CostSummary } from "./CostSummary";
 import { TranscriptItem } from "@audentic/react";
 
 interface SessionHistoryProps {
@@ -49,6 +50,10 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
     return <div className="p-4">Loading session data...</div>;
   }
 
+  if (!sessionId) {
+    return <div className="p-4">No session selected</div>;
+  }
+
   // return (
   //   <div className="h-full flex flex-col">
   //     <div className="grid grid-cols-2 flex-1 divide-x">
@@ -63,8 +68,11 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   // );
 
   return (
-    <div className="h-full flex">
-      <HistoryTranscript transcriptItems={transcriptItems} />
+    <div className="h-full flex flex-col gap-4 p-4">
+      <CostSummary sessionId={sessionId} />
+      <div className="flex-1">
+        <HistoryTranscript transcriptItems={transcriptItems} />
+      </div>
     </div>
   );
 }
