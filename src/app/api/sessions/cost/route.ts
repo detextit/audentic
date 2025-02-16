@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     const usageData = result.rows[0].usage_data || [];
 
     // Initialize counters
-    let totalStats = {
+    const totalStats = {
       text: {
         uncached_input: 0,
         cached_input: 0,
