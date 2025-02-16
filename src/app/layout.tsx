@@ -12,19 +12,19 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
   description:
-    "Transform your website with AI voice agents that enable natural conversations and 24/7 customer support. No coding required. Enhance user engagement today.",
+    "Transform your website with voice AI agents that enable natural conversations and digital interactions. No coding required. Enhance user engagement today.",
   keywords:
-    "audentic, elevenlabs, openai realtime, voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service, natural language processing, voice recognition, speech synthesis, virtual assistant",
+    "audentic, elevenlabs, openai, realtime, voice AI, website voice assistant, AI agents, voice integration, conversational AI, no-code voice AI, website accessibility, customer engagement, chatbot alternative, voice user interface, website automation, AI customer service, natural language processing, voice recognition, speech synthesis, virtual assistant",
   openGraph: {
     title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
     description:
       "Create intelligent voice interactions for your website. Our AI agents provide natural conversations and automated support, improving user experience instantly.",
-    url: "https://audentic.io",
+    url: "https://www.audentic.io",
     siteName: "Audentic",
     type: "website",
     images: [
       {
-        url: "https://audentic.io/dashboard.png",
+        url: "https://www.audentic.io/dashboard.png",
         width: 2940,
         height: 1658,
         alt: "Audentic - AI Voice Agents Platform",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       "Enhance your website with AI voice agents. Enable natural conversations and automated support without coding. Start improving engagement today.",
     site: "@audentic_io",
     creator: "@audentic_io",
-    images: ["https://audentic.io/cover.png"],
+    images: ["https://www.audentic.io/cover.png"],
   },
   robots: {
     index: true,
@@ -55,7 +55,13 @@ export const metadata: Metadata = {
     google: "lIr3-vVrCTgSE3Maioh0xU-TkH5ck2q5vCUcz-dyNGo",
   },
   alternates: {
-    canonical: "https://audentic.io",
+    canonical: "https://www.audentic.io",
+    languages: {
+      en: "https://www.audentic.io",
+    },
+    types: {
+      "text/html": [{ url: "https://audentic.io" }],
+    },
   },
 };
 
@@ -65,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="https://audentic.io">
+    <ClerkProvider afterSignOutUrl="https://www.audentic.io">
       <html
         lang="en"
         className={`${montserrat.variable} font-sans suppressHydrationWarning`}
@@ -79,8 +85,8 @@ export default function RootLayout({
                   "@context": "https://schema.org",
                   "@type": "Organization",
                   name: "Audentic",
-                  url: "https://audentic.io",
-                  logo: "https://audentic.io/icon.png",
+                  url: "https://www.audentic.io",
+                  logo: "https://www.audentic.io/icon.png",
                   description:
                     "Leading provider of No-Code Voice AI Agents for Websites. We specialize in creating intelligent, conversational AI solutions that enhance website functionality and user experience. Our platform enables businesses to implement sophisticated voice interactions without technical expertise.",
                   sameAs: [
