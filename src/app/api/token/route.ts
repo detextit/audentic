@@ -73,12 +73,14 @@ export async function POST(request: Request) {
 
     // Combine base instructions with knowledge base content
     const instructions =
+      knowledgeBaseContent +
+      "\n" +
+      agentConfig.instructions +
+      "\n" +
       getVoiceAgentDefaultInstructions(
         agentConfig.name,
         new Date().toLocaleString()
-      ) +
-      agentConfig.instructions +
-      knowledgeBaseContent;
+      );
 
     const tools = agentConfig.tools || [];
 

@@ -38,9 +38,10 @@ export default function Home() {
         const urlAgentId = pathname.split("/agents/")?.[1] || null;
         if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
           setSelectedAgentId(urlAgentId);
-        } else {
-          setSelectedAgentId(agents[0].id);
         }
+        // else {
+        //   setSelectedAgentId(agents[0].id);
+        // }
       }
     } else if (pathname.startsWith("/history")) {
       setSidebarOpen("History");
@@ -48,9 +49,10 @@ export default function Home() {
         const urlSessionId = pathname.split("/history/")?.[1] || null;
         if (urlSessionId) {
           setSelectedSessionId(urlSessionId);
-        } else {
-          setSelectedSessionId(sessions[0]?.session_id);
         }
+        // else {
+        //   setSelectedSessionId(sessions[0]?.session_id);
+        // }
       }
     }
   }, [pathname, agents, sessions]);

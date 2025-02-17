@@ -12,7 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface CostData {
@@ -76,11 +76,13 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-bold">Session Cost</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-bold">Session Cost</CardTitle>
+            <div className="flex items-center gap-4 text-lg font-semibold">
+              <Loader className="animate-spin" />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">Loading cost data...</div>
-        </CardContent>
       </Card>
     );
   if (error) return <div className="text-red-500">{error}</div>;
