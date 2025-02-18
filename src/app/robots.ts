@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/sign-in", "/sign-up", "/agents", "/history"],
       },
     ],
-    sitemap: "https://audentic.io/sitemap.xml",
-    host: "https://audentic.io",
+    sitemap: "https://www.audentic.io/sitemap.xml",
+    host: "https://www.audentic.io",
   };
 }
