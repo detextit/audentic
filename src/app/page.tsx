@@ -21,6 +21,14 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { faqData } from "@/data/faq";
+
 export default function LandingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
@@ -236,6 +244,66 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Hidden SEO content - visible to search engines but not users */}
+        <div className="sr-only">
+          <h2>About Audentic AI Voice Agents</h2>
+          <p>
+            Audentic provides cutting-edge AI voice agent technology that
+            transforms how users interact with websites. Our platform enables
+            businesses to create intelligent, conversational agents that
+            understand natural language and can perform complex tasks like form
+            filling, document assistance, and customer support.
+          </p>
+          <h3>Advanced Voice AI Technology</h3>
+          <p>
+            Built on state-of-the-art end to end speech technology,
+            Audentic&apos;s voice agents deliver human-like interactions while
+            maintaining high accuracy and reliability. Our agents can understand
+            context, remember conversation history, and adapt their responses
+            based on user needs.
+          </p>
+          <h3>Seamless Integration</h3>
+          <p>
+            Whether you&apos;re using React, popular website builders, or custom
+            solutions, Audentic&apos;s voice agents can be integrated into your
+            website with minimal effort. Our platform handles the complex
+            technical aspects, allowing you to focus on creating engaging voice
+            experiences for your users.
+          </p>
+          a
+        </div>
+
+        <div className="container mx-auto px-6 py-24">
+          <h2 className="text-4xl font-bold text-center mb-12">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqData.map((item, index) => (
+                <AccordionItem key={index} value={`item-${index + 1}`}>
+                  <AccordionTrigger className="text-xl font-semibold">
+                    {item.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground space-y-4">
+                    {item.answer.intro && <p>{item.answer.intro}</p>}
+                    <ul className="list-disc pl-6 space-y-2">
+                      {item.answer.points.map((point, i) => (
+                        <li key={i}>{point}</li>
+                      ))}
+                    </ul>
+                    {item.answer.codeExample && (
+                      <p className="mt-4 font-mono bg-slate-100 p-4 rounded-md">
+                        {item.answer.codeExample}
+                      </p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </div>
+
         {/* CTA Section */}
         <section className="border-t bg-slate-900 text-white">
           <div className="container mx-auto px-6 py-16 text-center items-center justify-center">
@@ -249,36 +317,6 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-
-      {/* Hidden SEO content - visible to search engines but not users */}
-      <div className="sr-only">
-        <h2>About Audentic AI Voice Agents</h2>
-        <p>
-          Audentic provides cutting-edge AI voice agent technology that
-          transforms how users interact with websites. Our platform enables
-          businesses to create intelligent, conversational agents that
-          understand natural language and can perform complex tasks like form
-          filling, document assistance, and customer support.
-        </p>
-        <h3>Advanced Voice AI Technology</h3>
-        <p>
-          Built on state-of-the-art end to end speech technology,
-          Audentic&apos;s voice agents deliver human-like interactions while
-          maintaining high accuracy and reliability. Our agents can understand
-          context, remember conversation history, and adapt their responses
-          based on user needs.
-        </p>
-        <h3>Seamless Integration</h3>
-        <p>
-          Whether you&apos;re using React, popular website builders, or custom
-          solutions, Audentic&apos;s voice agents can be integrated into your
-          website with minimal effort. Our platform handles the complex
-          technical aspects, allowing you to focus on creating engaging voice
-          experiences for your users.
-        </p>
-        a
-      </div>
-
       {/* Add SessionControl with fixed positioning */}
       <motion.div
         className="fixed bottom-4 right-4 z-50"
