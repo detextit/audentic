@@ -30,6 +30,7 @@ export interface AgentConfig {
   instructions: string;
   tools: Tool[];
   toolLogic?: Record<string, string>;
+  mcpTools?: string[];
 }
 
 export interface AgentDBConfig extends AgentConfig {
