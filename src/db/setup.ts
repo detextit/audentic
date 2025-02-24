@@ -69,11 +69,23 @@ export async function setupDatabase() {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `,
+
+      // Create mcp_servers table
+      sql`
+        CREATE TABLE IF NOT EXISTS mcp_servers (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
+          name VARCHAR(255) NOT NULL,
+          env JSONB DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `,
     ];
 
     await Promise.all(setupOperations);
     console.log(
-      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles - initiated"
+      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers - initiated"
     );
   } catch (error) {
     console.error("Error setting up database:", error);
