@@ -1,4 +1,5 @@
 import type { MCPServers } from "./mcp";
+import type { Tool } from "@/agentBuilder/types";
 
 /**
  * Check connection status for a server
@@ -30,18 +31,7 @@ export async function checkServerStatus(
 export async function listTools(
   serverName: string,
   baseUrl: string = process.env.MCP_SERVER_URL || "http://localhost:8080"
-): Promise<
-  Array<{
-    type: "function";
-    name: string;
-    description: string;
-    parameters: {
-      type: "object";
-      properties: Record<string, unknown>;
-      required?: string[];
-    };
-  }>
-> {
+): Promise<Tool[]> {
   const response = await fetch(
     `${baseUrl}/tools/${encodeURIComponent(serverName)}`
   );
@@ -61,13 +51,15 @@ export async function listTools(
       type: "function",
       name: tool.name,
       description: tool.description,
-      parameters: {
-        type: "object",
-        properties: tool.inputSchema?.properties || {},
-        ...(tool.inputSchema?.required && {
-          required: tool.inputSchema.required,
-        }),
-      },
+      parameters: tool.inputSchema
+        ? {
+            type: "object",
+            properties: tool.inputSchema.properties,
+            ...(tool.inputSchema.required && {
+              required: tool.inputSchema.required,
+            }),
+          }
+        : {},
     })
   );
 }

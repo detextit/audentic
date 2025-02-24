@@ -3,10 +3,28 @@ import { useState } from "react";
 export function useMcpServers() {
   const [loading, setLoading] = useState(false);
 
+  const getMcpServers = async (agentId: string) => {
+    if (!agentId) return [];
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/mcp-servers/${agentId}`);
+      if (!response.ok) throw new Error("Failed to get MCP servers");
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to get MCP servers:", error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveMcpServer = async (
     agentId: string,
     server: { name: string; env: Record<string, string> }
   ) => {
+    if (!agentId) return;
+
     setLoading(true);
     try {
       const response = await fetch("/api/mcp-servers", {
@@ -21,6 +39,8 @@ export function useMcpServers() {
   };
 
   const deleteMcpServer = async (agentId: string, serverName: string) => {
+    if (!agentId || !serverName) return;
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -35,11 +55,5 @@ export function useMcpServers() {
     }
   };
 
-  const getMcpServers = async (agentId: string) => {
-    const response = await fetch(`/api/mcp-servers/${agentId}`);
-    if (!response.ok) throw new Error("Failed to get MCP servers");
-    return response.json();
-  };
-
-  return { loading, saveMcpServer, deleteMcpServer, getMcpServers };
+  return { loading, getMcpServers, saveMcpServer, deleteMcpServer };
 }

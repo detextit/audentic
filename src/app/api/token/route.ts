@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getAgentById, getAgentKnowledgeBase } from "@/db";
+import { getAgentById, getAgentKnowledgeBase, getMcpServers } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
-import { AgentConfig, AgentDBConfig } from "@/agentBuilder/types";
+import { AgentConfig, AgentDBConfig, Tool } from "@/agentBuilder/types";
 import {
   createFormToolLogic,
   FormToolState,
@@ -14,6 +14,8 @@ import {
   formAgentMetaPrompt,
   getVoiceAgentDefaultInstructions,
 } from "@/agentBuilder/metaPrompts";
+import { configureServers, listTools } from "@/mcp/mcpUtils";
+import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -83,6 +85,39 @@ export async function POST(request: Request) {
       );
 
     const tools = agentConfig.tools || [];
+    const mcpTools: string[] = [];
+
+    // get MCP servers
+    const mcpServers = await getMcpServers(apiKey);
+    if (mcpServers.length > 0) {
+      // Configure MCP servers and get tools
+      const mcpServerConfig: Record<string, any> = {};
+      const configuredServerNames: string[] = [];
+
+      for (const server of mcpServers) {
+        if (AVAILABLE_MCP_SERVERS[server.name]) {
+          mcpServerConfig[server.name] = {
+            command: AVAILABLE_MCP_SERVERS[server.name].command,
+            env: server.env, // This contains the environment variables
+            args: AVAILABLE_MCP_SERVERS[server.name].args,
+          };
+          configuredServerNames.push(server.name);
+        } else {
+          console.error(`MCP server ${server.name} not found`);
+        }
+      }
+
+      // Configure servers and get available tools
+      const result = await configureServers(mcpServerConfig);
+      console.log("MCP servers configured:", result);
+
+      // Get tools from each configured server
+      for (const serverName of configuredServerNames) {
+        const serverTools: Tool[] = await listTools(serverName);
+        tools.push(...serverTools);
+        mcpTools.push(...serverTools.map((tool) => tool.name));
+      }
+    }
 
     const sessionSettings = {
       model: agentConfig.model,
@@ -139,6 +174,7 @@ export async function POST(request: Request) {
       url: "https://api.openai.com/v1/realtime",
       eventChannel: "oai-events",
       tool_logic: toolLogic,
+      mcp_tools: mcpTools,
     };
 
     return NextResponse.json(tokenResponse, {
