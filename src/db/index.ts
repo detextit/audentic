@@ -243,7 +243,10 @@ export async function getMcpServers(agentId: string) {
     FROM mcp_servers 
     WHERE agent_id = ${agentId}
   `;
-  return rows;
+  return rows.map((row) => ({
+    name: row.name,
+    env: JSON.parse(row.env),
+  }));
 }
 
 export async function saveMcpServer(
