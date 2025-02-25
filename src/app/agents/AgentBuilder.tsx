@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, PlusCircle } from "lucide-react";
+import { Trash2, PlusCircle, HelpCircle } from "lucide-react";
 import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 import {
   Dialog,
@@ -52,6 +52,12 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -712,12 +718,37 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   <CardContent className="space-y-4">
                     {definition.envVars.map((envVar) => (
                       <div key={envVar.name}>
-                        <Label htmlFor={envVar.name} className="text-sm">
-                          {envVar.name}
-                          {envVar.required && (
-                            <span className="text-red-500">*</span>
-                          )}
-                        </Label>
+                        <div className="flex items-center gap-1">
+                          <Label htmlFor={envVar.name} className="text-sm">
+                            {envVar.name}
+                            {envVar.required && (
+                              <span className="text-red-500">*</span>
+                            )}
+                          </Label>
+                          <Button
+                            variant="ghost"
+                            className="h-4 w-4 p-0 hover:bg-transparent"
+                            asChild
+                          >
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    Please verify this value is correct before
+                                    saving.
+                                  </p>
+                                  <p>
+                                    Ensure sensitive credentials are stored
+                                    securely.
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </Button>
+                        </div>
                         <Input
                           id={envVar.name}
                           type="password"
