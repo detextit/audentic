@@ -245,7 +245,7 @@ export async function getMcpServers(agentId: string) {
   `;
   return rows.map((row) => ({
     name: row.name,
-    env: JSON.parse(row.env),
+    env: row.env,
   }));
 }
 
@@ -253,12 +253,11 @@ export async function saveMcpServer(
   agentId: string,
   server: { name: string; env: Record<string, string> }
 ) {
+  console.log("Saving server:", server);
   await sql`
-    INSERT INTO mcp_servers (agent_id, name, env, updated_at)
-    VALUES (${agentId}, ${server.name}, ${JSON.stringify(
-    server.env
-  )}, CURRENT_TIMESTAMP)
-    ON CONFLICT (agent_id, name) 
+    INSERT INTO mcp_servers (agent_id, name, env)
+    VALUES (${agentId}, ${server.name}, ${JSON.stringify(server.env)})
+    ON CONFLICT (agent_id, name)
     DO UPDATE SET env = ${JSON.stringify(
       server.env
     )}, updated_at = CURRENT_TIMESTAMP

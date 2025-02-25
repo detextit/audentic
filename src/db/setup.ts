@@ -78,7 +78,8 @@ export async function setupDatabase() {
           name VARCHAR(255) NOT NULL,
           env JSONB DEFAULT '{}',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (agent_id, name)
         )
       `,
     ];

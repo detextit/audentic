@@ -48,8 +48,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -91,6 +93,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       name: string;
       env: Record<string, string>;
     }>
+  >([]);
+  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
+  const [pendingMcpServers, setPendingMcpServers] = useState<
+    Array<{ name: string; env: Record<string, string> }>
   >([]);
 
   // Helper to check if any fields are dirty
@@ -181,6 +187,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
     loadMcpServers();
   }, [currentAgent?.id]);
+
+  // When dialog opens, initialize pending servers with current servers
+  useEffect(() => {
+    if (integrationDialogOpen) {
+      setPendingMcpServers(mcpServers);
+    }
+  }, [integrationDialogOpen]);
 
   const handleAsyncUpdate = async ({
     condition,
@@ -328,11 +341,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         {
           condition: dirtyFields.settings.mcpServers,
           handler: async () => {
-            // Save each MCP server to database
-            for (const server of mcpServers) {
-              await saveMcpServer(currentAgent.id, server);
-            }
-
             // Get list of removed servers
             const existingServerNames = currentAgent.settings?.mcpServers || [];
             const removedServers = existingServerNames.filter(
@@ -342,6 +350,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             // Delete removed servers
             for (const serverName of removedServers) {
               await deleteMcpServer(currentAgent.id, serverName);
+            }
+
+            // Save each MCP server to database
+            for (const server of mcpServers) {
+              await saveMcpServer(currentAgent.id, server);
             }
 
             // Update agent settings with just the list of server names
@@ -733,48 +746,76 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               );
             })}
 
-            <Dialog>
+            <Dialog
+              open={integrationDialogOpen}
+              onOpenChange={setIntegrationDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Integration
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>Add Integration</DialogTitle>
+                  <DialogTitle>Add Integrations</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  {Object.entries(AVAILABLE_MCP_SERVERS)
-                    .filter(
-                      ([name]) => !mcpServers.some((s) => s.name === name)
-                    )
-                    .map(([name, server]) => (
-                      <Button
-                        key={name}
-                        variant="outline"
-                        className="flex items-center justify-start gap-3 h-auto p-4"
-                        onClick={() => {
-                          setMcpServers([
-                            ...mcpServers,
-                            {
-                              name,
-                              env: {},
-                            },
-                          ]);
-                          markFieldDirty("settings", "mcpServers");
-                        }}
-                      >
-                        <span className="text-2xl">{server.icon}</span>
-                        <div className="text-left">
-                          <h4 className="font-medium">{server.displayName}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {server.description}
-                          </p>
+                  {Object.entries(AVAILABLE_MCP_SERVERS).map(
+                    ([name, server]) => {
+                      const isSelected = pendingMcpServers.some(
+                        (s) => s.name === name
+                      );
+                      return (
+                        <div key={name} className="flex items-center space-x-4">
+                          <Checkbox
+                            id={name}
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setPendingMcpServers([
+                                  ...pendingMcpServers,
+                                  { name, env: {} },
+                                ]);
+                              } else {
+                                setPendingMcpServers(
+                                  pendingMcpServers.filter(
+                                    (s) => s.name !== name
+                                  )
+                                );
+                              }
+                              markFieldDirty("settings", "mcpServers");
+                            }}
+                          />
+                          <label
+                            htmlFor={name}
+                            className="flex items-center gap-3 text-sm leading-none cursor-pointer flex-1"
+                          >
+                            <span className="text-2xl">{server.icon}</span>
+                            <div>
+                              <p className="font-medium">
+                                {server.displayName}
+                              </p>
+                              <p className="text-muted-foreground">
+                                {server.description}
+                              </p>
+                            </div>
+                          </label>
                         </div>
-                      </Button>
-                    ))}
+                      );
+                    }
+                  )}
                 </div>
+                <DialogFooter>
+                  <Button
+                    onClick={() => {
+                      setMcpServers(pendingMcpServers);
+                      setIntegrationDialogOpen(false);
+                    }}
+                  >
+                    Done
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
