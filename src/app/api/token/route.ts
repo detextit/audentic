@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       );
 
     const tools = agentConfig.tools || [];
-    const mcpTools: string[] = [];
+    const mcpTools: Record<string, string[]> = {};
 
     // get MCP servers
     const mcpServers = await getMcpServers(apiKey);
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
       for (const serverName of configuredServerNames) {
         const serverTools: Tool[] = await listTools(serverName);
         tools.push(...serverTools);
-        mcpTools.push(...serverTools.map((tool) => tool.name));
+        mcpTools[serverName] = serverTools.map((tool) => tool.name);
       }
     }
 
