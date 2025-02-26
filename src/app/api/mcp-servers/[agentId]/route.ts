@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getMcpServers } from "@/db";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { agentId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
     const { agentId } = await params;
