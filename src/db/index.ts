@@ -235,3 +235,39 @@ function transformDBKnowledgeBaseArticle(
     updatedAt: dbArticle.updated_at,
   };
 }
+
+// Add to existing exports
+export async function getMcpServers(agentId: string) {
+  const { rows } = await sql`
+    SELECT name, env 
+    FROM mcp_servers 
+    WHERE agent_id = ${agentId}
+  `;
+  return rows.map((row) => ({
+    name: row.name,
+    env: row.env,
+  }));
+}
+
+export async function saveMcpServer(
+  agentId: string,
+  server: { name: string; env: Record<string, string> }
+) {
+  console.log("Saving server:", server);
+  await sql`
+    INSERT INTO mcp_servers (agent_id, name, env)
+    VALUES (${agentId}, ${server.name}, ${JSON.stringify(server.env)})
+    ON CONFLICT (agent_id, name)
+    DO UPDATE SET env = ${JSON.stringify(
+      server.env
+    )}, updated_at = CURRENT_TIMESTAMP
+  `;
+}
+
+export async function deleteMcpServer(agentId: string, serverName: string) {
+  await sql`
+    DELETE FROM mcp_servers 
+    WHERE agent_id = ${agentId} 
+    AND name = ${serverName}
+  `;
+}
