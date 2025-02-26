@@ -86,6 +86,7 @@ export async function POST(request: Request) {
 
     const tools = agentConfig.tools || [];
     const mcpTools: Record<string, string[]> = {};
+    const mcpBaseUrl = process.env.MCP_SERVER_URL; // TODO: make this unique per agent with secure token
 
     // get MCP servers
     const mcpServers = await getMcpServers(apiKey);
@@ -96,9 +97,25 @@ export async function POST(request: Request) {
 
       for (const server of mcpServers) {
         if (AVAILABLE_MCP_SERVERS[server.name]) {
+          // Create a deep copy of the defaultEnv to avoid modifying the original
+          const defaultEnv = {
+            ...AVAILABLE_MCP_SERVERS[server.name].defaultEnv,
+          };
+
+          // Customize MEMORY_FILE_PATH if it exists
+          if (defaultEnv?.MEMORY_FILE_PATH) {
+            defaultEnv.MEMORY_FILE_PATH = defaultEnv.MEMORY_FILE_PATH.replace(
+              "${agentId}",
+              apiKey
+            );
+          }
+
           mcpServerConfig[server.name] = {
             command: AVAILABLE_MCP_SERVERS[server.name].command,
-            env: server.env, // This contains the environment variables
+            env: {
+              ...server.env,
+              ...defaultEnv,
+            },
             args: AVAILABLE_MCP_SERVERS[server.name].args,
           };
           configuredServerNames.push(server.name);
@@ -175,6 +192,7 @@ export async function POST(request: Request) {
       eventChannel: "oai-events",
       tool_logic: toolLogic,
       mcp_tools: mcpTools,
+      mcp_base_url: mcpBaseUrl,
     };
 
     return NextResponse.json(tokenResponse, {

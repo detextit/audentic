@@ -716,7 +716,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {definition.envVars.map((envVar) => (
+                    {definition.envVars?.map((envVar) => (
                       <div key={envVar.name}>
                         <div className="flex items-center gap-1">
                           <Label htmlFor={envVar.name} className="text-sm">
@@ -741,8 +741,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                                     saving.
                                   </p>
                                   <p>
-                                    Ensure sensitive credentials are stored
-                                    securely.
+                                    Credentials are stored securely in a key
+                                    vault.
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -753,7 +753,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                           id={envVar.name}
                           type="password"
                           placeholder={envVar.description}
-                          value={server.env[envVar.name] || ""}
+                          value={server.env[envVar.name] || envVar.default}
                           onChange={(e) => {
                             const updatedServers = mcpServers.map((s) =>
                               s.name === server.name

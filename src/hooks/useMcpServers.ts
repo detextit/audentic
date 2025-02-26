@@ -43,13 +43,22 @@ export function useMcpServers() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/mcp-servers/${agentId}/${serverName}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete MCP server");
+      const response = await fetch("/api/mcp-servers", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ agentId, serverName }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete MCP server");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting MCP server:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
