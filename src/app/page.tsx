@@ -75,7 +75,7 @@ export default function LandingPage() {
                   Enable voice for your website
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  Create, test, and integrate AI voice agents into your web
+                  Create, test, and integrate voice AI agents into your web
                   applications.
                 </p>
                 <div className="flex gap-4">
@@ -205,9 +205,9 @@ export default function LandingPage() {
 
         {/* Hidden SEO content - visible to search engines but not users */}
         <div className="sr-only">
-          <h2>About Audentic AI Voice Agents</h2>
+          <h2>About Audentic Voice AI Agents</h2>
           <p>
-            Audentic provides cutting-edge AI voice agent technology that
+            Audentic provides cutting-edge voice AI agent technology that
             transforms how users interact with websites. Our platform enables
             businesses to create intelligent, conversational agents that
             understand natural language and can perform complex tasks like form
