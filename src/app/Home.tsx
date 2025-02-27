@@ -12,14 +12,21 @@ import SessionHistory from "@/app/history/SessionHistory";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSessions } from "@/hooks/useSessions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Home() {
+  // TODO: Setting the default state of the sidebar to collapsed
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("sidebarCollapsed");
-      return stored ? JSON.parse(stored) : false;
-    }
-    return false;
+    // if (typeof window !== "undefined") {
+    //   const stored = localStorage.getItem("sidebarCollapsed");
+    //   return stored ? JSON.parse(stored) : false;
+    // }
+    return true;
   });
 
   const [sidebarOpen, setSidebarOpen] = useState("Agents");
@@ -131,7 +138,16 @@ export default function Home() {
                             }`}
               onClick={handleAgentsClick}
             >
-              <Bot size={24} className="min-w-6" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Bot size={24} className="min-w-6" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Agents</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {!isCollapsed && <span>Agents</span>}
             </div>
             <div
@@ -148,7 +164,16 @@ export default function Home() {
                             }`}
               onClick={handleHistoryClick}
             >
-              <History size={24} className="min-w-6" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <History size={24} className="min-w-6" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>History</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {!isCollapsed && <span>History</span>}
             </div>
           </div>
@@ -166,7 +191,7 @@ export default function Home() {
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-auto bg-white">
-        <header className="h-[72px] border-b border-[hsl(var(--sidebar-border))] px-6 flex items-center bg-white shrink-0">
+        {/* <header className="h-[72px] border-b border-[hsl(var(--sidebar-border))] px-6 flex items-center bg-white shrink-0">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-primary))]"
@@ -177,7 +202,7 @@ export default function Home() {
               <PanelLeftClose size={20} />
             )}
           </button>
-        </header>
+        </header> */}
         <main className="flex-1 p-6 overflow-auto">
           {sidebarOpen === "History" && selectedSessionId ? (
             <SessionHistory sessionId={selectedSessionId} />
