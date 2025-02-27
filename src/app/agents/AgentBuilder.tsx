@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, PlusCircle, HelpCircle } from "lucide-react";
+import { Trash2, PlusCircle, HelpCircle, Copy, Check } from "lucide-react";
 import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 import {
   Dialog,
@@ -87,6 +87,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       mcpServers: false,
     },
   });
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const dataToCopy = `<audentic-embed agent-id="${currentAgent?.id}"></audentic-embed> <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"> </script> `;
+    await navigator.clipboard.writeText(dataToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -465,7 +474,31 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <h1 className="text-3xl font-semibold tracking-tight">
             {currentAgent.name}
           </h1>
-          <p className="text-muted-foreground mt-1">Agent Configuration</p>
+          <div className="flex items-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-2"
+                    onClick={handleCopy}
+                  >
+                    Embed Code
+                    {copied ? (
+                      <Check size={14} className="text-green-600" />
+                    ) : (
+                      <Copy size={14} className="text-gray-500" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Copy and add this code to your website to embed{" "}
+                  {currentAgent.name} agent
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <div className="flex gap-3">
           <Button onClick={handleUpdate} disabled={isUpdating || !hasChanges}>
@@ -514,15 +547,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Description</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Task Description</CardTitle>
+              <CardDescription className="text-xs">
                 The description is used to build the instructions and the
                 step-by-step flow for the agent.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <Textarea
                 value={currentAgent.description || ""}
                 onChange={(e) => {
@@ -533,20 +566,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   markFieldDirty("description");
                 }}
                 placeholder={`Describe the agent's task as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
-                className="min-h-[100px] resize-none focus-visible:ring-1"
+                className="min-h-[100px] resize-none focus-visible:ring-1 text-sm"
               />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Personality</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Personality</CardTitle>
+              <CardDescription className="text-xs">
                 Setup the agent&apos;s tone, demeanor, and other personality
                 traits.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <Input
                 value={currentAgent.personality || ""}
                 onChange={(e) => {
@@ -557,19 +590,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   markFieldDirty("personality");
                 }}
                 placeholder="Enter personality... e.g. 'friendly, patient, professional language'"
+                className="h-9 text-sm"
               />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Knowledge Base</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Knowledge Base</CardTitle>
+              <CardDescription className="text-xs">
                 Manage information that the agent can reference when answering
                 questions.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <KnowledgeBaseEditor
                 onArticleChange={handleKnowledgeBaseArticle}
                 onDeleteArticle={handleDeleteArticle}
@@ -581,227 +615,280 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Settings</CardTitle>
+              <CardDescription className="text-xs">
                 Customize the agent&apos;s behavior and settings
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="agentType"
-                  checked={currentAgent.settings?.isAdvancedModel}
-                  onCheckedChange={(checked) => {
-                    setCurrentAgent({
-                      ...currentAgent,
-                      settings: {
-                        ...currentAgent.settings,
-                        isAdvancedModel: checked,
-                      },
-                    });
-                    markFieldDirty("settings", "isAdvancedModel");
-                  }}
-                />
-                <Label
-                  htmlFor="agentType"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Use Advanced Model
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="initiate"
-                  checked={currentAgent.initiateConversation}
-                  onCheckedChange={(checked) => {
-                    setCurrentAgent({
-                      ...currentAgent,
-                      initiateConversation: checked,
-                    });
-                    markFieldDirty("initiateConversation");
-                  }}
-                />
-                <Label
-                  htmlFor="initiate"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Auto-initiate conversation
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="useBrowserTools"
-                  checked={currentAgent.settings?.useBrowserTools}
-                  onCheckedChange={(checked) =>
-                    handleSettingChange("useBrowserTools", checked)
-                  }
-                />
-                <Label
-                  htmlFor="useBrowserTools"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Use browser tools
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="isFormAgent"
-                  checked={currentAgent.settings?.isFormAgent}
-                  onCheckedChange={(checked) =>
-                    handleSettingChange("isFormAgent", checked)
-                  }
-                />
-                <Label
-                  htmlFor="isFormAgent"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Form Processing Agent
-                </Label>
-              </div>
+            <CardContent className="p-4 pt-3">
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="agentType"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Use Advanced Model
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Enable more powerful AI capabilities
+                    </p>
+                  </Label>
+                  <Switch
+                    id="agentType"
+                    checked={currentAgent.settings?.isAdvancedModel}
+                    onCheckedChange={(checked) => {
+                      setCurrentAgent({
+                        ...currentAgent,
+                        settings: {
+                          ...currentAgent.settings,
+                          isAdvancedModel: checked,
+                        },
+                      });
+                      markFieldDirty("settings", "isAdvancedModel");
+                    }}
+                  />
+                </div>
 
-              {currentAgent.settings?.isFormAgent && (
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="formUrl">Google Form URL</Label>
-                  <Input
-                    id="formUrl"
-                    type="url"
-                    placeholder="Enter Google Form URL"
-                    value={currentAgent.settings?.formSchema?.url || ""}
-                    onChange={(e) =>
-                      handleSettingChange("formSchema", {
-                        // if url is changed, everything in the schema is invalidated
-                        url: e.target.value,
-                      })
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="initiate"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Auto-initiate conversation
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Agent will start the conversation automatically
+                    </p>
+                  </Label>
+                  <Switch
+                    id="initiate"
+                    checked={currentAgent.initiateConversation}
+                    onCheckedChange={(checked) => {
+                      setCurrentAgent({
+                        ...currentAgent,
+                        initiateConversation: checked,
+                      });
+                      markFieldDirty("initiateConversation");
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="useBrowserTools"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Use browser tools
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Allow agent to interact with browser elements
+                    </p>
+                  </Label>
+                  <Switch
+                    id="useBrowserTools"
+                    checked={currentAgent.settings?.useBrowserTools}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("useBrowserTools", checked)
                     }
                   />
                 </div>
-              )}
+
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="isFormAgent"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Form Processing Agent
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Enable form processing capabilities
+                    </p>
+                  </Label>
+                  <Switch
+                    id="isFormAgent"
+                    checked={currentAgent.settings?.isFormAgent}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("isFormAgent", checked)
+                    }
+                  />
+                </div>
+
+                {currentAgent.settings?.isFormAgent && (
+                  <div className="mt-1 p-3 pl-4 border-l-2 border-primary/20 bg-muted/10 rounded-sm space-y-2">
+                    <Label htmlFor="formUrl" className="text-xs font-medium">
+                      Google Form URL
+                    </Label>
+                    <Input
+                      id="formUrl"
+                      type="url"
+                      placeholder="Enter Google Form URL"
+                      value={currentAgent.settings?.formSchema?.url || ""}
+                      className="h-8 text-sm"
+                      onChange={(e) =>
+                        handleSettingChange("formSchema", {
+                          // if url is changed, everything in the schema is invalidated
+                          url: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
-          <div className="grid gap-6">
-            {mcpServers.map((server) => {
-              const definition = AVAILABLE_MCP_SERVERS[server.name];
-              if (!definition) return null;
+          <div className="grid gap-4">
+            {/* Integration cards section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mcpServers.map((server) => {
+                const definition = AVAILABLE_MCP_SERVERS[server.name];
+                if (!definition) return null;
 
-              return (
-                <Card key={server.name}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{definition.icon}</div>
-                        <div>
-                          <CardTitle>{definition.displayName}</CardTitle>
-                          <CardDescription>
-                            {definition.description}
-                          </CardDescription>
+                return (
+                  <Card
+                    key={server.name}
+                    className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow"
+                  >
+                    <CardHeader className="p-4 pb-2 bg-muted/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+                            <span className="text-xl">{definition.icon}</span>
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">
+                              {definition.displayName}
+                            </CardTitle>
+                            <CardDescription className="text-xs line-clamp-1">
+                              {definition.description}
+                            </CardDescription>
+                          </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            setMcpServers(
+                              mcpServers.filter((s) => s.name !== server.name)
+                            );
+                            markFieldDirty("settings", "mcpServers");
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setMcpServers(
-                            mcpServers.filter((s) => s.name !== server.name)
-                          );
-                          markFieldDirty("settings", "mcpServers");
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {definition.envVars?.map((envVar) => (
-                      <div key={envVar.name}>
-                        <div className="flex items-center gap-1">
-                          <Label htmlFor={envVar.name} className="text-sm">
-                            {envVar.name}
-                            {envVar.required && (
-                              <span className="text-red-500">*</span>
-                            )}
-                          </Label>
-                          <Button
-                            variant="ghost"
-                            className="h-4 w-4 p-0 hover:bg-transparent"
-                            asChild
-                          >
+                    </CardHeader>
+                    <CardContent className="p-4 pt-3 space-y-3">
+                      {definition.envVars?.map((envVar) => (
+                        <div key={envVar.name} className="space-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Label
+                              htmlFor={envVar.name}
+                              className="text-xs font-medium"
+                            >
+                              {envVar.name}
+                              {envVar.required && (
+                                <span className="text-red-500 ml-0.5">*</span>
+                              )}
+                            </Label>
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
-                                  <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-4 w-4 p-0 hover:bg-transparent"
+                                  >
+                                    <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <p className="text-xs">
                                     Please verify this value is correct before
-                                    saving.
-                                  </p>
-                                  <p>
-                                    Credentials are stored securely in a key
-                                    vault.
+                                    saving. Credentials are stored securely in a
+                                    key vault.
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          </Button>
+                          </div>
+                          <Input
+                            id={envVar.name}
+                            type="password"
+                            placeholder={envVar.description}
+                            value={
+                              server.env[envVar.name] || envVar.default || ""
+                            }
+                            className="h-8 text-sm"
+                            onChange={(e) => {
+                              const updatedServers = mcpServers.map((s) =>
+                                s.name === server.name
+                                  ? {
+                                      ...s,
+                                      env: {
+                                        ...s.env,
+                                        [envVar.name]: e.target.value,
+                                      },
+                                    }
+                                  : s
+                              );
+                              setMcpServers(updatedServers);
+                              markFieldDirty("settings", "mcpServers");
+                            }}
+                          />
                         </div>
-                        <Input
-                          id={envVar.name}
-                          type="password"
-                          placeholder={envVar.description}
-                          value={server.env[envVar.name] || envVar.default}
-                          onChange={(e) => {
-                            const updatedServers = mcpServers.map((s) =>
-                              s.name === server.name
-                                ? {
-                                    ...s,
-                                    env: {
-                                      ...s.env,
-                                      [envVar.name]: e.target.value,
-                                    },
-                                  }
-                                : s
-                            );
-                            setMcpServers(updatedServers);
-                            markFieldDirty("settings", "mcpServers");
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
+            {/* Add Integration button and dialog */}
             <Dialog
               open={integrationDialogOpen}
               onOpenChange={setIntegrationDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add Integration
+                <Button
+                  variant="outline"
+                  className="mt-2 flex items-center justify-center gap-2 h-10 w-full max-w-xs mx-auto border-dashed border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Add Integration</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add Integrations</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                   {Object.entries(AVAILABLE_MCP_SERVERS).map(
                     ([name, server]) => {
                       const isSelected = pendingMcpServers.some(
                         (s) => s.name === name
                       );
+                      const isDisabled =
+                        mcpServers.some((s) => s.name === name) && !isSelected;
+
                       return (
-                        <div key={name} className="flex items-center space-x-4">
+                        <div
+                          key={name}
+                          className={`flex items-center space-x-4 p-3 rounded-lg border border-border/40 ${
+                            isSelected
+                              ? "bg-primary/5 border-primary/30"
+                              : isDisabled
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-muted/30"
+                          } transition-colors`}
+                        >
                           <Checkbox
                             id={name}
                             checked={isSelected}
+                            disabled={isDisabled}
+                            className={
+                              isSelected ? "text-primary border-primary" : ""
+                            }
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setPendingMcpServers([
@@ -820,14 +907,18 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                           />
                           <label
                             htmlFor={name}
-                            className="flex items-center gap-3 text-sm leading-none cursor-pointer flex-1"
+                            className={`flex items-center gap-3 text-sm leading-none cursor-pointer flex-1 ${
+                              isDisabled ? "cursor-not-allowed" : ""
+                            }`}
                           >
-                            <span className="text-2xl">{server.icon}</span>
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                              <span className="text-lg">{server.icon}</span>
+                            </div>
                             <div>
                               <p className="font-medium">
                                 {server.displayName}
                               </p>
-                              <p className="text-muted-foreground">
+                              <p className="text-muted-foreground text-xs mt-1">
                                 {server.description}
                               </p>
                             </div>
@@ -843,8 +934,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                       setMcpServers(pendingMcpServers);
                       setIntegrationDialogOpen(false);
                     }}
+                    className="w-full sm:w-auto"
                   >
-                    Done
+                    Add Selected
                   </Button>
                 </DialogFooter>
               </DialogContent>
