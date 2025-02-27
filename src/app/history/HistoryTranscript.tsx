@@ -2,9 +2,17 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TranscriptItem } from "@audentic/react";
-import { Power, Wrench, CheckCircle2, Copy, Check } from "lucide-react";
+import {
+  Power,
+  Wrench,
+  CheckCircle2,
+  Copy,
+  Check,
+  MessageSquare,
+  Bot,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -52,43 +60,73 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-6 py-3 border-b bg-white flex items-center justify-between">
-        <h2 className="font-semibold text-sm">Transcript</h2>
+    <Card className="flex flex-col h-full border border-border/40 shadow-sm overflow-hidden">
+      <CardHeader className="px-4 py-3 border-b bg-muted/10 flex flex-row items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
+            <MessageSquare className="h-3.5 w-3.5" />
+          </div>
+          <h2 className="font-medium text-sm">Transcript</h2>
+        </div>
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2"
+          className="h-8 px-2 hover:bg-muted/50 transition-colors"
           onClick={handleCopy}
         >
           {copied ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Check size={14} className="text-green-600" />
-              <span className="text-xs text-green-600">Copied!</span>
+              <span className="text-xs text-green-600">Copied</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1">
-              <Copy size={14} className="text-gray-500" />
+            <div className="flex items-center gap-1.5">
+              <Copy size={14} className="text-muted-foreground" />
               <span className="text-xs">Copy transcript</span>
             </div>
           )}
         </Button>
-      </div>
-      <ScrollArea className="flex-1 px-6">
-        <div className="py-4 space-y-4">
+      </CardHeader>
+      <ScrollArea className="flex-1">
+        <div className="py-4 space-y-4 px-4">
           {transcriptItems.map((item) => {
             if (item.role === "user" || item.role === "assistant") {
               return (
                 <div
                   key={item.itemId}
-                  className={`${item.role === "user" ? "bg-gray-50" : ""}`}
+                  className={cn(
+                    "rounded-lg p-3",
+                    item.role === "user"
+                      ? "bg-muted/20 border border-border/40"
+                      : "bg-primary/5 border border-primary/20"
+                  )}
                 >
-                  <div className="flex items-center gap-x-2 text-xs text-gray-500 mb-1">
-                    <span>{item.timestamp}</span>
-                    <span>{item.role}</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center w-6 h-6 rounded-full",
+                        item.role === "user"
+                          ? "bg-muted/30 text-muted-foreground"
+                          : "bg-primary/10 text-primary"
+                      )}
+                    >
+                      {item.role === "user" ? (
+                        <MessageSquare className="h-3 w-3" />
+                      ) : (
+                        <Bot className="h-3 w-3" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-x-2">
+                      <span className="text-xs font-medium capitalize">
+                        {item.role}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.timestamp}
+                      </span>
+                    </div>
                   </div>
                   {item.content.type === "text" && (
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none pl-8 text-sm">
                       <ReactMarkdown>{item.content.text || ""}</ReactMarkdown>
                     </div>
                   )}
@@ -114,26 +152,37 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
           })}
         </div>
       </ScrollArea>
-    </div>
+    </Card>
   );
 }
 
 function MessageWrapper({
   timestamp,
   role,
+  icon: Icon,
+  iconColor,
   children,
 }: {
   timestamp: string;
   role: string;
+  icon: React.ElementType;
+  iconColor: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-x-2 text-xs text-gray-500 mb-1">
-        <span>{timestamp}</span>
-        <span>{role}</span>
+      <div className="flex items-center gap-2 mb-2">
+        <div
+          className={`flex items-center justify-center w-6 h-6 rounded-full ${iconColor}`}
+        >
+          <Icon className="h-3 w-3" />
+        </div>
+        <div className="flex items-center gap-x-2">
+          <span className="text-xs font-medium capitalize">{role}</span>
+          <span className="text-xs text-muted-foreground">{timestamp}</span>
+        </div>
       </div>
-      {children}
+      <div className="pl-8">{children}</div>
     </div>
   );
 }
@@ -148,21 +197,25 @@ function SystemMessage({
   const isSessionStart = content.type === "session";
 
   return (
-    <MessageWrapper timestamp={timestamp} role="system">
+    <MessageWrapper
+      timestamp={timestamp}
+      role="system"
+      icon={Power}
+      iconColor={
+        isSessionStart
+          ? "bg-green-100 text-green-600"
+          : "bg-red-100 text-red-600"
+      }
+    >
       <Card
         className={cn(
-          "flex items-center gap-2 py-2 px-3",
-          isSessionStart ? "bg-green-50" : "bg-red-50"
+          "flex items-center gap-2 py-2 px-3 border",
+          isSessionStart
+            ? "bg-green-50/50 border-green-100"
+            : "bg-red-50/50 border-red-100"
         )}
       >
-        <Power
-          size={16}
-          className={cn(
-            "shrink-0",
-            isSessionStart ? "text-green-600" : "text-red-600"
-          )}
-        />
-        <div className="flex-1 min-w-0 text-sm">
+        <div className="flex-1 min-w-0 text-xs">
           <span className="break-words">
             {isSessionStart ? (
               <span className="text-green-700">
@@ -219,10 +272,10 @@ function ToolMessage({
   const renderKeyValuePairs = (data: Record<string, any>) => {
     return Object.entries(data).map(([key, value]) => (
       <div key={key} className="flex flex-col space-y-1 py-1">
-        <div className="text-xs font-medium text-gray-500">
+        <div className="text-xs font-medium text-muted-foreground">
           {key.replace(/_/g, " ")}
         </div>
-        <div className="text-xs text-gray-700 font-mono bg-gray-50 rounded p-1.5">
+        <div className="text-xs text-foreground font-mono bg-muted/20 rounded p-1.5 overflow-x-auto">
           {formatValue(value)}
         </div>
       </div>
@@ -230,14 +283,23 @@ function ToolMessage({
   };
 
   return (
-    <MessageWrapper timestamp={timestamp} role="tool">
-      <Card className="overflow-hidden border-l-2 border-l-blue-400">
-        <div className="bg-blue-50/50 px-3 py-2 flex items-center gap-2">
-          {isFunctionCall ? (
-            <Wrench size={14} className="text-blue-600 shrink-0" />
-          ) : (
-            <CheckCircle2 size={14} className="text-green-600 shrink-0" />
+    <MessageWrapper
+      timestamp={timestamp}
+      role="tool"
+      icon={isFunctionCall ? Wrench : CheckCircle2}
+      iconColor={
+        isFunctionCall
+          ? "bg-blue-100 text-blue-600"
+          : "bg-green-100 text-green-600"
+      }
+    >
+      <Card className="overflow-hidden border border-border/40">
+        <div
+          className={cn(
+            "px-3 py-2 flex items-center justify-between",
+            isFunctionCall ? "bg-blue-50/50" : "bg-green-50/50"
           )}
+        >
           <div className="flex-1 min-w-0">
             <span className="text-xs font-medium">
               {isFunctionCall ? (
@@ -250,19 +312,19 @@ function ToolMessage({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="h-6 w-6 p-0 rounded-full hover:bg-white/50"
             onClick={handleCopy}
           >
             {copied ? (
-              <Check size={14} className="text-green-600" />
+              <Check size={12} className="text-green-600" />
             ) : (
-              <Copy size={14} className="text-gray-500" />
+              <Copy size={12} className="text-muted-foreground" />
             )}
           </Button>
         </div>
 
         {isFunctionCall && content.arguments && (
-          <div className="px-3 py-2 bg-white border-t divide-y divide-gray-100">
+          <div className="px-3 py-2 bg-white border-t divide-y divide-border/30">
             {renderKeyValuePairs(content.arguments)}
           </div>
         )}
