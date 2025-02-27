@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, PlusCircle, HelpCircle } from "lucide-react";
+import { Trash2, PlusCircle, HelpCircle, Copy, Check } from "lucide-react";
 import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 import {
   Dialog,
@@ -87,6 +87,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       mcpServers: false,
     },
   });
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const dataToCopy = `<audentic-embed agent-id="${currentAgent?.id}"></audentic-embed> <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"> </script> `;
+    await navigator.clipboard.writeText(dataToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -465,7 +474,31 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <h1 className="text-3xl font-semibold tracking-tight">
             {currentAgent.name}
           </h1>
-          <p className="text-muted-foreground mt-1">Agent Configuration</p>
+          <div className="flex items-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-2"
+                    onClick={handleCopy}
+                  >
+                    Embed Code
+                    {copied ? (
+                      <Check size={14} className="text-green-600" />
+                    ) : (
+                      <Copy size={14} className="text-gray-500" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Copy and add this code to your website to embed{" "}
+                  {currentAgent.name} agent
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <div className="flex gap-3">
           <Button onClick={handleUpdate} disabled={isUpdating || !hasChanges}>
