@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { HistoryTranscript } from "./HistoryTranscript";
 import { CostSummary } from "./CostSummary";
 import { TranscriptItem } from "@audentic/react";
+import { Loader } from "lucide-react";
 
 interface SessionHistoryProps {
   sessionId?: string;
@@ -43,15 +44,38 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   }, [sessionId]);
 
   if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-red-500 p-6 bg-red-50/30 rounded-lg border border-red-200 max-w-md text-center">
+          <p className="font-medium">Error</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div className="p-4">Loading session data...</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loader className="h-6 w-6 animate-spin" />
+          <p className="text-sm">Loading session data...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!sessionId) {
-    return <div className="p-4">No session selected</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-muted-foreground p-6 bg-muted/10 rounded-lg border border-border/40 max-w-md text-center">
+          <p className="font-medium">No Session Selected</p>
+          <p className="text-sm mt-1">
+            Please select a session from the list to view details
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // return (
@@ -68,9 +92,11 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   // );
 
   return (
-    <div className="h-full flex flex-col gap-4 p-4">
-      <CostSummary sessionId={sessionId} />
-      <div className="flex-1">
+    <div className="h-full flex flex-col gap-6 p-6">
+      <div className="flex-none">
+        <CostSummary sessionId={sessionId} />
+      </div>
+      <div className="flex-1 min-h-0">
         <HistoryTranscript transcriptItems={transcriptItems} />
       </div>
     </div>
