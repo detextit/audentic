@@ -28,6 +28,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { faqData } from "@/data/faq";
+import ReactMarkdown from "react-markdown";
+import { FeatureSection } from "@/components/feature-card-section";
 
 export default function LandingPage() {
   const { isSignedIn } = useAuth();
@@ -44,7 +46,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <header className="border-b bg-slate-50/70">
+      <header className="top-0 border-b bg-slate-50/70">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Image
@@ -102,14 +104,14 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-              <div className="lg:w-1/2">
-                <div className="rounded-lg border bg-card p-4 shadow-lg">
+              <div className="lg:w-2/3">
+                <div className="rounded-lg border bg-card p-6 shadow-lg">
                   <Image
                     src="/dashboard.png"
                     alt="Dashboard Preview"
                     className="rounded-md"
-                    width={500}
-                    height={400}
+                    width={800}
+                    height={500}
                   />
                 </div>
               </div>
@@ -118,48 +120,11 @@ export default function LandingPage() {
         </div>
 
         {/* Features Section */}
-        <section className="border-t bg-slate-50/70 py-7">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-6">
-              Everything you need to build voice agents
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 col-span-full">
-                <FeatureCard
-                  icon={<Code className="h-8 w-8" />}
-                  title="No Code Required"
-                  description="Build your voice agents in minutes with our intuitive interface. We handle all the technical complexities for you."
-                />
-                <FeatureCard
-                  icon={<Share2 className="h-8 w-8" />}
-                  title="Easy Integration"
-                  description="Embed using our React component or choose from our add-ons for popular website builders."
-                />
-                <FeatureCard
-                  icon={<Signature className="h-8 w-8" />}
-                  title="Built For You"
-                  description="Import your documents in any format to ensure your agents have comprehensive knowledge of your business."
-                />
-              </div>
-              <div className="grid md:grid-cols-2 gap-6 col-span-full md:w-2/3 mx-auto">
-                <FeatureCard
-                  icon={<Bot className="h-8 w-8" />}
-                  title="Truly Agentic"
-                  description="Empower your agents with browser actions to enhance customer experience and automate interactions."
-                />
-                <FeatureCard
-                  icon={<Heart className="h-8 w-8" />}
-                  title="Emotionally Intelligent"
-                  description="Create agents that understand customer emotions and embody your brand's values for truly human-centric interactions."
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        <FeatureSection />
 
         {/* Markets & Use Cases Section */}
         <section className="bg-slate-50/70">
-          <div className="container mx-auto px-6 py-16">
+          <div className="container mx-auto px-6 py-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-3">
                 Revolutionize how users interact with your website
@@ -274,7 +239,7 @@ export default function LandingPage() {
         </div>
 
         <div className="container mx-auto px-6 py-24">
-          <h2 className="text-4xl font-bold text-center mb-12">
+          <h2 className="text-4xl font-bold text-center mb-6">
             Frequently Asked Questions
           </h2>
 
@@ -285,18 +250,61 @@ export default function LandingPage() {
                   <AccordionTrigger className="text-xl font-semibold">
                     {item.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground space-y-4">
-                    {item.answer.intro && <p>{item.answer.intro}</p>}
-                    <ul className="list-disc pl-6 space-y-2">
-                      {item.answer.points.map((point, i) => (
-                        <li key={i}>{point}</li>
-                      ))}
-                    </ul>
-                    {item.answer.codeExample && (
-                      <p className="mt-4 font-mono bg-slate-100 p-4 rounded-md">
-                        {item.answer.codeExample}
-                      </p>
-                    )}
+                  <AccordionContent className="text-muted-foreground">
+                    <div className="prose prose-slate dark:prose-invert max-w-none">
+                      <ReactMarkdown
+                        components={{
+                          ul: ({ ...props }) => (
+                            <ul
+                              className="list-disc pl-4 space-y-2 mt-2"
+                              {...props}
+                            />
+                          ),
+                          li: ({ ...props }) => (
+                            <li className="text-muted-foreground" {...props} />
+                          ),
+                          code: ({
+                            className,
+                            children,
+                            ...props
+                          }: React.HTMLProps<HTMLElement>) => (
+                            <div className="relative">
+                              <button
+                                className="absolute right-0 top-0 p-1 text-gray-500 hover:text-gray-700"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    children as string
+                                  );
+                                  alert("Code copied to clipboard!");
+                                }}
+                              >
+                                <ClipboardCheck className="h-4 w-4" />
+                              </button>
+                              <code
+                                className="bg-slate-100 text-gray-800 rounded px-1 py-0.5"
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            </div>
+                          ),
+                          pre: ({
+                            className,
+                            children,
+                            ...props
+                          }: React.HTMLProps<HTMLPreElement>) => (
+                            <pre
+                              className="bg-slate-100 rounded p-4 overflow-x-auto my-4"
+                              {...props}
+                            >
+                              {children}
+                            </pre>
+                          ),
+                        }}
+                      >
+                        {item.answer}
+                      </ReactMarkdown>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
@@ -318,39 +326,11 @@ export default function LandingPage() {
         </section>
       </main>
       {/* Add SessionControl with fixed positioning */}
-      <motion.div
-        className="fixed bottom-4 right-4 z-50"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        whileHover={{ scale: 1.02 }}
-      >
+      <motion.div className="fixed bottom-4 right-4 z-50">
         <div className="rounded-lg animate-pulse-subtle">
           <SessionControl agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57" />
         </div>
       </motion.div>
     </div>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card className="border shadow-md">
-      <CardContent className="pt-6">
-        <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mb-2 text-primary">
-          {icon}
-        </div>
-        <h3 className="font-semibold text-xl">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
   );
 }
