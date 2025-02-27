@@ -547,15 +547,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Description</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Task Description</CardTitle>
+              <CardDescription className="text-xs">
                 The description is used to build the instructions and the
                 step-by-step flow for the agent.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <Textarea
                 value={currentAgent.description || ""}
                 onChange={(e) => {
@@ -566,20 +566,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   markFieldDirty("description");
                 }}
                 placeholder={`Describe the agent's task as well as any key flow steps... e.g. 'you are a friendly teacher who helps students with their homework'`}
-                className="min-h-[100px] resize-none focus-visible:ring-1"
+                className="min-h-[100px] resize-none focus-visible:ring-1 text-sm"
               />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Personality</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Personality</CardTitle>
+              <CardDescription className="text-xs">
                 Setup the agent&apos;s tone, demeanor, and other personality
                 traits.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <Input
                 value={currentAgent.personality || ""}
                 onChange={(e) => {
@@ -590,19 +590,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   markFieldDirty("personality");
                 }}
                 placeholder="Enter personality... e.g. 'friendly, patient, professional language'"
+                className="h-9 text-sm"
               />
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Knowledge Base</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Knowledge Base</CardTitle>
+              <CardDescription className="text-xs">
                 Manage information that the agent can reference when answering
                 questions.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-3">
               <KnowledgeBaseEditor
                 onArticleChange={handleKnowledgeBaseArticle}
                 onDeleteArticle={handleDeleteArticle}
@@ -614,103 +615,123 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Settings</CardTitle>
+              <CardDescription className="text-xs">
                 Customize the agent&apos;s behavior and settings
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="agentType"
-                  checked={currentAgent.settings?.isAdvancedModel}
-                  onCheckedChange={(checked) => {
-                    setCurrentAgent({
-                      ...currentAgent,
-                      settings: {
-                        ...currentAgent.settings,
-                        isAdvancedModel: checked,
-                      },
-                    });
-                    markFieldDirty("settings", "isAdvancedModel");
-                  }}
-                />
-                <Label
-                  htmlFor="agentType"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Use Advanced Model
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="initiate"
-                  checked={currentAgent.initiateConversation}
-                  onCheckedChange={(checked) => {
-                    setCurrentAgent({
-                      ...currentAgent,
-                      initiateConversation: checked,
-                    });
-                    markFieldDirty("initiateConversation");
-                  }}
-                />
-                <Label
-                  htmlFor="initiate"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Auto-initiate conversation
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="useBrowserTools"
-                  checked={currentAgent.settings?.useBrowserTools}
-                  onCheckedChange={(checked) =>
-                    handleSettingChange("useBrowserTools", checked)
-                  }
-                />
-                <Label
-                  htmlFor="useBrowserTools"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Use browser tools
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="isFormAgent"
-                  checked={currentAgent.settings?.isFormAgent}
-                  onCheckedChange={(checked) =>
-                    handleSettingChange("isFormAgent", checked)
-                  }
-                />
-                <Label
-                  htmlFor="isFormAgent"
-                  className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Form Processing Agent
-                </Label>
-              </div>
+            <CardContent className="p-4 pt-3">
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="agentType"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Use Advanced Model
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Enable more powerful AI capabilities
+                    </p>
+                  </Label>
+                  <Switch
+                    id="agentType"
+                    checked={currentAgent.settings?.isAdvancedModel}
+                    onCheckedChange={(checked) => {
+                      setCurrentAgent({
+                        ...currentAgent,
+                        settings: {
+                          ...currentAgent.settings,
+                          isAdvancedModel: checked,
+                        },
+                      });
+                      markFieldDirty("settings", "isAdvancedModel");
+                    }}
+                  />
+                </div>
 
-              {currentAgent.settings?.isFormAgent && (
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="formUrl">Google Form URL</Label>
-                  <Input
-                    id="formUrl"
-                    type="url"
-                    placeholder="Enter Google Form URL"
-                    value={currentAgent.settings?.formSchema?.url || ""}
-                    onChange={(e) =>
-                      handleSettingChange("formSchema", {
-                        // if url is changed, everything in the schema is invalidated
-                        url: e.target.value,
-                      })
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="initiate"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Auto-initiate conversation
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Agent will start the conversation automatically
+                    </p>
+                  </Label>
+                  <Switch
+                    id="initiate"
+                    checked={currentAgent.initiateConversation}
+                    onCheckedChange={(checked) => {
+                      setCurrentAgent({
+                        ...currentAgent,
+                        initiateConversation: checked,
+                      });
+                      markFieldDirty("initiateConversation");
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="useBrowserTools"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Use browser tools
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Allow agent to interact with browser elements
+                    </p>
+                  </Label>
+                  <Switch
+                    id="useBrowserTools"
+                    checked={currentAgent.settings?.useBrowserTools}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("useBrowserTools", checked)
                     }
                   />
                 </div>
-              )}
+
+                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                  <Label
+                    htmlFor="isFormAgent"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Form Processing Agent
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Enable form processing capabilities
+                    </p>
+                  </Label>
+                  <Switch
+                    id="isFormAgent"
+                    checked={currentAgent.settings?.isFormAgent}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("isFormAgent", checked)
+                    }
+                  />
+                </div>
+
+                {currentAgent.settings?.isFormAgent && (
+                  <div className="mt-1 p-3 pl-4 border-l-2 border-primary/20 bg-muted/10 rounded-sm space-y-2">
+                    <Label htmlFor="formUrl" className="text-xs font-medium">
+                      Google Form URL
+                    </Label>
+                    <Input
+                      id="formUrl"
+                      type="url"
+                      placeholder="Enter Google Form URL"
+                      value={currentAgent.settings?.formSchema?.url || ""}
+                      className="h-8 text-sm"
+                      onChange={(e) =>
+                        handleSettingChange("formSchema", {
+                          // if url is changed, everything in the schema is invalidated
+                          url: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
