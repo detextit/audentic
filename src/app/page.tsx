@@ -1,14 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  Bot,
-  Share2,
   Mail,
-  Code,
-  Signature,
-  Heart,
   ClipboardCheck,
   Navigation,
   HeadphonesIcon,
@@ -264,7 +258,6 @@ export default function LandingPage() {
                             <li className="text-muted-foreground" {...props} />
                           ),
                           code: ({
-                            className,
                             children,
                             ...props
                           }: React.HTMLProps<HTMLElement>) => (
@@ -289,7 +282,6 @@ export default function LandingPage() {
                             </div>
                           ),
                           pre: ({
-                            className,
                             children,
                             ...props
                           }: React.HTMLProps<HTMLPreElement>) => (
