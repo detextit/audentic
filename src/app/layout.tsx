@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         url: "https://www.audentic.io/dashboard.png",
         width: 2940,
         height: 1658,
-        alt: "Audentic - AI Voice Agents Platform",
+        alt: "Audentic - Voice AI Agent Platform",
       },
     ],
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
     description:
-      "Enhance your website with AI voice agents. Enable natural conversations and automated support without coding. Start improving engagement today.",
+      "Enhance your website with voice AI agents. Enable natural conversations and automated support without coding. Start improving engagement today.",
     site: "@audentic_io",
     creator: "@audentic_io",
     images: ["https://www.audentic.io/cover.png"],
@@ -100,7 +100,7 @@ export default function RootLayout({
                   name: "Audentic",
                   applicationCategory: "Voice AI Platform",
                   description:
-                    "Advanced no-code platform for creating and integrating AI voice agents into websites. Our solution offers natural language processing, real-time voice recognition, and intelligent conversation management to transform website interactions. Perfect for businesses seeking to enhance customer engagement and support capabilities.",
+                    "Advanced no-code platform for creating and integrating voice AI agents into websites. Our solution offers natural language processing, real-time voice recognition, and intelligent conversation management to transform website interactions. Perfect for businesses seeking to enhance customer engagement and support capabilities.",
                   offers: {
                     "@type": "Offer",
                     availability: "https://schema.org/InStock",
