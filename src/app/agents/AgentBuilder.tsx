@@ -716,125 +716,158 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
-          <div className="grid gap-6">
-            {mcpServers.map((server) => {
-              const definition = AVAILABLE_MCP_SERVERS[server.name];
-              if (!definition) return null;
+          <div className="grid gap-4">
+            {/* Integration cards section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mcpServers.map((server) => {
+                const definition = AVAILABLE_MCP_SERVERS[server.name];
+                if (!definition) return null;
 
-              return (
-                <Card key={server.name}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{definition.icon}</div>
-                        <div>
-                          <CardTitle>{definition.displayName}</CardTitle>
-                          <CardDescription>
-                            {definition.description}
-                          </CardDescription>
+                return (
+                  <Card
+                    key={server.name}
+                    className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow"
+                  >
+                    <CardHeader className="p-4 pb-2 bg-muted/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+                            <span className="text-xl">{definition.icon}</span>
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">
+                              {definition.displayName}
+                            </CardTitle>
+                            <CardDescription className="text-xs line-clamp-1">
+                              {definition.description}
+                            </CardDescription>
+                          </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            setMcpServers(
+                              mcpServers.filter((s) => s.name !== server.name)
+                            );
+                            markFieldDirty("settings", "mcpServers");
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setMcpServers(
-                            mcpServers.filter((s) => s.name !== server.name)
-                          );
-                          markFieldDirty("settings", "mcpServers");
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {definition.envVars?.map((envVar) => (
-                      <div key={envVar.name}>
-                        <div className="flex items-center gap-1">
-                          <Label htmlFor={envVar.name} className="text-sm">
-                            {envVar.name}
-                            {envVar.required && (
-                              <span className="text-red-500">*</span>
-                            )}
-                          </Label>
-                          <Button
-                            variant="ghost"
-                            className="h-4 w-4 p-0 hover:bg-transparent"
-                            asChild
-                          >
+                    </CardHeader>
+                    <CardContent className="p-4 pt-3 space-y-3">
+                      {definition.envVars?.map((envVar) => (
+                        <div key={envVar.name} className="space-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Label
+                              htmlFor={envVar.name}
+                              className="text-xs font-medium"
+                            >
+                              {envVar.name}
+                              {envVar.required && (
+                                <span className="text-red-500 ml-0.5">*</span>
+                              )}
+                            </Label>
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
-                                  <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-4 w-4 p-0 hover:bg-transparent"
+                                  >
+                                    <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <p className="text-xs">
                                     Please verify this value is correct before
-                                    saving.
-                                  </p>
-                                  <p>
-                                    Credentials are stored securely in a key
-                                    vault.
+                                    saving. Credentials are stored securely in a
+                                    key vault.
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          </Button>
+                          </div>
+                          <Input
+                            id={envVar.name}
+                            type="password"
+                            placeholder={envVar.description}
+                            value={
+                              server.env[envVar.name] || envVar.default || ""
+                            }
+                            className="h-8 text-sm"
+                            onChange={(e) => {
+                              const updatedServers = mcpServers.map((s) =>
+                                s.name === server.name
+                                  ? {
+                                      ...s,
+                                      env: {
+                                        ...s.env,
+                                        [envVar.name]: e.target.value,
+                                      },
+                                    }
+                                  : s
+                              );
+                              setMcpServers(updatedServers);
+                              markFieldDirty("settings", "mcpServers");
+                            }}
+                          />
                         </div>
-                        <Input
-                          id={envVar.name}
-                          type="password"
-                          placeholder={envVar.description}
-                          value={server.env[envVar.name] || envVar.default}
-                          onChange={(e) => {
-                            const updatedServers = mcpServers.map((s) =>
-                              s.name === server.name
-                                ? {
-                                    ...s,
-                                    env: {
-                                      ...s.env,
-                                      [envVar.name]: e.target.value,
-                                    },
-                                  }
-                                : s
-                            );
-                            setMcpServers(updatedServers);
-                            markFieldDirty("settings", "mcpServers");
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
+            {/* Add Integration button and dialog */}
             <Dialog
               open={integrationDialogOpen}
               onOpenChange={setIntegrationDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add Integration
+                <Button
+                  variant="outline"
+                  className="mt-2 flex items-center justify-center gap-2 h-10 w-full max-w-xs mx-auto border-dashed border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Add Integration</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add Integrations</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                   {Object.entries(AVAILABLE_MCP_SERVERS).map(
                     ([name, server]) => {
                       const isSelected = pendingMcpServers.some(
                         (s) => s.name === name
                       );
+                      const isDisabled =
+                        mcpServers.some((s) => s.name === name) && !isSelected;
+
                       return (
-                        <div key={name} className="flex items-center space-x-4">
+                        <div
+                          key={name}
+                          className={`flex items-center space-x-4 p-3 rounded-lg border border-border/40 ${
+                            isSelected
+                              ? "bg-primary/5 border-primary/30"
+                              : isDisabled
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-muted/30"
+                          } transition-colors`}
+                        >
                           <Checkbox
                             id={name}
                             checked={isSelected}
+                            disabled={isDisabled}
+                            className={
+                              isSelected ? "text-primary border-primary" : ""
+                            }
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setPendingMcpServers([
@@ -853,14 +886,18 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                           />
                           <label
                             htmlFor={name}
-                            className="flex items-center gap-3 text-sm leading-none cursor-pointer flex-1"
+                            className={`flex items-center gap-3 text-sm leading-none cursor-pointer flex-1 ${
+                              isDisabled ? "cursor-not-allowed" : ""
+                            }`}
                           >
-                            <span className="text-2xl">{server.icon}</span>
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                              <span className="text-lg">{server.icon}</span>
+                            </div>
                             <div>
                               <p className="font-medium">
                                 {server.displayName}
                               </p>
-                              <p className="text-muted-foreground">
+                              <p className="text-muted-foreground text-xs mt-1">
                                 {server.description}
                               </p>
                             </div>
@@ -876,8 +913,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                       setMcpServers(pendingMcpServers);
                       setIntegrationDialogOpen(false);
                     }}
+                    className="w-full sm:w-auto"
                   >
-                    Done
+                    Add Selected
                   </Button>
                 </DialogFooter>
               </DialogContent>
