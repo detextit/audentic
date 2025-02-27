@@ -1,6 +1,6 @@
 "use client";
 
-import { History, PanelLeftClose, PanelLeft, Bot } from "lucide-react";
+import { History, Bot } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
@@ -21,13 +21,15 @@ import {
 
 export default function Home() {
   // TODO: Setting the default state of the sidebar to collapsed
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    // if (typeof window !== "undefined") {
-    //   const stored = localStorage.getItem("sidebarCollapsed");
-    //   return stored ? JSON.parse(stored) : false;
-    // }
-    return true;
-  });
+  // const [isCollapsed, setIsCollapsed] = useState(() => {
+  // if (typeof window !== "undefined") {
+  //   const stored = localStorage.getItem("sidebarCollapsed");
+  //   return stored ? JSON.parse(stored) : false;
+  // }
+  // return false;
+  // });
+
+  const isCollapsed = true;
 
   const [sidebarOpen, setSidebarOpen] = useState("Agents");
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
