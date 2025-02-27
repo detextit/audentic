@@ -1,4 +1,4 @@
-import { Plus, Bot, Search, Settings } from "lucide-react";
+import { Plus, Bot, Search } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
