@@ -183,6 +183,9 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Add a subtle separator between main nav and inner sidebar */}
+        <div className="w-px h-full bg-[hsl(var(--sidebar-border))]"></div>
+
         {sidebarOpen === "Agents" && (
           <AgentsSidebar onCreateClick={handleCreateAgent} />
         )}
