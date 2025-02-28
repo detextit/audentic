@@ -1,6 +1,7 @@
 import { LoggedEvent, TranscriptItem } from "@audentic/react";
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
 
 export async function GET(
   _request: Request,
@@ -43,23 +44,12 @@ export async function GET(
     ]);
 
     // Process cost data
-    let costData = null;
+    let costData: CostData | null = null;
     if (sessionResult.rows.length > 0) {
       const session = sessionResult.rows[0];
       costData = {
-        usage: session.usage_stats || {
-          text: { uncached_input: 0, cached_input: 0, output: 0 },
-          audio: { uncached_input: 0, cached_input: 0, output: 0 },
-        },
-        costs: session.cost_breakdown || {
-          text_uncached_input: 0,
-          text_cached_input: 0,
-          text_output: 0,
-          audio_uncached_input: 0,
-          audio_cached_input: 0,
-          audio_output: 0,
-          total: parseFloat(session.total_cost || 0),
-        },
+        usage: session.usage_stats || DEFAULT_COST_DATA.usage,
+        costs: session.cost_breakdown || DEFAULT_COST_DATA.costs,
         total_cost: parseFloat(session.total_cost || 0),
         is_final: !!session.ended_at,
         isPro: session.model_type === "gpt-4o-realtime-preview",

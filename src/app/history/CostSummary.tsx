@@ -15,31 +15,7 @@ import {
 import { ChevronDown, ChevronUp, Loader, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-
-interface CostData {
-  usage: {
-    text: {
-      uncached_input: number;
-      cached_input: number;
-      output: number;
-    };
-    audio: {
-      uncached_input: number;
-      cached_input: number;
-      output: number;
-    };
-  };
-  costs: {
-    text_uncached_input: number;
-    text_cached_input: number;
-    text_output: number;
-    audio_uncached_input: number;
-    audio_cached_input: number;
-    audio_output: number;
-    total: number;
-  };
-  isPro: boolean;
-}
+import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
 
 interface CostSummaryProps {
   sessionId: string;

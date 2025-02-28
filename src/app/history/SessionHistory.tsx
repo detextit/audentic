@@ -5,6 +5,7 @@ import { HistoryTranscript } from "./HistoryTranscript";
 import { CostSummary } from "./CostSummary";
 import { TranscriptItem } from "@audentic/react";
 import { Loader } from "lucide-react";
+import { CostData } from "@/types/cost";
 
 interface SessionHistoryProps {
   sessionId?: string;
@@ -13,7 +14,7 @@ interface SessionHistoryProps {
 export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   // const [events, setEvents] = useState<LoggedEvent[]>([]);
   const [transcriptItems, setTranscriptItems] = useState<TranscriptItem[]>([]);
-  const [costData, setCostData] = useState(null);
+  const [costData, setCostData] = useState<CostData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
