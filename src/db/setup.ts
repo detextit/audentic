@@ -30,7 +30,11 @@ export async function setupDatabase() {
           session_id VARCHAR(255) PRIMARY KEY,
           agent_id VARCHAR(255),
           started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ended_at TIMESTAMP
+          ended_at TIMESTAMP,
+          total_cost DECIMAL(10, 6) DEFAULT 0,
+          usage_stats JSONB DEFAULT NULL,
+          cost_breakdown JSONB DEFAULT NULL,
+          model_type VARCHAR(50) DEFAULT NULL
         )
       `,
 
