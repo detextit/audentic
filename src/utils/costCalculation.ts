@@ -1,3 +1,5 @@
+import { TokenUsage, TokenCosts } from "@/types/cost";
+
 export const COST_PER_1M_TOKENS = {
   PRO: {
     TEXT: {
@@ -25,28 +27,6 @@ export const COST_PER_1M_TOKENS = {
   },
 };
 
-export interface TokenUsage {
-  text: {
-    uncached_input: number;
-    cached_input: number;
-    output: number;
-  };
-  audio: {
-    uncached_input: number;
-    cached_input: number;
-    output: number;
-  };
-}
-
-export interface TokenCosts {
-  text_uncached_input: number;
-  text_cached_input: number;
-  text_output: number;
-  audio_uncached_input: number;
-  audio_cached_input: number;
-  audio_output: number;
-}
-
 /**
  * Calculate costs based on token usage and model type
  * @param usage Token usage statistics
@@ -59,7 +39,7 @@ export function calculateCosts(
 ): { costs: TokenCosts; totalCost: number } {
   const pricing = isPro ? COST_PER_1M_TOKENS.PRO : COST_PER_1M_TOKENS.BASE;
 
-  const costs = {
+  const costs: TokenCosts = {
     text_uncached_input:
       (usage.text.uncached_input * pricing.TEXT.input) / 1_000_000,
     text_cached_input:
@@ -71,9 +51,13 @@ export function calculateCosts(
     audio_cached_input:
       (usage.audio.cached_input * pricing.AUDIO.cached_input) / 1_000_000,
     audio_output: (usage.audio.output * pricing.AUDIO.output) / 1_000_000,
+    total: 0, // Will be calculated below
   };
 
-  const totalCost = Object.values(costs).reduce((sum, cost) => sum + cost, 0);
+  costs.total =
+    Object.values(costs).reduce((sum, cost) => sum + cost, 0) - costs.total; // Subtract total to avoid counting it twice
+
+  const totalCost = costs.total;
 
   return { costs, totalCost };
 }
