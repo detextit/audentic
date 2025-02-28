@@ -43,15 +43,29 @@ interface CostData {
 
 interface CostSummaryProps {
   sessionId: string;
+  costData?: CostData | null;
 }
 
-export function CostSummary({ sessionId }: CostSummaryProps) {
-  const [costData, setCostData] = useState<CostData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function CostSummary({
+  sessionId,
+  costData: initialCostData,
+}: CostSummaryProps) {
+  const [costData, setCostData] = useState<CostData | null>(
+    initialCostData || null
+  );
+  const [isLoading, setIsLoading] = useState(!initialCostData);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    // If costData is provided via props, use it
+    if (initialCostData) {
+      setCostData(initialCostData);
+      setIsLoading(false);
+      return;
+    }
+
+    // Otherwise fetch it
     async function fetchCostData() {
       if (!sessionId) {
         console.log("No sessionId provided to CostSummary");
@@ -63,13 +77,11 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(
-          `${baseUrl}/api/sessions/cost?sessionId=${sessionId}`
-        );
+        const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
 
         if (!response.ok) {
           console.error(
-            "Cost API response not OK:",
+            "Session API response not OK:",
             response.status,
             response.statusText
           );
@@ -77,8 +89,8 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
         }
 
         const data = await response.json();
-        console.log("Cost data received:", data);
-        setCostData(data);
+        console.log("Cost data received:", data.costData);
+        setCostData(data.costData);
       } catch (error) {
         console.error("Error fetching cost data:", error);
         setError("Failed to load cost data");
@@ -88,7 +100,7 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
     }
 
     fetchCostData();
-  }, [sessionId]);
+  }, [sessionId, initialCostData]);
 
   if (isLoading)
     return (
@@ -166,7 +178,7 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
                     <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-medium">
                       PRO
                     </span>
-                    <span>account pricing</span>
+                    <span>model pricing</span>
                   </div>
                 )}
               </div>

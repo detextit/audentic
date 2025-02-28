@@ -13,6 +13,7 @@ interface SessionHistoryProps {
 export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   // const [events, setEvents] = useState<LoggedEvent[]>([]);
   const [transcriptItems, setTranscriptItems] = useState<TranscriptItem[]>([]);
+  const [costData, setCostData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -32,6 +33,7 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
         const data = await response.json();
         // setEvents(data.events);
         setTranscriptItems(data.transcriptItems);
+        setCostData(data.costData);
       } catch (error) {
         console.error("Error fetching session data:", error);
         setError("Failed to load session data");
@@ -94,7 +96,7 @@ export default function SessionHistory({ sessionId }: SessionHistoryProps) {
   return (
     <div className="h-full flex flex-col gap-6 p-6">
       <div className="flex-none">
-        <CostSummary sessionId={sessionId} />
+        <CostSummary sessionId={sessionId} costData={costData} />
       </div>
       <div className="flex-1 min-h-0">
         <HistoryTranscript transcriptItems={transcriptItems} />
