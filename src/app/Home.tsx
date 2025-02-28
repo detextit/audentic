@@ -181,7 +181,7 @@ export default function Home() {
           </div>
 
           <div className="mt-auto mb-4">
-            <NavUser userName="" />
+            <NavUser userName="" isCollapsed={isCollapsed} />
           </div>
         </div>
 
