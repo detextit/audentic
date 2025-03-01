@@ -11,9 +11,11 @@ export default function AgentsPage() {
 
   useEffect(() => {
     if (agents.length > 0) {
-      router.replace(`/agents/${agents[0].id}`);
+      // Use client-side navigation without full page refresh
+      const agentId = agents[0].id;
+      window.history.pushState({}, "", `/agents/${agentId}`);
     }
-  }, [agents, router]);
+  }, [agents]);
 
   return <Home />;
 }
