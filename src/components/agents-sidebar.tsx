@@ -1,7 +1,6 @@
 import { Plus, Bot, Search } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,7 +15,6 @@ export const AgentsSidebar = React.memo(function AgentsSidebar({
   onCreateClick,
   onSelectAgent,
 }: AgentsSidebarProps) {
-  const router = useRouter();
   const { agents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
 

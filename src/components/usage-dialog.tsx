@@ -43,7 +43,6 @@ import {
 
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 
-import type { ChartConfig } from "@/components/ui/chart";
 import {
   Area,
   AreaChart,
@@ -124,39 +123,6 @@ const chartStyles = `
     --color-Sessions: hsl(160, 90%, 45%);
   }
 `;
-
-// Define chart colors as CSS variables
-const chartConfig: ChartConfig = {
-  "Total Cost": {
-    label: "Total Cost",
-    color: "hsl(215, 90%, 50%)", // Bright blue
-  },
-  "Avg Cost/Session": {
-    label: "Avg Cost/Session",
-    color: "hsl(280, 90%, 50%)", // Vibrant purple
-  },
-  Sessions: {
-    label: "Sessions",
-    color: "hsl(160, 90%, 45%)", // Bright teal
-  },
-};
-
-// For the agent distribution pie chart, we'll dynamically create config with vibrant colors
-const createAgentChartConfig = (agents: AgentStats[]): ChartConfig => {
-  const config: ChartConfig = {};
-
-  // Predefined vibrant colors that work well in both light and dark modes
-  const colorHues = [215, 280, 160, 30, 340, 190, 60, 310];
-
-  agents.forEach((agent, index) => {
-    config[agent.agent_name] = {
-      label: agent.agent_name,
-      color: `hsl(${colorHues[index % colorHues.length]}, 90%, 50%)`,
-    };
-  });
-
-  return config;
-};
 
 // Custom tooltip component for the pie chart
 const CustomPieTooltip = ({ active, payload }: any) => {

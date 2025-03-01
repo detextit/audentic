@@ -1,5 +1,4 @@
 import { FileClock, Clock, Search, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useMemo } from "react";
 import { useAgents } from "@/hooks/useAgents";
 import { useSessions } from "@/hooks/useSessions";
@@ -22,7 +21,6 @@ export const HistorySidebar = React.memo(function HistorySidebar({
   onSelectSession,
 }: HistorySidebarProps) {
   const { sessions } = useSessions();
-  const router = useRouter();
   const { agents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
 

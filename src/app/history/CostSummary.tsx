@@ -15,7 +15,7 @@ import {
 import { ChevronDown, ChevronUp, Loader, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
+import { CostData } from "@/types/cost";
 
 interface CostSummaryProps {
   sessionId: string;

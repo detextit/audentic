@@ -16,7 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Check, Sparkles, Mail, Calendar, Zap } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 import React, { useCallback, useMemo } from "react";
 
@@ -34,8 +33,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   open,
   onOpenChange,
 }: SubscriptionDialogProps) {
-  const { user } = useUser();
-
   // Memoize feature lists to prevent recreating on each render
   const freeFeatures = useMemo<PlanFeature[]>(
     () => [
