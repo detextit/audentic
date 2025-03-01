@@ -94,7 +94,7 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
   const fetchUserSubscription = async () => {
     setIsLoadingSubscription(true);
     try {
-      const response = await fetch("/api/subscription");
+      const response = await fetch("/api/stripe/subscription");
       if (!response.ok) {
         throw new Error("Failed to fetch subscription");
       }
