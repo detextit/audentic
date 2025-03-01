@@ -7,7 +7,8 @@ import { auth } from "@clerk/nextjs/server";
 // 2. Initialize it: const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 // 3. Query the user's subscription from Stripe
 
-export async function GET(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: NextRequest) {
   try {
     const { userId } = await auth();
 
@@ -40,9 +41,6 @@ export async function GET(req: NextRequest) {
     // For now, we'll just return a mock subscription
     // In a real implementation, you would check if the user has a subscription
     // and return the appropriate data
-
-    // Randomly return different plans for demonstration purposes
-    const plans = ["free", "enterprise"];
 
     // Set a future date for the current period end
     const currentPeriodEnd = new Date();
