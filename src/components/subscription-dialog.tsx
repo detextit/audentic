@@ -18,6 +18,7 @@ import {
 import { Check, Sparkles, Mail, Calendar, Zap } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
+import React, { useCallback, useMemo } from "react";
 
 interface PlanFeature {
   name: string;
@@ -29,40 +30,65 @@ interface SubscriptionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SubscriptionDialog({
+export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   open,
   onOpenChange,
 }: SubscriptionDialogProps) {
   const { user } = useUser();
 
-  const freeFeatures: PlanFeature[] = [
-    { name: "3 voice agents", included: true },
-    { name: "10$ credit per month", included: true },
-    { name: "Basic analytics", included: true },
-    { name: "Community support", included: true },
-    { name: "Shared compute engine", included: true },
-    { name: "Custom agent branding", included: false },
-    { name: "Custom integrations", included: false },
-  ];
+  // Memoize feature lists to prevent recreating on each render
+  const freeFeatures = useMemo<PlanFeature[]>(
+    () => [
+      { name: "3 voice agents", included: true },
+      { name: "10$ credit per month", included: true },
+      { name: "Basic analytics", included: true },
+      { name: "Community support", included: true },
+      { name: "Shared compute engine", included: true },
+      { name: "Custom agent branding", included: false },
+      { name: "Custom integrations", included: false },
+    ],
+    []
+  );
 
-  const customFeatures: PlanFeature[] = [
-    { name: "Unlimted voice agents", included: true },
-    { name: "Custom credit per month", included: true },
-    { name: "Advanced analytics", included: true },
-    { name: "Priority support", included: true },
-    { name: "Premium compute engine", included: true },
-    { name: "Custom agent branding", included: true },
-    { name: "Custom integrations", included: true },
-  ];
+  const customFeatures = useMemo<PlanFeature[]>(
+    () => [
+      { name: "Unlimted voice agents", included: true },
+      { name: "Custom credit per month", included: true },
+      { name: "Advanced analytics", included: true },
+      { name: "Priority support", included: true },
+      { name: "Premium compute engine", included: true },
+      { name: "Custom agent branding", included: true },
+      { name: "Custom integrations", included: true },
+    ],
+    []
+  );
 
-  const handleContactUs = () => {
+  const handleContactUs = useCallback(() => {
     window.location.href =
       "mailto:info@audentic.io?subject=Subscription Inquiry";
-  };
+  }, []);
 
-  const handleScheduleDemo = () => {
+  const handleScheduleDemo = useCallback(() => {
     window.open("https://calendly.com/audentic-info", "_blank");
-  };
+  }, []);
+
+  // Memoize feature list rendering
+  const renderFeatureList = useCallback((features: PlanFeature[]) => {
+    return features.map((feature, index) => (
+      <li key={index} className="flex items-start gap-2 text-sm">
+        <span className="mt-0.5">
+          {feature.included ? (
+            <Check className="h-4 w-4 text-primary" />
+          ) : (
+            <span className="h-4 w-4 block rounded-full border border-muted-foreground/30" />
+          )}
+        </span>
+        <span className={feature.included ? "" : "text-muted-foreground"}>
+          {feature.name}
+        </span>
+      </li>
+    ));
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,26 +124,7 @@ export function SubscriptionDialog({
             </CardHeader>
             <CardContent className="space-y-2 flex-grow">
               <p className="text-sm font-medium mb-2">Features include:</p>
-              <ul className="space-y-2">
-                {freeFeatures.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <span className="mt-0.5">
-                      {feature.included ? (
-                        <Check className="h-4 w-4 text-primary" />
-                      ) : (
-                        <span className="h-4 w-4 block rounded-full border border-muted-foreground/30" />
-                      )}
-                    </span>
-                    <span
-                      className={
-                        feature.included ? "" : "text-muted-foreground"
-                      }
-                    >
-                      {feature.name}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <ul className="space-y-2">{renderFeatureList(freeFeatures)}</ul>
             </CardContent>
             <CardFooter className="mt-auto">
               <Button className="w-full" variant="outline" disabled={true}>
@@ -140,16 +147,7 @@ export function SubscriptionDialog({
             </CardHeader>
             <CardContent className="space-y-2 flex-grow">
               <p className="text-sm font-medium mb-2">Features include:</p>
-              <ul className="space-y-2">
-                {customFeatures.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <span className="mt-0.5">
-                      <Check className="h-4 w-4 text-primary" />
-                    </span>
-                    <span>{feature.name}</span>
-                  </li>
-                ))}
-              </ul>
+              <ul className="space-y-2">{renderFeatureList(customFeatures)}</ul>
             </CardContent>
             <CardFooter className="flex flex-col space-y-2">
               <Button
@@ -184,4 +182,4 @@ export function SubscriptionDialog({
       </DialogContent>
     </Dialog>
   );
-}
+});

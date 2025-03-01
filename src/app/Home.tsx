@@ -1,14 +1,12 @@
 "use client";
 
 import { History, Bot } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { useAgents } from "@/hooks/useAgents";
 import { HistorySidebar } from "@/components/history-sidebar";
-import { AgentBuilder } from "@/app/agents/AgentBuilder";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
-import SessionHistory from "@/app/history/SessionHistory";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSessions } from "@/hooks/useSessions";
@@ -19,7 +17,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export default function Home() {
+// Lazy load heavy components
+const LazyAgentBuilder = lazy(() =>
+  import("@/app/agents/AgentBuilder").then((mod) => ({
+    default: mod.AgentBuilder,
+  }))
+);
+const LazySessionHistory = lazy(() => import("@/app/history/SessionHistory"));
+
+// Loading fallback
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+      <div className="h-6 w-6 animate-spin border-2 border-current border-t-transparent rounded-full" />
+      <p className="text-sm">Loading...</p>
+    </div>
+  </div>
+);
+
+const Home = React.memo(function Home() {
   // TODO: Setting the default state of the sidebar to collapsed
   // const [isCollapsed, setIsCollapsed] = useState(() => {
   // if (typeof window !== "undefined") {
@@ -39,6 +55,31 @@ export default function Home() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Update URL without full page refresh
+  const updateUrl = useCallback((url: string) => {
+    window.history.pushState({}, "", url);
+  }, []);
+
+  // Handle agent selection
+  const handleSelectAgent = useCallback(
+    (agentId: string) => {
+      setSelectedAgentId(agentId);
+      setSidebarOpen("Agents");
+      updateUrl(`/agents/${agentId}`);
+    },
+    [updateUrl]
+  );
+
+  // Handle session selection
+  const handleSelectSession = useCallback(
+    (sessionId: string) => {
+      setSelectedSessionId(sessionId);
+      setSidebarOpen("History");
+      updateUrl(`/history/${sessionId}`);
+    },
+    [updateUrl]
+  );
 
   useEffect(() => {
     if (pathname.startsWith("/agents")) {
@@ -74,30 +115,56 @@ export default function Home() {
     setIsCreateDialogOpen(true);
   };
 
-  const handleDialogClose = async () => {
+  const handleDialogClose = useCallback(async () => {
     setIsCreateDialogOpen(false);
-    const updatedAgents = await refreshAgents();
-    if (updatedAgents && updatedAgents.length > 0) {
-      setSelectedAgentId(updatedAgents[0].id);
-      router.replace(`/agents/${updatedAgents[0].id}`);
+    // Call refreshAgents but don't expect a return value
+    await refreshAgents(true);
+    // Use the agents from state instead
+    if (agents && agents.length > 0) {
+      handleSelectAgent(agents[0].id);
     }
-  };
+  }, [agents, refreshAgents, handleSelectAgent]);
 
-  const handleHistoryClick = () => {
+  const handleHistoryClick = useCallback(() => {
+    setSidebarOpen("History");
     if (sessions.length > 0) {
-      router.replace(`/history/${sessions[0].session_id}`);
+      setSelectedSessionId(sessions[0].session_id);
+      updateUrl(`/history/${sessions[0].session_id}`);
     } else {
-      router.replace("/history");
+      updateUrl("/history");
     }
-  };
+  }, [sessions, updateUrl]);
 
-  const handleAgentsClick = () => {
+  const handleAgentsClick = useCallback(() => {
+    setSidebarOpen("Agents");
     if (agents.length > 0) {
-      router.replace(`/agents/${agents[0].id}`);
+      setSelectedAgentId(agents[0].id);
+      updateUrl(`/agents/${agents[0].id}`);
     } else {
-      router.replace("/agents");
+      updateUrl("/agents");
     }
-  };
+  }, [agents, updateUrl]);
+
+  // Listen for popstate events (browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith("/agents/")) {
+        const agentId = path.split("/agents/")[1];
+        handleSelectAgent(agentId);
+      } else if (path.startsWith("/history/")) {
+        const sessionId = path.split("/history/")[1];
+        handleSelectSession(sessionId);
+      } else if (path === "/agents") {
+        handleAgentsClick();
+      } else if (path === "/history") {
+        handleHistoryClick();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [handleSelectAgent, handleSelectSession, handleAgentsClick, handleHistoryClick]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -111,7 +178,10 @@ export default function Home() {
             className={`flex items-center ${
               isCollapsed ? "justify-center" : "space-x-3"
             } mb-8 cursor-pointer hover:opacity-80`}
-            onClick={() => router.push("/")}
+            onClick={() => {
+              updateUrl("/");
+              router.push("/");
+            }}
           >
             <div className="rounded p-1">
               <Image
@@ -189,10 +259,15 @@ export default function Home() {
         <div className="w-px h-full bg-[hsl(var(--sidebar-border))]"></div>
 
         {sidebarOpen === "Agents" && (
-          <AgentsSidebar onCreateClick={handleCreateAgent} />
+          <AgentsSidebar
+            onCreateClick={handleCreateAgent}
+            onSelectAgent={handleSelectAgent}
+          />
         )}
 
-        {sidebarOpen === "History" && <HistorySidebar />}
+        {sidebarOpen === "History" && (
+          <HistorySidebar onSelectSession={handleSelectSession} />
+        )}
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-auto bg-white">
@@ -209,11 +284,13 @@ export default function Home() {
           </button>
         </header> */}
         <main className="flex-1 p-6 overflow-auto">
-          {sidebarOpen === "History" && selectedSessionId ? (
-            <SessionHistory sessionId={selectedSessionId} />
-          ) : (
-            selectedAgentId && <AgentBuilder agentId={selectedAgentId} />
-          )}
+          <Suspense fallback={<LoadingFallback />}>
+            {sidebarOpen === "History" && selectedSessionId ? (
+              <LazySessionHistory sessionId={selectedSessionId} />
+            ) : (
+              selectedAgentId && <LazyAgentBuilder agentId={selectedAgentId} />
+            )}
+          </Suspense>
         </main>
       </div>
 
@@ -225,4 +302,6 @@ export default function Home() {
       />
     </div>
   );
-}
+});
+
+export default Home;

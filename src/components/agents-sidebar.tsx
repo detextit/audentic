@@ -2,29 +2,43 @@ import { Plus, Bot, Search } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 interface AgentsSidebarProps {
   onCreateClick: () => void;
+  onSelectAgent: (agentId: string) => void;
 }
 
-export function AgentsSidebar({ onCreateClick }: AgentsSidebarProps) {
+export const AgentsSidebar = React.memo(function AgentsSidebar({
+  onCreateClick,
+  onSelectAgent,
+}: AgentsSidebarProps) {
   const router = useRouter();
   const { agents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleAgentClick = (agentId: string) => {
-    router.replace(`/agents/${agentId}`);
-  };
-
-  const filteredAgents = agents.filter((agent) =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleAgentClick = useCallback(
+    (agentId: string) => {
+      onSelectAgent(agentId);
+    },
+    [onSelectAgent]
   );
 
-  const isActive = (agentId: string) =>
-    window.location.pathname === `/agents/${agentId}`;
+  const filteredAgents = useMemo(
+    () =>
+      agents.filter((agent) =>
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [agents, searchQuery]
+  );
+
+  const isActive = useCallback(
+    (agentId: string) => window.location.pathname === `/agents/${agentId}`,
+    []
+  );
 
   return (
     <div
@@ -117,4 +131,4 @@ export function AgentsSidebar({ onCreateClick }: AgentsSidebarProps) {
       </div>
     </div>
   );
-}
+});

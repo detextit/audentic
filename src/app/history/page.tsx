@@ -11,9 +11,11 @@ export default function HistoryPage() {
 
   useEffect(() => {
     if (sessions.length > 0) {
-      router.replace(`/history/${sessions[0].session_id}`);
+      // Use client-side navigation without full page refresh
+      const sessionId = sessions[0].session_id;
+      window.history.pushState({}, "", `/history/${sessionId}`);
     }
-  }, [sessions, router]);
+  }, [sessions]);
 
   return <Home />;
 }

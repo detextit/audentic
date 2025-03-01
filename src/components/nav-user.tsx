@@ -19,13 +19,13 @@ import {
   LogOut,
   Sparkles,
   UserCog,
-  ArrowUpRight,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { UsageDialog } from "@/components/usage-dialog";
 import { SubscriptionDialog } from "@/components/subscription-dialog";
 import { Badge } from "@/components/ui/badge";
+import React from "react";
 
 interface NavUserProps {
   userName: string;
@@ -71,7 +71,10 @@ const getDisplayName = (user: UserResource | null | undefined): string => {
   return "Audentic.user";
 };
 
-export function NavUser({ userName, isCollapsed }: NavUserProps) {
+export const NavUser = React.memo(function NavUser({
+  userName,
+  isCollapsed,
+}: NavUserProps) {
   const { signOut, openUserProfile } = useClerk();
   const { user } = useUser();
   const isMobile = useIsMobile();
@@ -83,15 +86,37 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
   );
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
 
-  const displayName = userName || getDisplayName(user);
-  const email = user?.primaryEmailAddress?.emailAddress || "user@example.com";
-  const avatarUrl = user?.imageUrl;
+  // Memoize computed values
+  const displayName = useMemo(
+    () => userName || getDisplayName(user),
+    [userName, user]
+  );
+  const email = useMemo(
+    () => user?.primaryEmailAddress?.emailAddress || "user@example.com",
+    [user]
+  );
+  const avatarUrl = useMemo(() => user?.imageUrl, [user]);
+
+  // Memoize initials calculation
+  const initials = useMemo(() => {
+    if (!user) return "AU";
+    if (user.fullName) {
+      const names = user.fullName.split(" ");
+      return names.length > 1
+        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+        : names[0].slice(0, 2).toUpperCase();
+    }
+    if (user.username) {
+      return user.username.slice(0, 2).toUpperCase();
+    }
+    return "AU";
+  }, [user]);
 
   useEffect(() => {
     fetchUserSubscription();
   }, []);
 
-  const fetchUserSubscription = async () => {
+  const fetchUserSubscription = useCallback(async () => {
     setIsLoadingSubscription(true);
     try {
       const response = await fetch("/api/stripe/subscription");
@@ -112,46 +137,56 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
     } finally {
       setIsLoadingSubscription(false);
     }
-  };
+  }, []);
 
-  // Get initials for avatar fallback
-  const getInitials = () => {
-    if (!user) return "AU";
-    if (user.fullName) {
-      const names = user.fullName.split(" ");
-      return names.length > 1
-        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-        : names[0].slice(0, 2).toUpperCase();
-    }
-    if (user.username) {
-      return user.username.slice(0, 2).toUpperCase();
-    }
-    return "AU";
-  };
-
-  const handleOpenUsage = () => {
+  const handleOpenUsage = useCallback(() => {
     setIsDropdownOpen(false);
     setTimeout(() => {
       setShowUsageDialog(true);
     }, 100);
-  };
+  }, []);
 
-  const handleOpenSubscription = () => {
+  const handleOpenSubscription = useCallback(() => {
     setIsDropdownOpen(false);
     setTimeout(() => {
       setShowSubscriptionDialog(true);
     }, 100);
-  };
+  }, []);
 
-  const handleSignOut = () => {
+  const handleSignOut = useCallback(() => {
     setIsDropdownOpen(false);
     signOut();
-  };
+  }, [signOut]);
 
-  const handleOpenUserProfile = () => {
+  const handleOpenUserProfile = useCallback(() => {
     setIsDropdownOpen(false);
     openUserProfile();
-  };
+  }, [openUserProfile]);
+
+  // Memoize the subscription badge component
+  const subscriptionBadge = useMemo(() => {
+    if (isLoadingSubscription || !subscription) return null;
+
+    if (subscription.plan === "free") {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-primary/10 text-primary border-0 text-xs"
+        >
+          Upgrade
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-muted text-muted-foreground border-0 text-xs"
+        >
+          Manage
+        </Badge>
+      );
+    }
+  }, [isLoadingSubscription, subscription]);
 
   return (
     <>
@@ -160,13 +195,13 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
           {isCollapsed ? (
             <Avatar className="h-8 w-8 rounded-md cursor-pointer">
               <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           ) : (
             <Button variant="ghost">
               <Avatar className="h-8 w-8 rounded-md">
                 <AvatarImage src={avatarUrl} alt={displayName} />
-                <AvatarFallback>{getInitials()}</AvatarFallback>
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{displayName}</span>
@@ -189,7 +224,7 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={avatarUrl} alt={displayName} />
                 <AvatarFallback className="rounded-lg">
-                  {getInitials()}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -214,14 +249,7 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
                         {subscription.plan.charAt(0).toUpperCase() +
                           subscription.plan.slice(1)}
                       </span>
-                      {subscription.plan === "free" && (
-                        <Badge
-                          variant="outline"
-                          className="bg-primary/10 text-primary border-0 text-xs"
-                        >
-                          Upgrade
-                        </Badge>
-                      )}
+                      {subscription.plan === "free" && subscriptionBadge}
                     </span>
                   ) : (
                     "Subscription"
@@ -230,14 +258,8 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
               </div>
               {!isLoadingSubscription &&
                 subscription &&
-                subscription.plan !== "free" && (
-                  <Badge
-                    variant="outline"
-                    className="bg-muted text-muted-foreground border-0 text-xs"
-                  >
-                    Manage
-                  </Badge>
-                )}
+                subscription.plan !== "free" &&
+                subscriptionBadge}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
@@ -268,4 +290,4 @@ export function NavUser({ userName, isCollapsed }: NavUserProps) {
       />
     </>
   );
-}
+});
