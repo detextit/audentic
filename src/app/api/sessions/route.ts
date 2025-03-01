@@ -16,7 +16,17 @@ export async function GET() {
       const agentIds = agents.map((agent: AgentDBConfig) => agent.id);
       const agentIdsQuoted = agentIds.map((id) => `'${id}'`).join(",");
       const query = `
-        SELECT * FROM sessions WHERE agent_id IN (${agentIdsQuoted})
+        SELECT 
+          session_id, 
+          agent_id, 
+          started_at, 
+          ended_at, 
+          total_cost,
+          usage_stats,
+          cost_breakdown,
+          model_type
+        FROM sessions 
+        WHERE agent_id IN (${agentIdsQuoted})
         ORDER BY started_at DESC
       `;
       const result = await sql.query(query);

@@ -1,15 +1,65 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { TranscriptItem } from "@audentic/react";
+import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 
 export async function POST(request: Request) {
   try {
     const { sessionId, transcriptItems } = await request.json();
 
-    // First, end the session
+    // Calculate the total cost for the session
+    // First get the model type from session.created event
+    const modelResult = await sql`
+      SELECT event_data->'session'->>'model' as model
+      FROM events 
+      WHERE session_id = ${sessionId}
+        AND event_name = 'session.created'
+      LIMIT 1
+    `;
+
+    const model = modelResult.rows[0]?.model;
+    const isPro = model === "gpt-4o-realtime-preview";
+
+    // Get token usage data
+    const result = await sql`
+      SELECT 
+        jsonb_agg(
+          CASE 
+            WHEN event_name = 'response.done' 
+            THEN event_data->'response'->'usage' 
+          END
+        ) as usage_data
+      FROM events 
+      WHERE session_id = ${sessionId}
+        AND event_name = 'response.done'
+    `;
+
+    const usageData = result.rows[0].usage_data || [];
+
+    // Process usage data and calculate costs
+    const totalStats = processUsageData(usageData);
+    const { costs, totalCost } = calculateCosts(totalStats, isPro);
+
+    console.log(
+      "Session end - Usage data:",
+      JSON.stringify(usageData, null, 2)
+    );
+    console.log(
+      "Session end - Total stats:",
+      JSON.stringify(totalStats, null, 2)
+    );
+    console.log("Session end - Costs:", JSON.stringify(costs, null, 2));
+    console.log("Session end - Total cost:", totalCost);
+
+    // End the session and update with all cost and usage information
     await sql`
       UPDATE sessions 
-      SET ended_at = CURRENT_TIMESTAMP 
+      SET 
+        ended_at = CURRENT_TIMESTAMP,
+        total_cost = ${totalCost},
+        usage_stats = ${JSON.stringify(totalStats)},
+        cost_breakdown = ${JSON.stringify(costs)},
+        model_type = ${model}
       WHERE session_id = ${sessionId}
     `;
 
