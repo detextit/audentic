@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   AgentDBConfig,
   KnowledgeBaseArticle,
@@ -89,14 +89,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   });
 
   const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    const dataToCopy = `<audentic-embed agent-id="${currentAgent?.id}"></audentic-embed> <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"> </script> `;
-    await navigator.clipboard.writeText(dataToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
@@ -114,13 +106,24 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     Array<{ name: string; env: Record<string, string> }>
   >([]);
 
+  const handleCopy = useCallback(async () => {
+    const dataToCopy = `<audentic-embed agent-id="${currentAgent?.id}"></audentic-embed> <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"> </script> `;
+    await navigator.clipboard.writeText(dataToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [currentAgent?.id]);
+
   // Helper to check if any fields are dirty
-  const hasChanges = Object.values(dirtyFields).some((value) =>
-    typeof value === "boolean" ? value : Object.values(value).some((v) => v)
+  const hasChanges = useMemo(
+    () =>
+      Object.values(dirtyFields).some((value) =>
+        typeof value === "boolean" ? value : Object.values(value).some((v) => v)
+      ),
+    [dirtyFields]
   );
 
   // Helper to mark a field as dirty
-  const markFieldDirty = (field: string, subField?: string) => {
+  const markFieldDirty = useCallback((field: string, subField?: string) => {
     setDirtyFields((prev) => {
       if (subField) {
         return {
@@ -133,24 +136,27 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       }
       return { ...prev, [field]: true };
     });
-  };
+  }, []);
 
-  const handleSettingChange = (setting: string, value: any) => {
-    setCurrentAgent((prev) =>
-      prev
-        ? {
-            ...prev,
-            settings: {
-              ...prev.settings,
-              [setting]: value,
-            },
-          }
-        : null
-    );
-    markFieldDirty("settings", setting);
-  };
+  const handleSettingChange = useCallback(
+    (setting: string, value: any) => {
+      setCurrentAgent((prev) =>
+        prev
+          ? {
+              ...prev,
+              settings: {
+                ...prev.settings,
+                [setting]: value,
+              },
+            }
+          : null
+      );
+      markFieldDirty("settings", setting);
+    },
+    [markFieldDirty]
+  );
 
-  const resetDirtyFields = () => {
+  const resetDirtyFields = useCallback(() => {
     setDirtyFields({
       description: false,
       personality: false,
@@ -165,7 +171,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         mcpServers: false,
       },
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (loading) return; // Don't do anything while loading
@@ -418,15 +424,23 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   };
 
-  const handleDeleteAgent = async () => {
+  const handleDeleteAgent = useCallback(async () => {
+    if (isUpdating) return; // Prevent multiple rapid deletions
+
     try {
+      setIsUpdating(true);
       await deleteAgent(agentId);
 
       // Find next available agent or default to main agents page
       const remainingAgents = agents.filter((a) => a.id !== agentId);
       const nextAgent = remainingAgents[0];
 
-      router.push(nextAgent ? `/agents/${nextAgent.id}` : "/agents");
+      // Use client-side navigation without full page refresh
+      const nextUrl = nextAgent ? `/agents/${nextAgent.id}` : "/agents";
+      window.history.pushState({}, "", nextUrl);
+
+      // Still need to use router.push for actual navigation
+      router.push(nextUrl);
     } catch (error) {
       console.error("Failed to delete agent:", error);
       toast({
@@ -434,8 +448,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         title: "Delete Failed",
         description: "Failed to delete agent. Please try again.",
       });
+    } finally {
+      setIsUpdating(false);
     }
-  };
+  }, [agentId, agents, deleteAgent, isUpdating, router, toast]);
 
   if (loading)
     return (

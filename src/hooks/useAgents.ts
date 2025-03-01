@@ -1,32 +1,102 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { AgentDBConfig } from "@/agentBuilder/types";
+
+// Simple debounce function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return function (...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+// Cache for agents data
+let agentsCache: AgentDBConfig[] | null = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 300000; // 5 minutes cache TTL (increased from 1 minute)
+
 export function useAgents() {
   const { userId } = useAuth();
-  const [agents, setAgents] = useState<AgentDBConfig[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [agents, setAgents] = useState<AgentDBConfig[]>(agentsCache || []);
+  const [loading, setLoading] = useState(!agentsCache);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true);
+  const fetchInProgress = useRef(false);
 
-  const fetchAgents = useCallback(async () => {
-    try {
-      setLoading(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/agents`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch agents");
-      }
-      const data = await response.json();
-      setAgents(data);
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      return [];
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
+
+  // The actual fetch function
+  const doFetchAgents = useCallback(
+    async (forceRefresh = false) => {
+      if (!userId || fetchInProgress.current) return agentsCache || [];
+
+      fetchInProgress.current = true;
+
+      // Use cache if available and not expired, unless force refresh is requested
+      const now = Date.now();
+      if (!forceRefresh && agentsCache && now - lastFetchTime < CACHE_TTL) {
+        if (isMounted.current) {
+          setAgents(agentsCache);
+          setLoading(false);
+        }
+        fetchInProgress.current = false;
+        return agentsCache;
+      }
+
+      try {
+        if (isMounted.current) {
+          setLoading(true);
+        }
+
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const response = await fetch(`${baseUrl}/api/agents`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch agents");
+        }
+        const data = await response.json();
+
+        // Update cache
+        agentsCache = data;
+        lastFetchTime = now;
+
+        if (isMounted.current) {
+          setAgents(data);
+          setLoading(false);
+        }
+        return data;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An error occurred";
+        if (isMounted.current) {
+          setError(errorMessage);
+        }
+        return agentsCache || [];
+      } finally {
+        fetchInProgress.current = false;
+        if (isMounted.current) {
+          setLoading(false);
+        }
+      }
+    },
+    [userId]
+  );
+
+  // Debounced version to prevent multiple rapid calls
+  const fetchAgents = useCallback(debounce(doFetchAgents, 300), [
+    doFetchAgents,
+  ]);
 
   const createAgent = async (input: AgentDBConfig) => {
     try {
@@ -59,7 +129,8 @@ export function useAgents() {
       const newAgent = await response.json();
       console.log("Created agent:", newAgent); // Debug log
 
-      await fetchAgents();
+      // Invalidate cache and fetch fresh data
+      await fetchAgents(true);
 
       return newAgent;
     } catch (err: any) {
@@ -94,9 +165,16 @@ export function useAgents() {
       }
 
       const updatedAgent = await response.json();
-      setAgents((prev) =>
-        prev.map((agent) => (agent.id === agentId ? updatedAgent : agent))
+
+      // Update local state and cache
+      const updatedAgents = agents.map((agent) =>
+        agent.id === agentId ? updatedAgent : agent
       );
+
+      setAgents(updatedAgents);
+      agentsCache = updatedAgents;
+      lastFetchTime = Date.now();
+
       return updatedAgent;
     } catch (err) {
       const errorMessage =
@@ -119,7 +197,11 @@ export function useAgents() {
         throw new Error(errorData.error || "Failed to delete agent");
       }
 
-      setAgents((prev) => prev.filter((agent) => agent.id !== agentId));
+      // Update local state and cache
+      const updatedAgents = agents.filter((agent) => agent.id !== agentId);
+      setAgents(updatedAgents);
+      agentsCache = updatedAgents;
+      lastFetchTime = Date.now();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete agent";

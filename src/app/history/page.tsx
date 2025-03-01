@@ -1,19 +1,19 @@
 "use client";
 
 import { useSessions } from "@/hooks/useSessions";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Home from "../Home";
 
 export default function HistoryPage() {
   const { sessions } = useSessions();
-  const router = useRouter();
 
   useEffect(() => {
     if (sessions.length > 0) {
-      router.replace(`/history/${sessions[0].session_id}`);
+      // Use client-side navigation without full page refresh
+      const sessionId = sessions[0].session_id;
+      window.history.pushState({}, "", `/history/${sessionId}`);
     }
-  }, [sessions, router]);
+  }, [sessions]);
 
   return <Home />;
 }
