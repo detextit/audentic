@@ -58,6 +58,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WidgetConfiguration } from "./WidgetConfiguration";
 import { createLogger } from "@/utils/logger";
 
 // Create a logger instance for this component
@@ -610,6 +611,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         <TabsList>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="widget">Widget Configuration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">
@@ -1011,6 +1013,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               </DialogContent>
             </Dialog>
           </div>
+        </TabsContent>
+
+        <TabsContent value="widget" className="space-y-6">
+          <WidgetConfiguration agent={currentAgent} />
         </TabsContent>
       </Tabs>
     </div>
