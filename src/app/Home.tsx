@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { createLogger } from "@/utils/logger";
+import { BudgetWarning } from "@/components/budget-warning";
 
 // Create a logger instance for this component
 const logger = createLogger("Home");
@@ -356,6 +357,9 @@ const Home = React.memo(function Home() {
           </div>
 
           <div className="mt-auto mb-4">
+            <div className="flex items-center justify-center mb-2">
+              <BudgetWarning threshold={2.0} criticalThreshold={1.0} />
+            </div>
             <NavUser userName="" isCollapsed={isCollapsed} />
           </div>
         </div>
