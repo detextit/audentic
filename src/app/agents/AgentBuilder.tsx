@@ -65,8 +65,7 @@ const logger = createLogger("Agent Builder");
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
-  const { agents, loading, updateAgent, refreshAgents, deleteAgent } =
-    useAgents();
+  const { agents, loading, updateAgent, deleteAgent } = useAgents();
   const {
     articles: existingArticles,
     createArticles,

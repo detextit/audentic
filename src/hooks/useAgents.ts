@@ -206,8 +206,9 @@ export function useAgents() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
-        } catch (parseError) {
-          errorMessage = response.statusText || errorMessage;
+        } catch (error) {
+          errorMessage =
+            response.statusText || `Failed to create agent: ${error}`;
         }
         throw new Error(errorMessage);
       }

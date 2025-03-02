@@ -7,7 +7,6 @@ import React, {
   useCallback,
   lazy,
   Suspense,
-  useMemo,
   useRef,
 } from "react";
 import { NavUser } from "@/components/nav-user";
@@ -58,29 +57,32 @@ if (typeof window !== "undefined") {
 }
 
 // Loading fallback with skeleton UI for better perceived performance
-const LoadingFallback = () => (
-  <div className="w-full max-w-5xl mx-auto">
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-4 w-32 bg-muted animate-pulse rounded mt-1" />
-      </div>
-      <div className="flex gap-3">
-        <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-      </div>
-    </div>
-
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="border rounded-lg p-6">
-          <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
-          <div className="h-4 w-full bg-muted animate-pulse rounded opacity-50 mt-1" />
-          <div className="h-[100px] w-full bg-muted animate-pulse rounded mt-4" />
+const LoadingFallback = () => {
+  logger.info("Loading fallback");
+  return (
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+          <div className="h-4 w-32 bg-muted animate-pulse rounded mt-1" />
         </div>
-      ))}
+        <div className="flex gap-3">
+          <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border rounded-lg p-6">
+            <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
+            <div className="h-4 w-full bg-muted animate-pulse rounded opacity-50 mt-1" />
+            <div className="h-[100px] w-full bg-muted animate-pulse rounded mt-4" />
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Home = React.memo(function Home() {
   const isCollapsed = true;
@@ -95,8 +97,8 @@ const Home = React.memo(function Home() {
   });
 
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const { agents, refreshAgents, loading: agentsLoading } = useAgents();
-  const { sessions, loading: sessionsLoading } = useSessions();
+  const { agents, refreshAgents } = useAgents();
+  const { sessions } = useSessions();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const router = useRouter();
@@ -113,12 +115,6 @@ const Home = React.memo(function Home() {
   const updateUrl = useCallback((url: string) => {
     window.history.pushState({}, "", url);
   }, []);
-
-  // Determine if we're currently loading the active tab's data
-  const isActiveTabLoading = useMemo(() => {
-    if (!isLoading) return false;
-    return sidebarOpen === "Agents" ? agentsLoading : sessionsLoading;
-  }, [sidebarOpen, agentsLoading, sessionsLoading, isLoading]);
 
   // Preload the AgentBuilder component once
   useEffect(() => {
