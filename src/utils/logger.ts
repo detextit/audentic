@@ -5,8 +5,6 @@
 // Check if we're in development mode using Next.js public environment variables
 const isDevelopment = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
-type LogLevel = "debug" | "info" | "warn" | "error";
-
 interface LoggerOptions {
   module?: string;
   enabled?: boolean;
