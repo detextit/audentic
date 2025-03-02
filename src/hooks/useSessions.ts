@@ -19,6 +19,7 @@ function debounce<T extends (...args: any[]) => any>(
 let sessionsCache: Session[] | null = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 300000; // 5 minutes cache TTL (increased from 1 minute)
+let fetchPromise: Promise<Session[]> | null = null;
 
 export function useSessions() {
   const { userId } = useAuth();
@@ -27,6 +28,28 @@ export function useSessions() {
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
   const fetchInProgress = useRef(false);
+  const isActiveTab = useRef(false);
+
+  // Check if this is the active tab based on URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const checkActiveTab = () => {
+        const path = window.location.pathname;
+        isActiveTab.current = path.startsWith("/history");
+      };
+
+      // Check initially
+      checkActiveTab();
+
+      // Listen for URL changes
+      const handleUrlChange = () => {
+        checkActiveTab();
+      };
+
+      window.addEventListener("popstate", handleUrlChange);
+      return () => window.removeEventListener("popstate", handleUrlChange);
+    }
+  }, []);
 
   useEffect(() => {
     isMounted.current = true;
@@ -38,7 +61,14 @@ export function useSessions() {
   // The actual fetch function
   const doFetchSessions = useCallback(
     async (forceRefresh = false) => {
-      if (!userId || fetchInProgress.current) return sessionsCache || [];
+      if (!userId) return sessionsCache || [];
+
+      // If there's already a fetch in progress, return its promise
+      if (fetchPromise && !forceRefresh) {
+        return fetchPromise;
+      }
+
+      if (fetchInProgress.current && !forceRefresh) return sessionsCache || [];
 
       fetchInProgress.current = true;
 
@@ -60,34 +90,56 @@ export function useSessions() {
 
         const baseUrl =
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(`${baseUrl}/api/sessions`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch sessions");
-        }
-        const data = await response.json();
 
-        // Update cache
-        sessionsCache = data;
-        lastFetchTime = now;
+        // Create a new fetch promise and store it
+        fetchPromise = fetch(`${baseUrl}/api/sessions`)
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then((errorData) => {
+                throw new Error(errorData.error || "Failed to fetch sessions");
+              });
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Update cache
+            sessionsCache = data;
+            lastFetchTime = now;
 
-        if (isMounted.current) {
-          setSessions(data);
-          setLoading(false);
-        }
-        return data;
+            if (isMounted.current) {
+              setSessions(data);
+              setLoading(false);
+            }
+            return data;
+          })
+          .catch((err) => {
+            const errorMessage =
+              err instanceof Error ? err.message : "An error occurred";
+            if (isMounted.current) {
+              setError(errorMessage);
+              setLoading(false); // Make sure to set loading to false on error
+            }
+            return sessionsCache || [];
+          })
+          .finally(() => {
+            fetchInProgress.current = false;
+            fetchPromise = null;
+            if (isMounted.current) {
+              setLoading(false); // Ensure loading is set to false in finally block
+            }
+          });
+
+        return fetchPromise;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "An error occurred";
         if (isMounted.current) {
           setError(errorMessage);
+          setLoading(false); // Make sure to set loading to false on error
         }
-        return sessionsCache || [];
-      } finally {
         fetchInProgress.current = false;
-        if (isMounted.current) {
-          setLoading(false);
-        }
+        fetchPromise = null;
+        return sessionsCache || [];
       }
     },
     [userId]
@@ -100,6 +152,8 @@ export function useSessions() {
 
   useEffect(() => {
     if (userId) {
+      // Always fetch immediately regardless of active tab
+      // This ensures data is available when needed
       fetchSessions();
     }
   }, [userId, fetchSessions]);
