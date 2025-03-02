@@ -4,6 +4,7 @@ import { TranscriptItem } from "@audentic/react";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 import { createLogger } from "@/utils/logger";
 import { DEFAULT_COST_DATA } from "@/types/cost";
+import { getAgentById, recordUsage } from "@/db";
 
 const logger = createLogger("Sessions End API");
 
@@ -147,6 +148,32 @@ export async function POST(request: Request) {
         model_type = ${model}
       WHERE session_id = ${sessionId}
     `;
+
+    // Record the usage cost in the user's budget if we have an agent ID
+    if (agentId) {
+      try {
+        const agent = await getAgentById(agentId);
+        if (agent && agent.userId) {
+          // Record the usage cost
+          const usageResult = await recordUsage(agent.userId, totalCost);
+
+          if (!usageResult.success) {
+            logger.warn(
+              `Failed to record usage for user ${agent.userId}: ${usageResult.message}`
+            );
+          } else {
+            logger.info(
+              `Recorded usage of $${totalCost.toFixed(6)} for user ${
+                agent.userId
+              }`
+            );
+          }
+        }
+      } catch (error) {
+        logger.error("Error recording usage:", error);
+        // Continue with the session end process even if recording usage fails
+      }
+    }
 
     // Then, if transcript items are provided, log the final transcript
     if (transcriptItems) {

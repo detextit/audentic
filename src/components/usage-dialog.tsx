@@ -181,6 +181,8 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [userBudget, setUserBudget] = useState<any>(null);
+  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
 
   // Calculate date ranges based on selected time range
   const getDateRange = () => {
@@ -263,10 +265,29 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
     }
   };
 
+  // Fetch user budget
+  const fetchUserBudget = async () => {
+    try {
+      setIsLoadingBudget(true);
+      const response = await fetch("/api/subscription/budget");
+      if (!response.ok) {
+        throw new Error("Failed to fetch budget");
+      }
+      const data = await response.json();
+      setUserBudget(data.budget);
+    } catch (error) {
+      logger.error("Error fetching budget:", error);
+      setUserBudget(null);
+    } finally {
+      setIsLoadingBudget(false);
+    }
+  };
+
   // Fetch data when dialog opens or parameters change
   useEffect(() => {
     if (open) {
       fetchUsageData();
+      fetchUserBudget();
     }
   }, [open, timeRange, groupBy]);
 
@@ -345,6 +366,34 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
             and agents.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Budget Summary */}
+        {!isLoadingBudget && userBudget && (
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+            <div className="flex flex-wrap justify-between items-center">
+              <div>
+                <h3 className="text-sm font-medium">Available Credits</h3>
+                <p className="text-2xl font-bold text-primary">
+                  ${userBudget.remainingBudget.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Total Usage</h3>
+                <p className="text-2xl font-bold">
+                  ${userBudget.usedAmount.toFixed(2)}
+                </p>
+              </div>
+              {userBudget.planType === "free" && (
+                <div>
+                  <h3 className="text-sm font-medium">Next Refresh</h3>
+                  <p className="text-lg">
+                    {new Date(userBudget.nextRefreshDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
           <div className="flex flex-wrap gap-4">
