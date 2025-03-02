@@ -419,12 +419,14 @@ export function KnowledgeBaseEditor({
           )}
         </div>
       ) : (
-        <div className="text-sm text-muted-foreground flex flex-col items-center justify-center p-6 border border-dashed border-border/40 rounded-md bg-muted/5">
-          <Book className="h-10 w-10 text-muted-foreground/30 mb-2" />
-          <p className="text-center">
-            No articles added yet. Click the button above to add your first
-            article.
-          </p>
+        <div className="text-sm text-muted-foreground flex items-center justify-center p-3 border border-dashed border-border/40 rounded-md bg-muted/5">
+          <div className="flex items-center gap-2">
+            <Book className="h-5 w-5" />
+            <span>
+              No knowledge base articles added. Add your first article using the
+              button above.
+            </span>
+          </div>
         </div>
       )}
     </div>
