@@ -58,7 +58,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { WidgetConfiguration } from "./WidgetConfiguration";
+import { Widget, WidgetConfiguration } from "./WidgetConfiguration";
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -87,12 +87,22 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       isAdvancedModel: false,
       mcpServers: false,
     },
+    widgetConfig: false,
   });
 
   const [copied, setCopied] = useState(false);
+  // Generate embed code based on current configuration
+  const generateEmbedCode = () => {
+    return `<audentic-embed agent-id="${
+      currentAgent?.id
+    }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
+      widgetConfig
+    )}'></audentic-embed>
+    <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
+  };
 
   const handleCopy = async () => {
-    const dataToCopy = `<audentic-embed agent-id="${currentAgent?.id}"></audentic-embed> <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"> </script> `;
+    const dataToCopy = generateEmbedCode();
     await navigator.clipboard.writeText(dataToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -114,6 +124,12 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [pendingMcpServers, setPendingMcpServers] = useState<
     Array<{ name: string; env: Record<string, string> }>
   >([]);
+
+  // Add state for widget configuration
+  const [widgetConfig, setWidgetConfig] = useState<WidgetConfiguration | null>(
+    null
+  );
+  const [isWidgetConfigLoading, setIsWidgetConfigLoading] = useState(true);
 
   // Helper to check if any fields are dirty
   const hasChanges = Object.values(dirtyFields).some((value) =>
@@ -165,6 +181,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         isAdvancedModel: false,
         mcpServers: false,
       },
+      widgetConfig: false,
     });
   };
 
@@ -211,6 +228,57 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   }, [integrationDialogOpen]);
 
+  // Load widget configuration when agent loads
+  useEffect(() => {
+    if (!currentAgent?.id) return;
+
+    const loadWidgetConfig = async () => {
+      setIsWidgetConfigLoading(true);
+      try {
+        const response = await fetch(
+          `/api/agents/${currentAgent.id}/widget-config`
+        );
+
+        if (!response.ok) {
+          console.error(`HTTP error! status: ${response.status}`);
+          setIsWidgetConfigLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.config) {
+          setWidgetConfig(data.config);
+        } else {
+          // Set default widget config if none exists
+          setWidgetConfig({
+            showBackgroundCard: true,
+            title: "Need Help?",
+            backgroundColor: "#FFFFFF",
+            textColor: "#666666",
+            width: "200",
+            height: "110",
+            buttonText: "Voice Agent",
+            primaryColor: "#000000",
+            buttonTextColor: "#FFFFFF",
+            borderRadius: "12",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading widget configuration:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load widget configuration. Using defaults.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsWidgetConfigLoading(false);
+      }
+    };
+
+    loadWidgetConfig();
+  }, [currentAgent?.id]);
+
   const handleAsyncUpdate = async ({
     condition,
     handler,
@@ -248,6 +316,50 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const handleDeleteArticle = (articleId: string) => {
     setPendingDeletions((prev) => [...prev, articleId]);
     markFieldDirty("settings", "knowledgeBase");
+  };
+
+  // Handle widget configuration changes
+  const handleWidgetConfigChange = (newConfig: WidgetConfiguration) => {
+    setWidgetConfig(newConfig);
+    setDirtyFields((prev) => ({ ...prev, widgetConfig: true }));
+  };
+
+  // Save widget configuration
+  const handleSaveWidgetConfig = async () => {
+    if (!currentAgent || !widgetConfig) return;
+
+    try {
+      const response = await fetch(
+        `/api/agents/${currentAgent.id}/widget-config`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ config: widgetConfig }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Failed with status: ${response.status}`
+        );
+      }
+
+      // Reset dirty flag
+      setDirtyFields((prev) => ({ ...prev, widgetConfig: false }));
+    } catch (error) {
+      console.error("Error saving widget configuration:", error);
+      toast({
+        title: "Error",
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : "Failed to save widget configuration",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleUpdate = async () => {
@@ -382,6 +494,12 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             });
           },
           name: "integrations",
+        },
+        // Add widget configuration update
+        {
+          condition: dirtyFields.widgetConfig,
+          handler: handleSaveWidgetConfig,
+          name: "widget configuration",
         },
       ];
 
@@ -947,7 +1065,22 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </TabsContent>
 
         <TabsContent value="widget" className="space-y-6">
-          <WidgetConfiguration agent={currentAgent} />
+          {isWidgetConfigLoading ? (
+            <Card className="p-6">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="h-32 w-32 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">
+                  Loading widget configuration...
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <Widget
+              agent={currentAgent}
+              widgetConfig={widgetConfig || {}}
+              onConfigChange={handleWidgetConfigChange}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

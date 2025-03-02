@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -11,9 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { AgentDBConfig } from "@/agentBuilder/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Phone, PhoneOff } from "lucide-react";
 
 // Define the WidgetConfiguration interface
-interface WidgetConfiguration {
+export interface WidgetConfiguration {
   showBackgroundCard?: boolean;
   title?: string;
   backgroundColor?: string;
@@ -32,31 +33,155 @@ interface WidgetSettings {
   config: WidgetConfiguration;
 }
 
-export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
+// Add props interface for the Widget component
+interface WidgetProps {
+  agent: AgentDBConfig;
+  widgetConfig: WidgetConfiguration;
+  onConfigChange: (config: WidgetConfiguration) => void;
+}
+
+const ConnectionButton = ({
+  isConnected,
+  isConnecting,
+  onToggle,
+  buttonText,
+  primaryColor,
+  buttonTextColor,
+  borderRadius,
+}: {
+  isConnected: boolean;
+  isConnecting: boolean;
+  onToggle: () => void;
+  buttonText: string;
+  primaryColor: string;
+  buttonTextColor: string;
+  borderRadius: string;
+}) => (
+  <button
+    onClick={onToggle}
+    className="flex items-center justify-center gap-2 py-3 px-6 rounded-full w-full text-sm"
+    style={{
+      backgroundColor: isConnected ? "#FFFFFF" : primaryColor || "#000000",
+      color: isConnected ? "#FF4444" : buttonTextColor || "#FFFFFF",
+      borderRadius: `${Math.min(Number(borderRadius || 12) * 2, 24)}px`,
+      border: isConnected ? "1px solid #FF4444" : "none",
+    }}
+  >
+    {isConnected ? (
+      <>
+        <PhoneOff size={20} />
+        <span>End call</span>
+      </>
+    ) : (
+      <>
+        <Phone size={20} />
+        <span>{isConnecting ? "Connecting..." : buttonText}</span>
+      </>
+    )}
+  </button>
+);
+
+export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
   // Add state for validation warnings
   const [widthWarning, setWidthWarning] = useState<string | null>(null);
   const [heightWarning, setHeightWarning] = useState<string | null>(null);
 
-  // Create state for widget settings
+  // Default widget configuration
+  const defaultWidgetConfig: WidgetConfiguration = {
+    showBackgroundCard: true,
+    title: "Need Help?",
+    backgroundColor: "#FFFFFF",
+    textColor: "#666666",
+    width: "200",
+    height: "110",
+    buttonText: "Voice Agent",
+    primaryColor: "#000000",
+    buttonTextColor: "#FFFFFF",
+    borderRadius: "12",
+  };
+
+  // Create state for widget settings with default values
   const [widgetSettings, setWidgetSettings] = useState<WidgetSettings>({
     agentId: agent.id,
-    config: {
-      showBackgroundCard: true,
-      title: "Need Help?",
-      backgroundColor: "#FFFFFF",
-      textColor: "#666666",
-      width: "300",
-      height: "150",
-      buttonText: "Voice Agent",
-      primaryColor: "#000000",
-      buttonTextColor: "#FFFFFF",
-      borderRadius: "12",
-    },
+    config: widgetConfig || defaultWidgetConfig,
   });
+
+  // Update local state when props change
+  useEffect(() => {
+    setWidgetSettings({
+      agentId: agent.id,
+      config: widgetConfig || defaultWidgetConfig,
+    });
+  }, [agent.id, widgetConfig]);
 
   // Create the handleSettingChange function
   const handleSettingChange = (settingType: string, newSettings: any) => {
     if (settingType === "widget") {
+      // Handle showBackgroundCard changes - reset warnings and clear irrelevant fields
+      if ("showBackgroundCard" in newSettings) {
+        if (!newSettings.showBackgroundCard) {
+          // When disabling background card, clear fields that aren't relevant
+          // Keep only: buttonText, primaryColor, buttonTextColor, borderRadius
+          setWidthWarning(null);
+          setHeightWarning(null);
+
+          const relevantConfig = {
+            showBackgroundCard: false,
+            buttonText: widgetSettings.config.buttonText,
+            primaryColor: widgetSettings.config.primaryColor,
+            buttonTextColor: widgetSettings.config.buttonTextColor,
+            borderRadius: widgetSettings.config.borderRadius,
+          };
+
+          setWidgetSettings({
+            agentId: agent.id,
+            config: relevantConfig,
+          });
+
+          // Notify parent component of the change
+          onConfigChange(relevantConfig);
+          return;
+        } else {
+          // When enabling background card, restore default values for card-specific fields
+          const cardEnabledConfig = {
+            ...widgetSettings.config,
+            showBackgroundCard: true,
+            title: widgetSettings.config.title || defaultWidgetConfig.title,
+            backgroundColor:
+              widgetSettings.config.backgroundColor ||
+              defaultWidgetConfig.backgroundColor,
+            textColor:
+              widgetSettings.config.textColor || defaultWidgetConfig.textColor,
+            width: widgetSettings.config.width || defaultWidgetConfig.width,
+            height: widgetSettings.config.height || defaultWidgetConfig.height,
+          };
+
+          // Validate current dimensions
+          const widthValue = parseInt(cardEnabledConfig.width || "0");
+          if (widthValue < 200) {
+            setWidthWarning(
+              "Width should be at least 200px when background card is shown"
+            );
+          }
+
+          const heightValue = parseInt(cardEnabledConfig.height || "0");
+          if (heightValue < 110) {
+            setHeightWarning(
+              "Height should be at least 110px when background card is shown"
+            );
+          }
+
+          setWidgetSettings({
+            agentId: agent.id,
+            config: cardEnabledConfig,
+          });
+
+          // Notify parent component of the change
+          onConfigChange(cardEnabledConfig);
+          return;
+        }
+      }
+
       // Handle width validation
       if ("width" in newSettings && widgetSettings.config.showBackgroundCard) {
         const widthValue = parseInt(newSettings.width);
@@ -76,9 +201,9 @@ export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
         widgetSettings.config.showBackgroundCard
       ) {
         const heightValue = parseInt(newSettings.height);
-        if (heightValue < 150) {
+        if (heightValue < 110) {
           setHeightWarning(
-            "Height should be at least 150px when background card is shown"
+            "Height should be at least 110px when background card is shown"
           );
         } else {
           setHeightWarning(null);
@@ -87,47 +212,19 @@ export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
         setHeightWarning(null);
       }
 
-      // Handle showBackgroundCard changes - reset warnings if needed
-      if ("showBackgroundCard" in newSettings) {
-        if (!newSettings.showBackgroundCard) {
-          setWidthWarning(null);
-          setHeightWarning(null);
-        } else {
-          // Validate current dimensions
-          if (widgetSettings.config.width) {
-            const widthValue = parseInt(widgetSettings.config.width);
-            if (widthValue < 200) {
-              setWidthWarning(
-                "Width should be at least 200px when background card is shown"
-              );
-            }
-          }
-
-          if (widgetSettings.config.height) {
-            const heightValue = parseInt(widgetSettings.config.height);
-            if (heightValue < 150) {
-              setHeightWarning(
-                "Height should be at least 150px when background card is shown"
-              );
-            }
-          }
-        }
-      }
-
-      const updatedWidgetSettings: WidgetSettings = {
-        agentId: agent.id,
-        config: {
-          ...widgetSettings.config,
-          ...newSettings,
-        },
+      const updatedConfig = {
+        ...widgetSettings.config,
+        ...newSettings,
       };
 
-      // Update the state with the new settings
-      setWidgetSettings(updatedWidgetSettings);
+      // Update the local state
+      setWidgetSettings({
+        agentId: agent.id,
+        config: updatedConfig,
+      });
 
-      console.log("Widget settings updated:", updatedWidgetSettings);
-
-      // Here you would typically call an API to persist these changes
+      // Notify parent component of the change
+      onConfigChange(updatedConfig);
     }
   };
 
@@ -145,7 +242,7 @@ export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
             <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
               <Label
                 htmlFor="showBackgroundCard"
-                className="text-sm font-medium cursor-pointer flex-1"
+                className="text-sm font-small cursor-pointer flex-1"
               >
                 Show background card
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -285,7 +382,7 @@ export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
                     <Input
                       id="widgetHeight"
                       type="number"
-                      min="150"
+                      min="110"
                       placeholder="Height"
                       value={widgetSettings.config.height}
                       onChange={(e) => {
@@ -409,109 +506,81 @@ export function WidgetConfiguration({ agent }: { agent: AgentDBConfig }) {
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center border rounded-md p-6 bg-gray-50 dark:bg-gray-900">
-            <div className="text-center mb-8 text-sm text-muted-foreground">
-              Widget Preview
-            </div>
+          <div className="flex flex-col space-y-6">
+            <div className="border rounded-md p-6 bg-gray-50 dark:bg-gray-900 flex flex-col items-center">
+              <div className="text-center mb-6 text-sm text-muted-foreground">
+                Widget Preview
+              </div>
 
-            {widgetSettings.config.showBackgroundCard !== false ? (
-              <div
-                className="relative rounded-lg shadow-lg overflow-hidden"
-                style={{
-                  backgroundColor:
-                    widgetSettings.config.backgroundColor || "#FFFFFF",
-                  borderRadius: `${widgetSettings.config.borderRadius || 12}px`,
-                  width: `${widgetSettings.config.width || 300}px`,
-                  height: `${widgetSettings.config.height || 150}px`,
-                }}
-              >
-                <div
-                  className={`p-6 text-center ${
-                    (widgetSettings.config.title ?? "") === ""
-                      ? "flex items-center justify-center h-full"
-                      : ""
-                  }`}
-                >
-                  {(widgetSettings.config.title ?? "") !== "" && (
-                    <h3
-                      className="text-lg font-medium mb-6"
-                      style={{
-                        color: widgetSettings.config.textColor || "#666666",
-                      }}
-                    >
-                      {widgetSettings.config.title}
-                    </h3>
-                  )}
-
-                  <button
-                    className="flex items-center justify-center gap-2 py-3 px-6 rounded-full w-full"
+              <div className="mb-6">
+                {widgetSettings.config.showBackgroundCard !== false ? (
+                  <div
+                    className="relative rounded-lg shadow-lg overflow-hidden flex flex-col"
                     style={{
                       backgroundColor:
-                        widgetSettings.config.primaryColor || "#000000",
-                      color: widgetSettings.config.buttonTextColor || "#FFFFFF",
-                      borderRadius: `${Math.min(
-                        Number(widgetSettings.config.borderRadius || 12) * 2,
-                        24
-                      )}px`,
+                        widgetSettings.config.backgroundColor || "#FFFFFF",
+                      borderRadius: `${
+                        widgetSettings.config.borderRadius || 12
+                      }px`,
+                      width: `${widgetSettings.config.width || 200}px`,
+                      height: `${widgetSettings.config.height || 110}px`,
                     }}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    {(widgetSettings.config.buttonText ?? "") !== ""
-                      ? widgetSettings.config.buttonText
-                      : ""}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                className="flex items-center justify-center gap-2 rounded-full shadow-lg px-6 py-3"
-                style={{
-                  backgroundColor:
-                    widgetSettings.config.primaryColor || "#000000",
-                  color: widgetSettings.config.buttonTextColor || "#FFFFFF",
-                  borderRadius: `${Math.min(
-                    Number(widgetSettings.config.borderRadius || 12) * 2,
-                    24
-                  )}px`,
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
-                {(widgetSettings.config.buttonText ?? "") !== ""
-                  ? widgetSettings.config.buttonText
-                  : ""}
-              </button>
-            )}
+                    <div className="flex flex-col justify-center items-center h-full p-6">
+                      {(widgetSettings.config.title ?? "") !== "" && (
+                        <h3
+                          className="text-sm font-medium mb-3"
+                          style={{
+                            color: widgetSettings.config.textColor || "#666666",
+                          }}
+                        >
+                          {widgetSettings.config.title}
+                        </h3>
+                      )}
 
-            <div className="mt-8 text-center">
+                      <ConnectionButton
+                        isConnected={false}
+                        isConnecting={false}
+                        onToggle={() => {}}
+                        buttonText={
+                          widgetSettings.config.buttonText || "Voice Agent"
+                        }
+                        primaryColor={
+                          widgetSettings.config.primaryColor || "#000000"
+                        }
+                        buttonTextColor={
+                          widgetSettings.config.buttonTextColor || "#FFFFFF"
+                        }
+                        borderRadius={
+                          widgetSettings.config.borderRadius || "12"
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <ConnectionButton
+                    isConnected={false}
+                    isConnecting={false}
+                    onToggle={() => {}}
+                    buttonText={
+                      widgetSettings.config.buttonText || "Voice Agent"
+                    }
+                    primaryColor={
+                      widgetSettings.config.primaryColor || "#000000"
+                    }
+                    buttonTextColor={
+                      widgetSettings.config.buttonTextColor || "#FFFFFF"
+                    }
+                    borderRadius={widgetSettings.config.borderRadius || "12"}
+                  />
+                )}
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 {widgetSettings.config.showBackgroundCard !== false
                   ? `Widget with background card (${
-                      widgetSettings.config.width || 300
-                    }px × ${widgetSettings.config.height || 150}px)`
+                      widgetSettings.config.width || 200
+                    }px × ${widgetSettings.config.height || 110}px)`
                   : "Button-only widget"}
               </p>
             </div>
