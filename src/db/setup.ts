@@ -101,6 +101,17 @@ export async function setupDatabase() {
           UNIQUE (agent_id)
         )
       `,
+      // Create user_budget table
+      sql`
+        CREATE TABLE IF NOT EXISTS user_budget (
+          user_id TEXT PRIMARY KEY,
+          total_budget DECIMAL(10, 2) DEFAULT 0,
+          used_amount DECIMAL(10, 2) DEFAULT 0,
+          last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          next_refresh_date TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '30 days'),
+          plan_type VARCHAR(50) DEFAULT 'free'
+        )
+      `,
     ];
 
     await Promise.all(setupOperations);

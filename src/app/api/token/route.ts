@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAgentById, getAgentKnowledgeBase, getMcpServers } from "@/db";
+import {
+  getAgentById,
+  getAgentKnowledgeBase,
+  getMcpServers,
+  hasEnoughBudget,
+} from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
 import { AgentConfig, AgentDBConfig, Tool } from "@/agentBuilder/types";
@@ -58,6 +63,36 @@ export async function POST(request: Request) {
         { error: "Agent configuration not found - Invalid Agent ID" },
         {
           status: 404,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Check if the user has enough budget
+    const agent = await getAgentById(apiKey);
+    if (!agent || !agent.userId) {
+      return NextResponse.json(
+        { error: "Agent user information not found" },
+        {
+          status: 404,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Check if user has enough budget (require $1 per session)
+    const budgetCheck = await hasEnoughBudget(agent.userId, 1);
+
+    if (!budgetCheck.hasEnough) {
+      return NextResponse.json(
+        {
+          error: "Insufficient budget",
+          budget: budgetCheck.budget,
+          message:
+            "Please add more funds to your account to continue using the service.",
+        },
+        {
+          status: 402, // Payment Required
           headers: corsHeaders,
         }
       );

@@ -122,7 +122,7 @@ export const NavUser = React.memo(function NavUser({
   const fetchUserSubscription = useCallback(async () => {
     setIsLoadingSubscription(true);
     try {
-      const response = await fetch("/api/stripe/subscription");
+      const response = await fetch("/api/subscription/stripe");
       if (!response.ok) {
         throw new Error("Failed to fetch subscription");
       }
@@ -158,7 +158,7 @@ export const NavUser = React.memo(function NavUser({
 
   const handleSignOut = useCallback(() => {
     setIsDropdownOpen(false);
-    signOut();
+    signOut({ redirectUrl: "/" });
   }, [signOut]);
 
   const handleOpenUserProfile = useCallback(() => {

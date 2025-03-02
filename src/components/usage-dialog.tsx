@@ -40,9 +40,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
-
+import { format, subDays } from "date-fns";
 import {
   Area,
   AreaChart,
@@ -121,8 +119,8 @@ interface UsageDialogProps {
 // Custom styles for charts
 const chartStyles = `
   :root {
-    --color-Total\\ Cost: hsl(215, 90%, 50%);
-    --color-Avg\\ Cost\\/Session: hsl(280, 90%, 50%);
+    --color-Total-Cost: hsl(215, 90%, 50%);
+    --color-Avg-Cost-Session: hsl(280, 90%, 50%);
     --color-Sessions: hsl(160, 90%, 45%);
   }
 `;
@@ -183,6 +181,8 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [userBudget, setUserBudget] = useState<any>(null);
+  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
 
   // Calculate date ranges based on selected time range
   const getDateRange = () => {
@@ -195,8 +195,8 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
         endDate = format(now, "yyyy-MM-dd");
         break;
       case "month":
-        startDate = format(startOfMonth(now), "yyyy-MM-dd");
-        endDate = format(endOfMonth(now), "yyyy-MM-dd");
+        startDate = format(subDays(now, 30), "yyyy-MM-dd");
+        endDate = format(now, "yyyy-MM-dd");
         break;
       case "3months":
         startDate = format(subDays(now, 90), "yyyy-MM-dd");
@@ -265,10 +265,29 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
     }
   };
 
+  // Fetch user budget
+  const fetchUserBudget = async () => {
+    try {
+      setIsLoadingBudget(true);
+      const response = await fetch("/api/subscription/budget");
+      if (!response.ok) {
+        throw new Error("Failed to fetch budget");
+      }
+      const data = await response.json();
+      setUserBudget(data.budget);
+    } catch (error) {
+      logger.error("Error fetching budget:", error);
+      setUserBudget(null);
+    } finally {
+      setIsLoadingBudget(false);
+    }
+  };
+
   // Fetch data when dialog opens or parameters change
   useEffect(() => {
     if (open) {
       fetchUsageData();
+      fetchUserBudget();
     }
   }, [open, timeRange, groupBy]);
 
@@ -293,7 +312,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
 
     switch (groupBy) {
       case "week":
-        return `Week of ${format(date, "MMM d")}`;
+        return format(date, "MMM d");
       case "month":
         return format(date, "MMMM yyyy");
       case "day":
@@ -348,6 +367,34 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
+        {/* Budget Summary */}
+        {!isLoadingBudget && userBudget && (
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+            <div className="flex flex-wrap justify-between items-center">
+              <div>
+                <h3 className="text-sm font-medium">Available Credits</h3>
+                <p className="text-2xl font-bold text-primary">
+                  ${userBudget.remainingBudget.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Total Usage</h3>
+                <p className="text-2xl font-bold">
+                  ${userBudget.usedAmount.toFixed(2)}
+                </p>
+              </div>
+              {userBudget.planType === "free" && (
+                <div>
+                  <h3 className="text-sm font-medium">Next Refresh</h3>
+                  <p className="text-lg">
+                    {new Date(userBudget.nextRefreshDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
           <div className="flex flex-wrap gap-4">
             <div>
@@ -360,7 +407,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="week">Last 7 days</SelectItem>
-                  <SelectItem value="month">This month</SelectItem>
+                  <SelectItem value="month">Last 30 days</SelectItem>
                   <SelectItem value="3months">Last 90 days</SelectItem>
                 </SelectContent>
               </Select>
@@ -518,7 +565,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                         <ResponsiveContainer width="99%" height="100%">
                           <AreaChart
                             data={formatChartData(usageData.weekly_usage)}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+                            margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
                           >
                             <CartesianGrid
                               strokeDasharray="3 3"
@@ -541,8 +588,8 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                               type="monotone"
                               dataKey="Total Cost"
                               name="Total Cost"
-                              stroke="var(--color-Total Cost)"
-                              fill="var(--color-Total Cost)"
+                              stroke="var(--color-Total-Cost)"
+                              fill="var(--color-Total-Cost)"
                               fillOpacity={0.3}
                               strokeWidth={2}
                             />
@@ -588,8 +635,8 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                               )}
                               dataKey="value"
                               nameKey="name"
-                              innerRadius={60}
-                              outerRadius={80}
+                              innerRadius={80}
+                              outerRadius={120}
                               paddingAngle={4}
                               strokeWidth={1}
                               stroke="#ffffff"
@@ -826,7 +873,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                                 data={formatChartData(agentCostData.cost_data)}
                                 margin={{
                                   top: 10,
-                                  right: 30,
+                                  right: 10,
                                   left: 0,
                                   bottom: 5,
                                 }}
@@ -854,17 +901,17 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                                   type="monotone"
                                   dataKey="Total Cost"
                                   name="Total Cost"
-                                  stroke="var(--color-Total Cost)"
+                                  stroke="var(--color-Total-Cost)"
                                   strokeWidth={2.5}
                                   dot={{
                                     r: 4,
-                                    fill: "var(--color-Total Cost)",
+                                    fill: "var(--color-Total-Cost)",
                                     strokeWidth: 1,
                                     stroke: "#fff",
                                   }}
                                   activeDot={{
                                     r: 6,
-                                    fill: "var(--color-Total Cost)",
+                                    fill: "var(--color-Total-Cost)",
                                     stroke: "#fff",
                                     strokeWidth: 2,
                                   }}
@@ -873,17 +920,17 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
                                   type="monotone"
                                   dataKey="Avg Cost/Session"
                                   name="Avg Cost/Session"
-                                  stroke="var(--color-Avg Cost/Session)"
+                                  stroke="var(--color-Avg-Cost-Session)"
                                   strokeWidth={2.5}
                                   dot={{
                                     r: 4,
-                                    fill: "var(--color-Avg Cost/Session)",
+                                    fill: "var(--color-Avg-Cost-Session)",
                                     strokeWidth: 1,
                                     stroke: "#fff",
                                   }}
                                   activeDot={{
                                     r: 6,
-                                    fill: "var(--color-Avg Cost/Session)",
+                                    fill: "var(--color-Avg-Cost-Session)",
                                     stroke: "#fff",
                                     strokeWidth: 2,
                                   }}
