@@ -3,10 +3,12 @@ import { AgentDBConfig } from "@/agentBuilder/types";
 import { auth } from "@clerk/nextjs/server";
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Sessions API");
 
 export async function GET() {
   const { userId } = await auth();
-  console.log("sessions");
   try {
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -34,7 +36,7 @@ export async function GET() {
     }
     return NextResponse.json([]);
   } catch (error) {
-    console.error("Error fetching sessions:", error);
+    logger.error("Error fetching sessions:", error);
     return NextResponse.json(
       { error: "Failed to fetch sessions" },
       { status: 500 }

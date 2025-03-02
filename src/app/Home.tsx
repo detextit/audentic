@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { createLogger } from "@/utils/logger";
+
+// Create a logger instance for this component
+const logger = createLogger("Home");
 
 // Lazy load heavy components
 const LazyAgentBuilder = lazy(() =>
@@ -270,19 +274,6 @@ const Home = React.memo(function Home() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [handleSelectAgent, handleSelectSession, handleAgentsClick, handleHistoryClick]);
-
-  // Remove debug logging in production
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Render state:", {
-        agentsLength: agents.length,
-        selectedAgentId,
-        sidebarOpen,
-        isLoading,
-        agentBuilderReady: agentBuilderReadyRef.current,
-      });
-    }
-  }, [agents.length, selectedAgentId, sidebarOpen, isLoading]);
 
   return (
     <div className="flex h-screen bg-gray-50">

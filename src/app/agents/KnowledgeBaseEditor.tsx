@@ -33,6 +33,9 @@ import {
   KnowledgeBaseDBArticle,
 } from "@/agentBuilder/types";
 import { cn } from "@/lib/utils";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("KB Editor");
 
 interface KnowledgeBaseEditorProps {
   onArticleChange: (article: KnowledgeBaseArticle) => void;
@@ -93,7 +96,7 @@ export function KnowledgeBaseEditor({
       });
       setInputMethod("manual"); // Switch back to manual mode to review
     } catch (error) {
-      console.error("Failed to fetch URL content:", error);
+      logger.error("Failed to fetch URL content:", error);
       // You might want to show an error toast here
     } finally {
       setIsProcessing(false);
@@ -122,7 +125,7 @@ export function KnowledgeBaseEditor({
       });
       setInputMethod("manual"); // Switch back to manual mode to review
     } catch (error) {
-      console.error("Failed to process file:", error);
+      logger.error("Failed to process file:", error);
       // You might want to show an error toast here
     } finally {
       setIsProcessing(false);

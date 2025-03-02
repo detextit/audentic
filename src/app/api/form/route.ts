@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Form API");
 
 export async function POST(request: Request) {
   try {
@@ -24,7 +27,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ html });
   } catch (error) {
-    console.error("Proxy error:", error);
+    logger.error("Proxy error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }

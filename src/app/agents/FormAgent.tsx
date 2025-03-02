@@ -29,6 +29,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { FormQuestion } from "@/agentBuilder/processForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Form Agent");
 
 export function FormAgent({
   agentId,
@@ -85,7 +88,7 @@ export function FormAgent({
         setError(
           error instanceof Error ? error.message : "Unknown error occurred"
         );
-        console.error("Error loading form:", error);
+        logger.error("Error loading form:", error);
       } finally {
         setLoading(false);
       }
@@ -111,17 +114,17 @@ export function FormAgent({
         }
       );
     } catch (error) {
-      console.error(`Error updating form values:`, error);
+      logger.error(`Error updating form values:`, error);
     }
   };
 
   const onSubmit = async (data: any) => {
     try {
       // Handle form submission
-      console.log("Form submitted:", data);
+      logger.debug("Form submitted:", data);
       // Add your submission logic here
     } catch (error) {
-      console.error("Error submitting form:", error);
+      logger.error("Error submitting form:", error);
     }
   };
 

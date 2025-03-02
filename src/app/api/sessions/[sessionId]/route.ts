@@ -2,6 +2,9 @@ import { LoggedEvent, TranscriptItem } from "@audentic/react";
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Sessions API");
 
 export async function GET(
   _request: Request,
@@ -79,7 +82,7 @@ export async function GET(
       costData,
     });
   } catch (error) {
-    console.error("Error fetching session data:", error);
+    logger.error("Error fetching session data:", error);
     return NextResponse.json(
       { error: "Failed to fetch session data" },
       { status: 500 }

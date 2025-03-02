@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getUserAgents } from "@/db";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Agent Cost API");
 
 export async function GET(
   _request: Request,
@@ -138,7 +141,7 @@ export async function GET(
       overall: overallStats,
     });
   } catch (error) {
-    console.error("Error fetching agent cost data:", error);
+    logger.error("Error fetching agent cost data:", error);
     return NextResponse.json(
       { error: "Failed to fetch agent cost data" },
       { status: 500 }

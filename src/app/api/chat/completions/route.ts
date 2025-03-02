@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Chat Completions API");
 
 const openai = new OpenAI();
 
@@ -17,7 +20,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(completion);
   } catch (error: any) {
-    console.error("Error in /chat/completions:", error);
+    logger.error("Error in /chat/completions:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,4 +1,7 @@
 import { TokenUsage, TokenCosts } from "@/types/cost";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Cost Calculation");
 
 export const COST_PER_1M_TOKENS = {
   PRO: {
@@ -85,7 +88,7 @@ export function processUsageData(usageData: any[]): TokenUsage {
   usageData.forEach((usage: any) => {
     if (!usage) return;
 
-    console.log("Processing usage data:", JSON.stringify(usage, null, 2));
+    logger.debug("Processing usage data:", JSON.stringify(usage, null, 2));
 
     const inputDetails = usage.input_token_details || {};
     const outputDetails = usage.output_token_details || {};
@@ -111,6 +114,6 @@ export function processUsageData(usageData: any[]): TokenUsage {
     totalStats.audio.output += outputDetails.audio_tokens || 0;
   });
 
-  console.log("Final token usage stats:", JSON.stringify(totalStats, null, 2));
+  logger.debug("Final token usage stats:", JSON.stringify(totalStats, null, 2));
   return totalStats;
 }
