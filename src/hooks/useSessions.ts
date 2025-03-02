@@ -18,8 +18,9 @@ function debounce<T extends (...args: any[]) => any>(
 // Cache for sessions data
 let sessionsCache: Session[] | null = null;
 let lastFetchTime = 0;
-const CACHE_TTL = 300000; // 5 minutes cache TTL (increased from 1 minute)
+const CACHE_TTL = 300000; // 5 minutes cache TTL
 let fetchPromise: Promise<Session[]> | null = null;
+let pendingFetchTimeout: NodeJS.Timeout | null = null;
 
 export function useSessions() {
   const { userId } = useAuth();
@@ -70,6 +71,12 @@ export function useSessions() {
 
       if (fetchInProgress.current && !forceRefresh) return sessionsCache || [];
 
+      // Clear any pending fetch timeout
+      if (pendingFetchTimeout) {
+        clearTimeout(pendingFetchTimeout);
+        pendingFetchTimeout = null;
+      }
+
       fetchInProgress.current = true;
 
       // Use cache if available and not expired, unless force refresh is requested
@@ -117,7 +124,7 @@ export function useSessions() {
               err instanceof Error ? err.message : "An error occurred";
             if (isMounted.current) {
               setError(errorMessage);
-              setLoading(false); // Make sure to set loading to false on error
+              setLoading(false);
             }
             return sessionsCache || [];
           })
@@ -125,7 +132,7 @@ export function useSessions() {
             fetchInProgress.current = false;
             fetchPromise = null;
             if (isMounted.current) {
-              setLoading(false); // Ensure loading is set to false in finally block
+              setLoading(false);
             }
           });
 
@@ -135,7 +142,7 @@ export function useSessions() {
           err instanceof Error ? err.message : "An error occurred";
         if (isMounted.current) {
           setError(errorMessage);
-          setLoading(false); // Make sure to set loading to false on error
+          setLoading(false);
         }
         fetchInProgress.current = false;
         fetchPromise = null;
@@ -150,13 +157,36 @@ export function useSessions() {
     doFetchSessions,
   ]);
 
+  // Fetch sessions on mount, but with a slight delay if not the active tab
   useEffect(() => {
-    if (userId) {
-      // Always fetch immediately regardless of active tab
-      // This ensures data is available when needed
-      fetchSessions();
+    if (!userId) return;
+
+    // If we already have cached data, use it immediately
+    if (sessionsCache) {
+      setSessions(sessionsCache);
+      setLoading(false);
+
+      // Only refresh if cache is stale
+      const now = Date.now();
+      if (now - lastFetchTime >= CACHE_TTL) {
+        // Fetch with a delay if not the active tab
+        if (!isActiveTab.current) {
+          pendingFetchTimeout = setTimeout(() => doFetchSessions(false), 2000);
+        } else {
+          doFetchSessions(false);
+        }
+      }
+    } else {
+      // No cache, fetch immediately
+      doFetchSessions(true);
     }
-  }, [userId, fetchSessions]);
+
+    return () => {
+      if (pendingFetchTimeout) {
+        clearTimeout(pendingFetchTimeout);
+      }
+    };
+  }, [userId, doFetchSessions]);
 
   return {
     sessions,
