@@ -158,7 +158,7 @@ export const NavUser = React.memo(function NavUser({
 
   const handleSignOut = useCallback(() => {
     setIsDropdownOpen(false);
-    signOut();
+    signOut({ redirectUrl: "/" });
   }, [signOut]);
 
   const handleOpenUserProfile = useCallback(() => {
