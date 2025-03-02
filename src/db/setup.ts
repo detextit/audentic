@@ -101,7 +101,6 @@ export async function setupDatabase() {
           UNIQUE (agent_id)
         )
       `,
-
       // Create user_budget table
       sql`
         CREATE TABLE IF NOT EXISTS user_budget (
@@ -117,7 +116,8 @@ export async function setupDatabase() {
 
     await Promise.all(setupOperations);
     logger.info(
-      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers - initiated"
+      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers, Widget Config - initiated"
+
     );
   } catch (error) {
     logger.error("Error setting up database:", error);
