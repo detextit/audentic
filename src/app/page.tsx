@@ -10,7 +10,6 @@ import {
   GraduationCap,
   FileSignature,
 } from "lucide-react";
-import { SessionControl } from "@audentic/react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,6 +23,12 @@ import {
 import { faqData } from "@/data/faq";
 import ReactMarkdown from "react-markdown";
 import { FeatureSection } from "@/components/feature-card-section";
+import dynamic from "next/dynamic";
+
+const SessionControl = dynamic(
+  () => import("@audentic/react").then((mod) => mod.SessionControl),
+  { ssr: false }
+);
 
 export default function LandingPage() {
   const { isSignedIn } = useAuth();
@@ -49,6 +54,7 @@ export default function LandingPage() {
               width={24}
               height={24}
               className="w-6 h-6"
+              priority
             />
             <span className="font-semibold text-lg">Audentic</span>
           </div>
@@ -106,6 +112,10 @@ export default function LandingPage() {
                     className="rounded-md"
                     width={800}
                     height={500}
+                    priority
+                    quality={75}
+                    placeholder="blur"
+                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEtAJJXIDTjwAAAABJRU5ErkJggg=="
                   />
                 </div>
               </div>
@@ -229,7 +239,6 @@ export default function LandingPage() {
             technical aspects, allowing you to focus on creating engaging voice
             experiences for your users.
           </p>
-          a
         </div>
 
         <div className="container mx-auto px-6 py-24">
@@ -317,8 +326,13 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-      {/* Add SessionControl with fixed positioning */}
-      <motion.div className="fixed bottom-4 right-4 z-50">
+
+      <motion.div
+        className="fixed bottom-4 right-4 z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+      >
         <div className="rounded-lg animate-pulse-subtle">
           <SessionControl agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57" />
         </div>
