@@ -112,6 +112,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   const [currentAgent, setCurrentAgent] = useState<AgentDBConfig | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState(false);
@@ -731,7 +732,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         <TabsList>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="widget">Widget Configuration</TabsTrigger>
+          <TabsTrigger value="widget">Widget</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">

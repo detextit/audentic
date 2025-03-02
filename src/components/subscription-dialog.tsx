@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/card";
 import { Check, Sparkles, Mail, Calendar, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createLogger } from "@/utils/logger";
 
+const logger = createLogger("Subscription Dialog");
 interface PlanFeature {
   name: string;
   included?: boolean;
@@ -33,11 +35,13 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   open,
   onOpenChange,
 }: SubscriptionDialogProps) {
+  const [userBudget, setUserBudget] = useState<any>(null);
+  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
   // Memoize feature lists to prevent recreating on each render
   const freeFeatures = useMemo<PlanFeature[]>(
     () => [
       { name: "Unlimited voice agents", included: true },
-      { name: "10$ credit per month", included: true },
+      { name: "5$ credit per month", included: true },
       { name: "Basic analytics", included: true },
       { name: "Community support", included: true },
       { name: "Shared compute", included: true },
@@ -68,6 +72,30 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   const handleScheduleDemo = useCallback(() => {
     window.open("https://calendly.com/audentic-info", "_blank");
   }, []);
+
+  // Fetch user budget
+  const fetchUserBudget = async () => {
+    try {
+      setIsLoadingBudget(true);
+      const response = await fetch("/api/subscription/budget");
+      if (!response.ok) {
+        throw new Error("Failed to fetch budget");
+      }
+      const data = await response.json();
+      setUserBudget(data.budget);
+    } catch (error) {
+      logger.error("Error fetching budget:", error);
+      setUserBudget(null);
+    } finally {
+      setIsLoadingBudget(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchUserBudget();
+    }
+  }, [open]);
 
   // Memoize feature list rendering
   const renderFeatureList = useCallback((features: PlanFeature[]) => {
@@ -100,6 +128,34 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
             tailored to your needs.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Budget Summary */}
+        {!isLoadingBudget && userBudget && (
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+            <div className="flex flex-wrap justify-between items-center">
+              <div>
+                <h3 className="text-sm font-medium">Available Credits</h3>
+                <p className="text-2xl font-bold text-primary">
+                  ${userBudget.remainingBudget.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Total Usage</h3>
+                <p className="text-2xl font-bold">
+                  ${userBudget.usedAmount.toFixed(2)}
+                </p>
+              </div>
+              {userBudget.planType === "free" && (
+                <div>
+                  <h3 className="text-sm font-medium">Next Refresh</h3>
+                  <p className="text-lg">
+                    {new Date(userBudget.nextRefreshDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Free Plan Card */}

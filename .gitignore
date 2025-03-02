@@ -40,3 +40,5 @@ next-env.d.ts
 todo.md
 
 .vscode/settings.json
+
+src/scripts
