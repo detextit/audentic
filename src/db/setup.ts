@@ -90,6 +90,18 @@ export async function setupDatabase() {
         )
       `,
 
+      // Create widget_config table
+      sql`
+        CREATE TABLE IF NOT EXISTS widget_config (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
+          config JSONB NOT NULL DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (agent_id)
+        )
+      `,
+
       // Create user_budget table
       sql`
         CREATE TABLE IF NOT EXISTS user_budget (

@@ -325,7 +325,6 @@ export function FormAgent({
           <div className="fixed bottom-10 right-10">
             <SessionControl
               agentId={agentId}
-              transcript={true}
               maxOutputTokens={8192}
               updateForm={updateForm}
             />
