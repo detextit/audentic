@@ -42,16 +42,6 @@ interface UserSubscription {
   cancelAtPeriodEnd: boolean;
 }
 
-interface UserBudget {
-  userId: string;
-  totalBudget: number;
-  usedAmount: number;
-  remainingBudget: number;
-  lastUpdated: string;
-  nextRefreshDate: Date;
-  planType: string;
-}
-
 const getDisplayName = (user: UserResource | null | undefined): string => {
   if (!user) return "Audentic.User";
   if (user.username) {
@@ -98,8 +88,6 @@ export const NavUser = React.memo(function NavUser({
     null
   );
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
-  const [userBudget, setUserBudget] = useState<UserBudget | null>(null);
-  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
 
   // Memoize computed values
   const displayName = useMemo(
@@ -129,7 +117,6 @@ export const NavUser = React.memo(function NavUser({
 
   useEffect(() => {
     fetchUserSubscription();
-    fetchUserBudget();
   }, []);
 
   const fetchUserSubscription = useCallback(async () => {
@@ -154,32 +141,6 @@ export const NavUser = React.memo(function NavUser({
       setIsLoadingSubscription(false);
     }
   }, []);
-
-  const fetchUserBudget = useCallback(async () => {
-    setIsLoadingBudget(true);
-    try {
-      const response = await fetch("/api/subscription/budget");
-      if (!response.ok) {
-        throw new Error("Failed to fetch budget");
-      }
-      const data = await response.json();
-      setUserBudget(data.budget);
-    } catch (error) {
-      logger.error("Error fetching budget:", error);
-      // Default to zero budget if there's an error
-      setUserBudget({
-        userId: user?.id || "",
-        totalBudget: 0,
-        usedAmount: 0,
-        remainingBudget: 0,
-        lastUpdated: new Date().toISOString(),
-        nextRefreshDate: new Date(),
-        planType: "free",
-      });
-    } finally {
-      setIsLoadingBudget(false);
-    }
-  }, [user]);
 
   const handleOpenUsage = useCallback(() => {
     setIsDropdownOpen(false);
@@ -229,24 +190,6 @@ export const NavUser = React.memo(function NavUser({
       );
     }
   }, [isLoadingSubscription, subscription]);
-
-  // Memoize the budget badge component
-  const budgetBadge = useMemo(() => {
-    if (isLoadingBudget || !userBudget) return null;
-
-    return (
-      <Badge
-        variant="outline"
-        className={`${
-          userBudget.remainingBudget > 0
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
-        } border-0 text-xs`}
-      >
-        ${userBudget.remainingBudget.toFixed(2)}
-      </Badge>
-    );
-  }, [isLoadingBudget, userBudget]);
 
   return (
     <>

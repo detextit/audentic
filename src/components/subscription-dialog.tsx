@@ -26,16 +26,6 @@ interface PlanFeature {
   included?: boolean;
 }
 
-interface UserBudget {
-  userId: string;
-  totalBudget: number;
-  usedAmount: number;
-  remainingBudget: number;
-  lastUpdated: string;
-  nextRefreshDate: Date;
-  planType: string;
-}
-
 interface SubscriptionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

@@ -730,7 +730,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         <TabsList>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="widget">Widget Configuration</TabsTrigger>
+          <TabsTrigger value="widget">Widget</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">
