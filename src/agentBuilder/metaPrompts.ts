@@ -159,7 +159,6 @@ export const getVoiceAgentInstruction = async (
   }
 
   const data = await response.json();
-  console.log(data);
   return data.choices[0].message.content;
 };
 

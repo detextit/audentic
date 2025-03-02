@@ -1,6 +1,9 @@
 import { createKnowledgeBaseArticle, getAgentKnowledgeBase } from "@/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("KB API");
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +22,7 @@ export async function GET(request: Request) {
     const articles = await getAgentKnowledgeBase(agentId);
     return NextResponse.json(articles);
   } catch (error) {
-    console.error("Error fetching knowledge base articles:", error);
+    logger.error("Error fetching knowledge base articles:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -40,7 +43,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(article);
   } catch (error) {
-    console.error("Error creating knowledge base article:", error);
+    logger.error("Error creating knowledge base article:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

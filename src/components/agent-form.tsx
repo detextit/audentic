@@ -3,6 +3,9 @@ import { AgentDBConfig } from "@/agentBuilder/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAgents } from "@/hooks/useAgents";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Agent Form");
 
 interface AgentFormProps {
   agent?: AgentDBConfig;
@@ -27,7 +30,7 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("Submitting form data:", formData); // Debug log
+      logger.info("Submitting form data:", formData); // Debug log
       if (agent) {
         await updateAgent(agent.id, formData);
       } else {
@@ -35,7 +38,7 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
       }
       onClose();
     } catch (error) {
-      console.error("Form submission error:", error);
+      logger.error("Form submission error:", error);
     }
   };
 

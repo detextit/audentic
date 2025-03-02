@@ -4,6 +4,9 @@ import { JSX, useEffect, useState } from "react";
 import { TalkAgent } from "@/app/agents/TalkAgent";
 import { usePathname } from "next/navigation";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Talk Page");
 
 export default function TalkAgentPage(): JSX.Element {
   const pathname = usePathname();
@@ -15,7 +18,7 @@ export default function TalkAgentPage(): JSX.Element {
       fetch(`/api/agents/${agentId}`)
         .then((response) => response.json())
         .then((data) => setAgent(data))
-        .catch((error) => console.error("Error fetching agent:", error));
+        .catch((error) => logger.error("Error fetching agent:", error));
     }
   }, [agentId]);
 
