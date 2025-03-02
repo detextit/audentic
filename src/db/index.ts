@@ -269,10 +269,231 @@ export async function saveMcpServer(
 }
 
 export async function deleteMcpServer(agentId: string, serverName: string) {
-  logger.debug("Deleting server:", serverName);
-  await sql`
-    DELETE FROM mcp_servers 
-    WHERE agent_id = ${agentId} 
-    AND name = ${serverName}
-  `;
+  try {
+    await sql`
+      DELETE FROM mcp_servers
+      WHERE agent_id = ${agentId} AND name = ${serverName}
+    `;
+    return true;
+  } catch (error) {
+    logger.error("Error deleting MCP server:", error);
+    return false;
+  }
+}
+
+// User Budget Management
+
+export async function getUserBudget(userId: string) {
+  try {
+    const result = await sql`
+      SELECT * FROM user_budget
+      WHERE user_id = ${userId}
+    `;
+
+    if (result.rows.length === 0) {
+      // Initialize budget for new user with default values (free plan gets $5)
+      const defaultBudget = 5.0;
+      const nextRefreshDate = new Date();
+      nextRefreshDate.setDate(nextRefreshDate.getDate() + 30); // 30 days from now
+
+      await sql`
+        INSERT INTO user_budget (
+          user_id, 
+          total_budget, 
+          used_amount, 
+          next_refresh_date, 
+          plan_type
+        )
+        VALUES (
+          ${userId}, 
+          ${defaultBudget}, 
+          0, 
+          ${nextRefreshDate.toISOString()}, 
+          'free'
+        )
+      `;
+
+      return {
+        userId,
+        totalBudget: defaultBudget,
+        usedAmount: 0,
+        remainingBudget: defaultBudget,
+        lastUpdated: new Date(),
+        nextRefreshDate: nextRefreshDate,
+        planType: "free",
+      };
+    }
+
+    const userBudget = result.rows[0];
+
+    // Check if budget needs to be refreshed
+    const nextRefresh = new Date(userBudget.next_refresh_date);
+    const now = new Date();
+
+    if (now >= nextRefresh && userBudget.plan_type === "free") {
+      // It's time to refresh the budget for free users
+      const refreshAmount = 5.0; // $5 for free plan
+      const newNextRefresh = new Date();
+      newNextRefresh.setDate(nextRefresh.getDate() + 30); // 30 days from next refresh
+
+      const refreshResult = await sql`
+        UPDATE user_budget
+        SET 
+          total_budget = total_budget + ${refreshAmount},
+          next_refresh_date = ${newNextRefresh.toISOString()},
+          last_updated = CURRENT_TIMESTAMP
+        WHERE user_id = ${userId}
+        RETURNING *
+      `;
+
+      const refreshedBudget = refreshResult.rows[0];
+      return {
+        userId: refreshedBudget.user_id,
+        totalBudget: parseFloat(refreshedBudget.total_budget),
+        usedAmount: parseFloat(refreshedBudget.used_amount),
+        remainingBudget:
+          parseFloat(refreshedBudget.total_budget) -
+          parseFloat(refreshedBudget.used_amount),
+        lastUpdated: refreshedBudget.last_updated,
+        nextRefreshDate: new Date(refreshedBudget.next_refresh_date),
+        planType: refreshedBudget.plan_type,
+      };
+    }
+
+    return {
+      userId: userBudget.user_id,
+      totalBudget: parseFloat(userBudget.total_budget),
+      usedAmount: parseFloat(userBudget.used_amount),
+      remainingBudget:
+        parseFloat(userBudget.total_budget) -
+        parseFloat(userBudget.used_amount),
+      lastUpdated: userBudget.last_updated,
+      nextRefreshDate: new Date(userBudget.next_refresh_date),
+      planType: userBudget.plan_type,
+    };
+  } catch (error) {
+    logger.error("Error getting user budget:", error);
+    throw error;
+  }
+}
+
+export async function addUserBudget(
+  userId: string,
+  amountToAdd: number,
+  planType?: string
+) {
+  try {
+    const currentBudget = await getUserBudget(userId);
+
+    // If plan type is changing, update the next refresh date
+    const updatePlanType = planType && planType !== currentBudget.planType;
+    const nextRefreshDate = updatePlanType
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      : currentBudget.nextRefreshDate;
+
+    let query;
+    if (updatePlanType) {
+      query = sql`
+        UPDATE user_budget
+        SET 
+          total_budget = ${currentBudget.totalBudget + amountToAdd},
+          last_updated = CURRENT_TIMESTAMP,
+          plan_type = ${planType},
+          next_refresh_date = ${nextRefreshDate.toISOString()}
+        WHERE user_id = ${userId}
+        RETURNING *
+      `;
+    } else {
+      query = sql`
+        UPDATE user_budget
+        SET 
+          total_budget = ${currentBudget.totalBudget + amountToAdd},
+          last_updated = CURRENT_TIMESTAMP
+        WHERE user_id = ${userId}
+        RETURNING *
+      `;
+    }
+
+    const result = await query;
+
+    const updatedBudget = result.rows[0];
+    return {
+      userId: updatedBudget.user_id,
+      totalBudget: parseFloat(updatedBudget.total_budget),
+      usedAmount: parseFloat(updatedBudget.used_amount),
+      remainingBudget:
+        parseFloat(updatedBudget.total_budget) -
+        parseFloat(updatedBudget.used_amount),
+      lastUpdated: updatedBudget.last_updated,
+      nextRefreshDate: new Date(updatedBudget.next_refresh_date),
+      planType: updatedBudget.plan_type,
+    };
+  } catch (error) {
+    logger.error("Error updating user budget:", error);
+    throw error;
+  }
+}
+
+export async function recordUsage(userId: string, cost: number) {
+  try {
+    const currentBudget = await getUserBudget(userId);
+
+    // Check if user has enough budget
+    if (currentBudget.remainingBudget < cost) {
+      return {
+        success: false,
+        message: "Insufficient budget",
+        budget: currentBudget,
+      };
+    }
+
+    const result = await sql`
+      UPDATE user_budget
+      SET 
+        used_amount = ${currentBudget.usedAmount + cost},
+        last_updated = CURRENT_TIMESTAMP
+      WHERE user_id = ${userId}
+      RETURNING *
+    `;
+
+    const updatedBudget = result.rows[0];
+    return {
+      success: true,
+      message: "Usage recorded successfully",
+      budget: {
+        userId: updatedBudget.user_id,
+        totalBudget: parseFloat(updatedBudget.total_budget),
+        usedAmount: parseFloat(updatedBudget.used_amount),
+        remainingBudget:
+          parseFloat(updatedBudget.total_budget) -
+          parseFloat(updatedBudget.used_amount),
+        lastUpdated: updatedBudget.last_updated,
+        nextRefreshDate: new Date(updatedBudget.next_refresh_date),
+        planType: updatedBudget.plan_type,
+      },
+    };
+  } catch (error) {
+    logger.error("Error recording usage:", error);
+    throw error;
+  }
+}
+
+export async function hasEnoughBudget(
+  userId: string,
+  estimatedCost: number = 0.01
+) {
+  try {
+    const userBudget = await getUserBudget(userId);
+    return {
+      hasEnough: userBudget.remainingBudget >= estimatedCost,
+      budget: userBudget,
+    };
+  } catch (error) {
+    logger.error("Error checking budget:", error);
+    return {
+      hasEnough: false,
+      budget: null,
+      error: "Failed to check budget",
+    };
+  }
 }
