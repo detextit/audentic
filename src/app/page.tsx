@@ -23,6 +23,7 @@ import {
 import { faqData } from "@/data/faq";
 import ReactMarkdown from "react-markdown";
 import { FeatureSection } from "@/components/feature-card-section";
+import React from "react";
 import dynamic from "next/dynamic";
 
 const SessionControl = dynamic(
@@ -41,6 +42,13 @@ export default function LandingPage() {
       router.push("/sign-in");
     }
   };
+
+  // Add useEffect to log when script loads
+  React.useEffect(() => {
+    console.log("Checking for embed.js script...");
+    const scriptElement = document.querySelector('script[src="/embed.js"]');
+    console.log("Script element found:", scriptElement);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -71,7 +79,6 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
-
       <main>
         <div className="bg-gradient-to-b from-slate-100 to-slate-200">
           <section className="container mx-auto px-6 py-6">
@@ -328,13 +335,26 @@ export default function LandingPage() {
       </main>
 
       <motion.div
-        className="fixed bottom-4 right-4 z-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
       >
         <div className="rounded-lg animate-pulse-subtle">
-          <SessionControl agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57" />
+          <SessionControl
+            agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57"
+            widgetConfiguration={{
+              showBackgroundCard: true,
+              title: "Need Help?",
+              backgroundColor: "#FFFFFF",
+              textColor: "#666666",
+              width: "200",
+              height: "110",
+              buttonText: "Voice Chat",
+              primaryColor: "#000000",
+              buttonTextColor: "#FFFFFF",
+              borderRadius: "12",
+            }}
+          />
         </div>
       </motion.div>
     </div>

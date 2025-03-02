@@ -1,6 +1,7 @@
 import { sql } from "@vercel/postgres";
 import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
+import { WidgetConfiguration } from "@/app/agents/WidgetConfiguration";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("DB Actions");
@@ -496,4 +497,34 @@ export async function hasEnoughBudget(
       error: "Failed to check budget",
     };
   }
+}
+
+// Get widget configuration for an agent
+export async function getWidgetConfig(
+  agentId: string
+): Promise<WidgetConfiguration | null> {
+  const result = await sql`
+    SELECT config FROM widget_config 
+    WHERE agent_id = ${agentId}
+  `;
+
+  return result.rows.length ? result.rows[0].config : null;
+}
+
+// Save or update widget configuration
+export async function saveWidgetConfig(
+  agentId: string,
+  config: WidgetConfiguration
+): Promise<WidgetConfiguration> {
+  const result = await sql`
+    INSERT INTO widget_config (agent_id, config)
+    VALUES (${agentId}, ${JSON.stringify(config)})
+    ON CONFLICT (agent_id)
+    DO UPDATE SET 
+      config = ${JSON.stringify(config)},
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING config
+  `;
+
+  return result.rows[0].config;
 }
