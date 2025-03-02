@@ -21,11 +21,7 @@ export function TalkAgent({
         <CardContent>
           <div className="flex flex-col h-[70vh]">
             <div className="flex-grow flex items-end justify-end">
-              <SessionControl
-                transcript={true}
-                agentId={agentId}
-                maxOutputTokens={8192}
-              />
+              <SessionControl agentId={agentId} maxOutputTokens={8192} />
             </div>
           </div>
         </CardContent>
