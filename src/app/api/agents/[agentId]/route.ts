@@ -1,6 +1,10 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Agent ID API");
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ agentId: string }> }
@@ -23,7 +27,7 @@ export async function GET(
       ...agent,
     });
   } catch (error) {
-    console.error("Error fetching agent:", error);
+    logger.error("Error fetching agent:", error);
     return NextResponse.json(
       { error: "An error occurred while fetching the agent" },
       { status: 500 }

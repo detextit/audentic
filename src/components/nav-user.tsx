@@ -26,6 +26,9 @@ import { UsageDialog } from "@/components/usage-dialog";
 import { SubscriptionDialog } from "@/components/subscription-dialog";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Nav User");
 
 interface NavUserProps {
   userName: string;
@@ -126,7 +129,7 @@ export const NavUser = React.memo(function NavUser({
       const data = await response.json();
       setSubscription(data.subscription);
     } catch (error) {
-      console.error("Error fetching subscription:", error);
+      logger.error("Error fetching subscription:", error);
       // Default to free plan if there's an error
       setSubscription({
         status: "active",

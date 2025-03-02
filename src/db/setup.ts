@@ -1,4 +1,7 @@
 import { sql } from "@vercel/postgres";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("DB Setup");
 
 export async function setupDatabase() {
   try {
@@ -89,11 +92,11 @@ export async function setupDatabase() {
     ];
 
     await Promise.all(setupOperations);
-    console.log(
+    logger.info(
       "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers - initiated"
     );
   } catch (error) {
-    console.error("Error setting up database:", error);
+    logger.error("Error setting up database:", error);
     throw error;
   }
 }

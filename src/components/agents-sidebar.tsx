@@ -5,17 +5,35 @@ import { useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AgentsSidebarProps {
   onCreateClick: () => void;
   onSelectAgent: (agentId: string) => void;
 }
 
+// Skeleton loader for agents
+const AgentsSkeleton = () => (
+  <div className="space-y-2 px-2 py-3">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="px-3 py-2.5 rounded-md">
+        <div className="flex items-start gap-3">
+          <Skeleton className="w-8 h-8 rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="w-3/4 h-4 mb-2" />
+            <Skeleton className="w-full h-3" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 export const AgentsSidebar = React.memo(function AgentsSidebar({
   onCreateClick,
   onSelectAgent,
 }: AgentsSidebarProps) {
-  const { agents } = useAgents();
+  const { agents, loading } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleAgentClick = useCallback(
@@ -72,7 +90,9 @@ export const AgentsSidebar = React.memo(function AgentsSidebar({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto py-3 px-2">
-        {filteredAgents.length === 0 ? (
+        {loading ? (
+          <AgentsSkeleton />
+        ) : filteredAgents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
             <Bot className="h-10 w-10 text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">

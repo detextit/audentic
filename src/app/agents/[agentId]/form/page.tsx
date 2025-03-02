@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { FormAgent } from "@/app/agents/FormAgent";
 import { usePathname } from "next/navigation";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Form Page");
 
 export default function FormPage() {
   const pathname = usePathname();
@@ -15,7 +18,7 @@ export default function FormPage() {
       fetch(`/api/agents/${agentId}`)
         .then((response) => response.json())
         .then((data) => setAgent(data))
-        .catch((error) => console.error("Error fetching agent:", error));
+        .catch((error) => logger.error("Error fetching agent:", error));
     }
   }, [agentId]);
 

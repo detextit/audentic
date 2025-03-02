@@ -1,9 +1,10 @@
 import { FileClock, Clock, Search, Calendar } from "lucide-react";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useAgents } from "@/hooks/useAgents";
 import { useSessions } from "@/hooks/useSessions";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 
 export interface Session {
   session_id: string;
@@ -23,9 +24,22 @@ export const HistorySidebar = React.memo(function HistorySidebar({
   const { sessions } = useSessions();
   const { agents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
+  const pathname = usePathname();
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
+  // Update active session based on URL
+  useEffect(() => {
+    if (pathname.startsWith("/history/")) {
+      const sessionId = pathname.split("/history/")[1];
+      setActiveSessionId(sessionId);
+    } else {
+      setActiveSessionId(null);
+    }
+  }, [pathname]);
 
   const handleSessionClick = useCallback(
     (sessionId: string) => {
+      setActiveSessionId(sessionId);
       onSelectSession(sessionId);
     },
     [onSelectSession]
@@ -74,8 +88,8 @@ export const HistorySidebar = React.memo(function HistorySidebar({
   );
 
   const isActive = useCallback(
-    (sessionId: string) => window.location.pathname === `/history/${sessionId}`,
-    []
+    (sessionId: string) => sessionId === activeSessionId,
+    [activeSessionId]
   );
 
   return (

@@ -16,6 +16,9 @@ import { ChevronDown, ChevronUp, Loader, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CostData } from "@/types/cost";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Cost Summary");
 
 interface CostSummaryProps {
   sessionId: string;
@@ -44,19 +47,18 @@ export function CostSummary({
     // Otherwise fetch it
     async function fetchCostData() {
       if (!sessionId) {
-        console.log("No sessionId provided to CostSummary");
+        logger.warn("No sessionId provided to CostSummary");
         setIsLoading(false);
         return;
       }
 
-      console.log("Fetching cost data for session:", sessionId);
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
         const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
 
         if (!response.ok) {
-          console.error(
+          logger.error(
             "Session API response not OK:",
             response.status,
             response.statusText
@@ -65,10 +67,9 @@ export function CostSummary({
         }
 
         const data = await response.json();
-        console.log("Cost data received:", data.costData);
         setCostData(data.costData);
       } catch (error) {
-        console.error("Error fetching cost data:", error);
+        logger.error("Error fetching cost data:", error);
         setError("Failed to load cost data");
       } finally {
         setIsLoading(false);

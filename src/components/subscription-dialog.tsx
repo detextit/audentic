@@ -36,12 +36,12 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   // Memoize feature lists to prevent recreating on each render
   const freeFeatures = useMemo<PlanFeature[]>(
     () => [
-      { name: "3 voice agents", included: true },
+      { name: "Unlimited voice agents", included: true },
       { name: "10$ credit per month", included: true },
       { name: "Basic analytics", included: true },
       { name: "Community support", included: true },
-      { name: "Shared compute engine", included: true },
-      { name: "Custom agent branding", included: false },
+      { name: "Shared compute", included: true },
+      { name: "Custom branding", included: false },
       { name: "Custom integrations", included: false },
     ],
     []
@@ -50,11 +50,11 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   const customFeatures = useMemo<PlanFeature[]>(
     () => [
       { name: "Unlimted voice agents", included: true },
-      { name: "Custom credit per month", included: true },
+      { name: "Custom credit", included: true },
       { name: "Advanced analytics", included: true },
       { name: "Priority support", included: true },
-      { name: "Premium compute engine", included: true },
-      { name: "Custom agent branding", included: true },
+      { name: "Dedicated compute", included: true },
+      { name: "Custom branding", included: true },
       { name: "Custom integrations", included: true },
     ],
     []

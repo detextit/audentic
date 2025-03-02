@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Use MCP Servers");
 
 export function useMcpServers() {
   const [loading, setLoading] = useState(false);
@@ -12,7 +15,7 @@ export function useMcpServers() {
       if (!response.ok) throw new Error("Failed to get MCP servers");
       return await response.json();
     } catch (error) {
-      console.error("Failed to get MCP servers:", error);
+      logger.error("Failed to get MCP servers:", error);
       return [];
     } finally {
       setLoading(false);
@@ -57,7 +60,7 @@ export function useMcpServers() {
 
       return await response.json();
     } catch (error) {
-      console.error("Error deleting MCP server:", error);
+      logger.error("Error deleting MCP server:", error);
       throw error;
     } finally {
       setLoading(false);

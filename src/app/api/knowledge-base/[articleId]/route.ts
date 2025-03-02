@@ -1,6 +1,9 @@
 import { deleteKnowledgeBaseArticle, updateKnowledgeBaseArticle } from "@/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("KB Article API");
 
 export async function PATCH(
   _request: Request,
@@ -22,7 +25,7 @@ export async function PATCH(
 
     return NextResponse.json(article);
   } catch (error) {
-    console.error("Error updating knowledge base article:", error);
+    logger.error("Error updating knowledge base article:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -46,7 +49,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("Error deleting knowledge base article:", error);
+    logger.error("Error deleting knowledge base article:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

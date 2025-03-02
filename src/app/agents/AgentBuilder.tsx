@@ -58,11 +58,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { createLogger } from "@/utils/logger";
+
+// Create a logger instance for this component
+const logger = createLogger("Agent Builder");
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
-  const { agents, loading, updateAgent, refreshAgents, deleteAgent } =
-    useAgents();
+  const { agents, loading, updateAgent, deleteAgent } = useAgents();
   const {
     articles: existingArticles,
     createArticles,
@@ -174,18 +177,27 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   }, []);
 
   useEffect(() => {
-    if (loading) return; // Don't do anything while loading
+    logger.debug("AgentBuilder useEffect", {
+      agentId,
+      agentsLength: agents.length,
+      loading,
+    });
 
-    if (agents.length > 0 && agentId) {
-      const foundAgent = agents.find((a) => a.id === agentId);
-      if (foundAgent) {
-        setCurrentAgent(foundAgent);
+    if (agents.length > 0) {
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent) {
+        logger.info("Found agent:", agent.name);
+        setCurrentAgent(agent);
         resetDirtyFields();
       } else {
-        refreshAgents();
+        logger.error(`Agent with ID ${agentId} not found`);
+        // If the agent isn't found but we have other agents, redirect to the first one
+        if (agents.length > 0) {
+          router.push(`/agents/${agents[0].id}`);
+        }
       }
     }
-  }, [agents, agentId, loading, refreshAgents]);
+  }, [agentId, agents, router, resetDirtyFields]);
 
   useEffect(() => {
     if (currentAgent?.id) {
@@ -202,7 +214,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         const servers = await getMcpServers(currentAgent.id);
         setMcpServers(servers);
       } catch (error) {
-        console.error("Failed to load MCP servers:", error);
+        logger.error("Failed to load MCP servers:", error);
       }
     };
 
@@ -236,7 +248,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     try {
       await handler();
     } catch (error) {
-      console.error(`Failed to update ${name}:`, error);
+      logger.error(`Failed to update ${name}:`, error);
       toast({
         variant: "destructive",
         title: "Update Failed",
@@ -403,7 +415,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       resetDirtyFields();
     } catch (error) {
-      console.error("Failed to update agent:", error);
+      logger.error("Failed to update agent:", error);
       toast({
         variant: "destructive",
         title: "Update Failed",
@@ -442,7 +454,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       // Still need to use router.push for actual navigation
       router.push(nextUrl);
     } catch (error) {
-      console.error("Failed to delete agent:", error);
+      logger.error("Failed to delete agent:", error);
       toast({
         variant: "destructive",
         title: "Delete Failed",
@@ -453,7 +465,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }
   }, [agentId, agents, deleteAgent, isUpdating, router, toast]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -481,7 +493,45 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         </div>
       </div>
     );
-  if (!currentAgent) return null;
+  }
+
+  // If we have agents but the current agent isn't found, show a loading state
+  // This helps with the initial load when agents exist but currentAgent isn't set yet
+  if (agents.length > 0 && !currentAgent) {
+    logger.info("Showing loading state for agent:", agentId);
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-32 bg-muted animate-pulse rounded mt-1" />
+          </div>
+          <div className="flex gap-3">
+            <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+                <div className="h-4 w-full bg-muted animate-pulse rounded opacity-50 mt-1" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[100px] w-full bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentAgent) {
+    logger.warn("No current agent found for ID:", agentId);
+    return null;
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -646,6 +696,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     className="text-sm font-medium cursor-pointer flex-1"
                   >
                     Use Advanced Model
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (5x pricing)
+                    </span>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Enable more powerful AI capabilities
                     </p>
