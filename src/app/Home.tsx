@@ -8,6 +8,7 @@ import React, {
   lazy,
   Suspense,
   useMemo,
+  useRef,
 } from "react";
 import { NavUser } from "@/components/nav-user";
 import { AgentsSidebar } from "@/components/agents-sidebar";
@@ -34,16 +35,22 @@ const LazyAgentBuilder = lazy(() =>
 );
 const LazySessionHistory = lazy(() => import("@/app/history/SessionHistory"));
 
-// Preload the lazy components based on priority
+// Optimize preloading strategy - only preload the component we need first
 if (typeof window !== "undefined") {
   // Get the current path to determine what to preload first
   const path = window.location.pathname;
   const isAgentsPath = path.startsWith("/agents") || path === "/";
 
-  // Immediately preload both components to ensure they're available
-  // This prevents issues with components not being ready when needed
-  import("@/app/agents/AgentBuilder");
-  import("@/app/history/SessionHistory");
+  // Prioritize loading the component that matches the current path
+  if (isAgentsPath) {
+    import("@/app/agents/AgentBuilder");
+    // Defer loading the other component
+    setTimeout(() => import("@/app/history/SessionHistory"), 2000);
+  } else {
+    import("@/app/history/SessionHistory");
+    // Defer loading the other component
+    setTimeout(() => import("@/app/agents/AgentBuilder"), 2000);
+  }
 }
 
 // Loading fallback with skeleton UI for better perceived performance
@@ -72,18 +79,17 @@ const LoadingFallback = () => (
 );
 
 const Home = React.memo(function Home() {
-  // TODO: Setting the default state of the sidebar to collapsed
-  // const [isCollapsed, setIsCollapsed] = useState(() => {
-  // if (typeof window !== "undefined") {
-  //   const stored = localStorage.getItem("sidebarCollapsed");
-  //   return stored ? JSON.parse(stored) : false;
-  // }
-  // return false;
-  // });
-
   const isCollapsed = true;
 
-  const [sidebarOpen, setSidebarOpen] = useState("Agents");
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Initialize based on URL path to avoid unnecessary state changes
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      return path.startsWith("/history") ? "History" : "Agents";
+    }
+    return "Agents";
+  });
+
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { agents, refreshAgents, loading: agentsLoading } = useAgents();
   const { sessions, loading: sessionsLoading } = useSessions();
@@ -91,21 +97,78 @@ const Home = React.memo(function Home() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   const router = useRouter();
   const pathname = usePathname();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [priorityLoading, setPriorityLoading] = useState(true);
 
-  // Determine if we're currently loading the active tab's data
-  const isActiveTabLoading = useMemo(() => {
-    // Only consider loading state for initial render, not for subsequent data fetches
-    // This prevents the skeleton from showing indefinitely
-    if (!isInitialLoad) return false;
-    return sidebarOpen === "Agents" ? agentsLoading : sessionsLoading;
-  }, [sidebarOpen, agentsLoading, sessionsLoading, isInitialLoad]);
+  // Reduce loading states to a single one with a shorter timeout
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Track component readiness with refs instead of state to avoid re-renders
+  const agentBuilderReadyRef = useRef(false);
+  const initialSetupDoneRef = useRef(false);
 
   // Update URL without full page refresh
   const updateUrl = useCallback((url: string) => {
     window.history.pushState({}, "", url);
   }, []);
+
+  // Determine if we're currently loading the active tab's data
+  const isActiveTabLoading = useMemo(() => {
+    if (!isLoading) return false;
+    return sidebarOpen === "Agents" ? agentsLoading : sessionsLoading;
+  }, [sidebarOpen, agentsLoading, sessionsLoading, isLoading]);
+
+  // Preload the AgentBuilder component once
+  useEffect(() => {
+    if (!agentBuilderReadyRef.current) {
+      import("@/app/agents/AgentBuilder").then(() => {
+        agentBuilderReadyRef.current = true;
+      });
+    }
+
+    // Set a single timeout for loading state
+    const loadingTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(loadingTimer);
+  }, []);
+
+  // Handle initial URL-based selection only once
+  useEffect(() => {
+    if (initialSetupDoneRef.current) return;
+
+    const isAgentsTab = pathname.startsWith("/agents") || pathname === "/";
+
+    if (isAgentsTab && agents.length > 0) {
+      const urlAgentId = pathname.split("/agents/")?.[1] || null;
+      if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
+        setSelectedAgentId(urlAgentId);
+      } else if (agents[0]?.id) {
+        setSelectedAgentId(agents[0].id);
+        updateUrl(`/agents/${agents[0].id}`);
+      }
+    } else if (pathname.startsWith("/history") && sessions.length > 0) {
+      const urlSessionId = pathname.split("/history/")?.[1] || null;
+      if (
+        urlSessionId &&
+        sessions.some((session) => session.session_id === urlSessionId)
+      ) {
+        setSelectedSessionId(urlSessionId);
+      } else if (sessions[0]?.session_id) {
+        setSelectedSessionId(sessions[0].session_id);
+        updateUrl(`/history/${sessions[0].session_id}`);
+      }
+    }
+
+    initialSetupDoneRef.current = true;
+  }, [pathname, agents, sessions, updateUrl]);
+
+  // Auto-select first agent only when needed
+  useEffect(() => {
+    if (agents.length > 0 && !selectedAgentId && sidebarOpen === "Agents") {
+      setSelectedAgentId(agents[0].id);
+      updateUrl(`/agents/${agents[0].id}`);
+    }
+  }, [agents, selectedAgentId, sidebarOpen, updateUrl]);
 
   // Handle agent selection
   const handleSelectAgent = useCallback(
@@ -126,55 +189,6 @@ const Home = React.memo(function Home() {
     },
     [updateUrl]
   );
-
-  // Set initial state based on URL and prioritize loading
-  useEffect(() => {
-    // Determine which tab is active based on the URL
-    const isAgentsTab = pathname.startsWith("/agents") || pathname === "/";
-    setSidebarOpen(isAgentsTab ? "Agents" : "History");
-
-    // Set a shorter timeout for the priority loading state
-    const priorityTimer = setTimeout(() => {
-      setPriorityLoading(false);
-    }, 500);
-
-    // Set a shorter timeout for the overall initial loading state
-    const initialLoadTimer = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 1000);
-
-    if (isAgentsTab) {
-      if (agents.length > 0) {
-        const urlAgentId = pathname.split("/agents/")?.[1] || null;
-        if (urlAgentId && agents.some((agent) => agent.id === urlAgentId)) {
-          setSelectedAgentId(urlAgentId);
-        } else if (agents[0]?.id && pathname === "/") {
-          // Auto-select first agent if on home page
-          setSelectedAgentId(agents[0].id);
-          updateUrl(`/agents/${agents[0].id}`);
-        }
-      }
-    } else if (pathname.startsWith("/history")) {
-      if (sessions.length > 0) {
-        const urlSessionId = pathname.split("/history/")?.[1] || null;
-        if (
-          urlSessionId &&
-          sessions.some((session) => session.session_id === urlSessionId)
-        ) {
-          setSelectedSessionId(urlSessionId);
-        } else if (sessions[0]?.session_id) {
-          // Auto-select first session if none is specified in URL
-          setSelectedSessionId(sessions[0].session_id);
-          updateUrl(`/history/${sessions[0].session_id}`);
-        }
-      }
-    }
-
-    return () => {
-      clearTimeout(priorityTimer);
-      clearTimeout(initialLoadTimer);
-    };
-  }, [pathname, agents, sessions, updateUrl]);
 
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", JSON.stringify(isCollapsed));
@@ -218,12 +232,23 @@ const Home = React.memo(function Home() {
   const handleAgentsClick = useCallback(() => {
     setSidebarOpen("Agents");
     if (agents.length > 0) {
-      setSelectedAgentId(agents[0].id);
-      updateUrl(`/agents/${agents[0].id}`);
+      // If there's already a selected agent and it exists in the agents list, keep it selected
+      if (
+        selectedAgentId &&
+        agents.some((agent) => agent.id === selectedAgentId)
+      ) {
+        updateUrl(`/agents/${selectedAgentId}`);
+      } else {
+        // Otherwise select the first agent
+        setSelectedAgentId(agents[0].id);
+        updateUrl(`/agents/${agents[0].id}`);
+      }
     } else {
+      // Clear selection if no agents
+      setSelectedAgentId(null);
       updateUrl("/agents");
     }
-  }, [agents, updateUrl]);
+  }, [agents, updateUrl, selectedAgentId]);
 
   // Listen for popstate events (browser back/forward)
   useEffect(() => {
@@ -245,6 +270,19 @@ const Home = React.memo(function Home() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [handleSelectAgent, handleSelectSession, handleAgentsClick, handleHistoryClick]);
+
+  // Remove debug logging in production
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Render state:", {
+        agentsLength: agents.length,
+        selectedAgentId,
+        sidebarOpen,
+        isLoading,
+        agentBuilderReady: agentBuilderReadyRef.current,
+      });
+    }
+  }, [agents.length, selectedAgentId, sidebarOpen, isLoading]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -350,27 +388,14 @@ const Home = React.memo(function Home() {
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-auto bg-white">
-        {/* <header className="h-[72px] border-b border-[hsl(var(--sidebar-border))] px-6 flex items-center bg-white shrink-0">
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-primary))]"
-          >
-            {isCollapsed ? (
-              <PanelLeft size={20} />
-            ) : (
-              <PanelLeftClose size={20} />
-            )}
-          </button>
-        </header> */}
         <main className="flex-1 p-6 overflow-auto">
           <Suspense fallback={<LoadingFallback />}>
-            {isInitialLoad ? (
+            {isLoading ? (
               <LoadingFallback />
             ) : sidebarOpen === "History" ? (
               selectedSessionId ? (
                 <LazySessionHistory sessionId={selectedSessionId} />
               ) : sessions.length > 0 ? (
-                // If no session is selected but sessions exist, show the first one
                 <LazySessionHistory sessionId={sessions[0].session_id} />
               ) : (
                 // Fallback if no sessions exist
@@ -384,11 +409,15 @@ const Home = React.memo(function Home() {
                   </p>
                 </div>
               )
-            ) : selectedAgentId ? (
-              <LazyAgentBuilder agentId={selectedAgentId} />
             ) : agents.length > 0 ? (
-              // If no agent is selected but agents exist, show the first one
-              <LazyAgentBuilder agentId={agents[0].id} />
+              selectedAgentId ? (
+                <LazyAgentBuilder
+                  key={selectedAgentId}
+                  agentId={selectedAgentId}
+                />
+              ) : (
+                <LazyAgentBuilder key={agents[0].id} agentId={agents[0].id} />
+              )
             ) : (
               // Fallback if no agents exist
               <div className="flex flex-col items-center justify-center h-full text-center p-4">
@@ -409,7 +438,7 @@ const Home = React.memo(function Home() {
         </main>
       </div>
 
-      {/* Only show dialog when needed */}
+      {/* Only render dialog when needed */}
       {isCreateDialogOpen && (
         <AgentFormDialog
           open={isCreateDialogOpen}
