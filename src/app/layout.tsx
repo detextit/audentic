@@ -71,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="/">
+    <ClerkProvider>
       <html
         lang="en"
         className={`${montserrat.variable} font-sans suppressHydrationWarning`}
