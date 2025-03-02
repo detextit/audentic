@@ -333,7 +333,7 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-
+      {/* Add SessionControl with fixed positioning */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
