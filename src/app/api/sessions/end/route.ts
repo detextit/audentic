@@ -3,12 +3,27 @@ import { NextResponse } from "next/server";
 import { TranscriptItem } from "@audentic/react";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 import { createLogger } from "@/utils/logger";
+import { DEFAULT_COST_DATA } from "@/types/cost";
 
 const logger = createLogger("Sessions End API");
 
 export async function POST(request: Request) {
   try {
     const { sessionId, transcriptItems } = await request.json();
+
+    // Check if the session already exists and has been ended
+    const sessionCheck = await sql`
+      SELECT ended_at, agent_id FROM sessions WHERE session_id = ${sessionId}
+    `;
+
+    // If session is already ended, don't process it again
+    if (sessionCheck.rows.length > 0 && sessionCheck.rows[0].ended_at) {
+      logger.info(`Session ${sessionId} already ended, skipping processing`);
+      return NextResponse.json({ success: true, status: "already_ended" });
+    }
+
+    const agentId =
+      sessionCheck.rows.length > 0 ? sessionCheck.rows[0].agent_id : null;
 
     // Calculate the total cost for the session
     // First get the model type from session.created event
@@ -20,10 +35,42 @@ export async function POST(request: Request) {
       LIMIT 1
     `;
 
-    const model = modelResult.rows[0]?.model;
-    const isPro = model === "gpt-4o-realtime-preview";
+    let model = modelResult.rows[0]?.model;
+    let isPro = model === "gpt-4o-realtime-preview";
 
-    // Get token usage data
+    // If model is not found in events, try to get it from the agent table
+    if (!model && agentId) {
+      logger.info(
+        `Model not found in events for session ${sessionId}, trying agent table`
+      );
+      const agentResult = await sql`
+        SELECT settings FROM agents WHERE id = ${agentId}
+      `;
+
+      if (agentResult.rows.length > 0 && agentResult.rows[0].settings) {
+        const settings = agentResult.rows[0].settings;
+        const isAdvancedModel = settings.isAdvancedModel === true;
+
+        model = isAdvancedModel
+          ? "gpt-4o-realtime-preview"
+          : "gpt-4o-mini-realtime-preview";
+
+        isPro = isAdvancedModel;
+
+        logger.info(
+          `Determined model ${model} from agent settings for session ${sessionId}`
+        );
+      } else {
+        // Default to non-pro model if not found
+        model = "gpt-4o-mini-realtime-preview";
+        isPro = false;
+        logger.warn(
+          `Model not found for session ${sessionId}, defaulting to ${model}`
+        );
+      }
+    }
+
+    // Get token usage data from response.done events
     const result = await sql`
       SELECT 
         jsonb_agg(
@@ -37,11 +84,57 @@ export async function POST(request: Request) {
         AND event_name = 'response.done'
     `;
 
-    const usageData = result.rows[0].usage_data || [];
+    const usageData = result.rows[0]?.usage_data || [];
 
-    // Process usage data and calculate costs
-    const totalStats = processUsageData(usageData);
-    const { costs, totalCost } = calculateCosts(totalStats, isPro);
+    // Check if we have valid usage data
+    const hasValidUsageData =
+      usageData.length > 0 && usageData.some((data: any) => data !== null);
+
+    let totalStats, costs, totalCost;
+
+    if (hasValidUsageData) {
+      // Process usage data and calculate costs
+      totalStats = processUsageData(usageData);
+      const costResult = calculateCosts(totalStats, isPro);
+      costs = costResult.costs;
+      totalCost = costResult.totalCost;
+    } else {
+      // No valid usage data found, use default values
+      logger.warn(
+        `No valid usage data found for session ${sessionId}, using default values`
+      );
+      totalStats = DEFAULT_COST_DATA.usage;
+      costs = DEFAULT_COST_DATA.costs;
+      totalCost = 0;
+
+      // Try to estimate usage from other events if possible
+      const messageEvents = await sql`
+        SELECT COUNT(*) as message_count
+        FROM events 
+        WHERE session_id = ${sessionId}
+          AND event_name IN ('message.created', 'message.received')
+      `;
+
+      if (messageEvents.rows[0]?.message_count > 0) {
+        const messageCount = parseInt(messageEvents.rows[0].message_count);
+        // Very rough estimation - assume average token usage per message
+        const estimatedTokens = messageCount * 100;
+
+        if (isPro) {
+          // Rough estimate for Pro model
+          totalCost = estimatedTokens * 0.00001; // $0.01 per 1000 tokens rough estimate
+        } else {
+          // Rough estimate for Base model
+          totalCost = estimatedTokens * 0.000001; // $0.001 per 1000 tokens rough estimate
+        }
+
+        logger.info(
+          `Estimated cost for session ${sessionId} based on ${messageCount} messages: $${totalCost.toFixed(
+            6
+          )}`
+        );
+      }
+    }
 
     // End the session and update with all cost and usage information
     await sql`
