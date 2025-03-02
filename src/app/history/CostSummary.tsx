@@ -15,61 +15,51 @@ import {
 import { ChevronDown, ChevronUp, Loader, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { CostData } from "@/types/cost";
+import { createLogger } from "@/utils/logger";
 
-interface CostData {
-  usage: {
-    text: {
-      uncached_input: number;
-      cached_input: number;
-      output: number;
-    };
-    audio: {
-      uncached_input: number;
-      cached_input: number;
-      output: number;
-    };
-  };
-  costs: {
-    text_uncached_input: number;
-    text_cached_input: number;
-    text_output: number;
-    audio_uncached_input: number;
-    audio_cached_input: number;
-    audio_output: number;
-    total: number;
-  };
-  isPro: boolean;
-}
+const logger = createLogger("Cost Summary");
 
 interface CostSummaryProps {
   sessionId: string;
+  costData?: CostData | null;
 }
 
-export function CostSummary({ sessionId }: CostSummaryProps) {
-  const [costData, setCostData] = useState<CostData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function CostSummary({
+  sessionId,
+  costData: initialCostData,
+}: CostSummaryProps) {
+  const [costData, setCostData] = useState<CostData | null>(
+    initialCostData || null
+  );
+  const [isLoading, setIsLoading] = useState(!initialCostData);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    // If costData is provided via props, use it
+    if (initialCostData) {
+      setCostData(initialCostData);
+      setIsLoading(false);
+      return;
+    }
+
+    // Otherwise fetch it
     async function fetchCostData() {
       if (!sessionId) {
-        console.log("No sessionId provided to CostSummary");
+        logger.warn("No sessionId provided to CostSummary");
         setIsLoading(false);
         return;
       }
 
-      console.log("Fetching cost data for session:", sessionId);
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(
-          `${baseUrl}/api/sessions/cost?sessionId=${sessionId}`
-        );
+        const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
 
         if (!response.ok) {
-          console.error(
-            "Cost API response not OK:",
+          logger.error(
+            "Session API response not OK:",
             response.status,
             response.statusText
           );
@@ -77,10 +67,9 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
         }
 
         const data = await response.json();
-        console.log("Cost data received:", data);
-        setCostData(data);
+        setCostData(data.costData);
       } catch (error) {
-        console.error("Error fetching cost data:", error);
+        logger.error("Error fetching cost data:", error);
         setError("Failed to load cost data");
       } finally {
         setIsLoading(false);
@@ -88,7 +77,7 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
     }
 
     fetchCostData();
-  }, [sessionId]);
+  }, [sessionId, initialCostData]);
 
   if (isLoading)
     return (
@@ -166,7 +155,7 @@ export function CostSummary({ sessionId }: CostSummaryProps) {
                     <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-medium">
                       PRO
                     </span>
-                    <span>account pricing</span>
+                    <span>model pricing</span>
                   </div>
                 )}
               </div>

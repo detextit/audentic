@@ -1,6 +1,9 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { LoggedEvent } from "@audentic/react";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Events Log API");
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error logging event:", error);
+    logger.error("Error logging event:", error);
     return NextResponse.json({ error: "Failed to log event" }, { status: 500 });
   }
 }

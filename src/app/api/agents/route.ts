@@ -8,6 +8,9 @@ import {
   deleteAgent,
 } from "@/db";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Agents API");
 
 export async function GET(request: Request) {
   try {
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
     const agents = await getUserAgents(userId);
     return NextResponse.json(agents);
   } catch (error) {
-    console.error("Error fetching agents:", error);
+    logger.error("Error fetching agents:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -47,7 +50,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(agent);
   } catch (error: any) {
-    console.error("Detailed API error:", {
+    logger.error("Detailed API error:", {
       error,
       message: error.message,
       stack: error.stack,
@@ -82,7 +85,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(agent);
   } catch (error) {
-    console.error("Error updating agent:", error);
+    logger.error("Error updating agent:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -109,7 +112,7 @@ export async function DELETE(request: Request) {
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("Error deleting agent:", error);
+    logger.error("Error deleting agent:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

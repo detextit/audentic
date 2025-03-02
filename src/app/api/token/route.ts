@@ -16,6 +16,9 @@ import {
 } from "@/agentBuilder/metaPrompts";
 import { configureServers, listTools } from "@/mcp/mcpUtils";
 import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Token API");
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -120,13 +123,13 @@ export async function POST(request: Request) {
           };
           configuredServerNames.push(server.name);
         } else {
-          console.error(`MCP server ${server.name} not found`);
+          logger.error(`MCP server ${server.name} not found`);
         }
       }
 
       // Configure servers and get available tools
       const result = await configureServers(mcpServerConfig);
-      console.log("MCP servers configured:", result);
+      logger.info("MCP servers configured:", result);
 
       // Get tools from each configured server
       for (const serverName of configuredServerNames) {
@@ -158,7 +161,7 @@ export async function POST(request: Request) {
       tool_choice: "auto",
     };
 
-    console.log("Session settings:", JSON.stringify(sessionSettings, null, 2));
+    logger.info("Session settings:", JSON.stringify(sessionSettings, null, 2));
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/sessions",
@@ -174,7 +177,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("Token fetch error:", error);
+      logger.error("Token fetch error:", error);
       return NextResponse.json({ error }, { status: response.status });
     }
 
@@ -182,7 +185,7 @@ export async function POST(request: Request) {
     // convert tooLogic values to strings
     const toolLogic = agentConfig.toolLogic || {};
 
-    console.log("Tool logic:", JSON.stringify(toolLogic, null, 2));
+    logger.info("Tool logic:", JSON.stringify(toolLogic, null, 2));
 
     const tokenResponse = {
       client_secret: data.client_secret,
@@ -200,7 +203,7 @@ export async function POST(request: Request) {
       headers: corsHeaders,
     });
   } catch (error) {
-    console.error("Token route error:", error);
+    logger.error("Token route error:", error);
     return NextResponse.json(
       { error: "Failed to get token" },
       {
@@ -251,7 +254,7 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
           zodSchema: agent.settings.formSchema.zodSchema,
         };
         const formToolLogic = createFormToolLogic(formState);
-        console.log("Form tool logic:", formToolLogic);
+        logger.info("Form tool logic:", formToolLogic);
         // Merge the form tool logic with existing tool logic
         agentConfig.toolLogic = {
           ...agentConfig.toolLogic,
@@ -263,7 +266,7 @@ async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
     }
     return null;
   } catch (error) {
-    console.error("Error fetching agent config:", error);
+    logger.error("Error fetching agent config:", error);
     return null;
   }
 }
@@ -276,10 +279,10 @@ async function verifyApiKey(
   if (!apiKey && !origin) return false;
 
   try {
-    console.log("Verify API key", origin, apiKey);
+    logger.info("Verify API key", origin, apiKey);
     return true; // Replace with actual verification
   } catch (error) {
-    console.error("API key verification error:", error);
+    logger.error("API key verification error:", error);
     return false;
   }
 }

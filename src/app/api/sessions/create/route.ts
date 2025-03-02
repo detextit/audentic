@@ -1,5 +1,8 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Sessions CreateAPI");
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +15,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error creating session:", error);
+    logger.error("Error creating session:", error);
     return NextResponse.json(
       { error: "Failed to create session" },
       { status: 500 }

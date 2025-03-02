@@ -2,6 +2,10 @@ import { sql } from "@vercel/postgres";
 import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
 import { WidgetConfiguration } from "@/app/agents/WidgetConfiguration";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("DB Actions");
+
 // Create agent
 export async function createAgent(
   userId: string,
@@ -238,6 +242,7 @@ function transformDBKnowledgeBaseArticle(
 
 // Add to existing exports
 export async function getMcpServers(agentId: string) {
+  logger.debug("Getting MCP servers for agent:", agentId);
   const { rows } = await sql`
     SELECT name, env 
     FROM mcp_servers 
@@ -253,7 +258,7 @@ export async function saveMcpServer(
   agentId: string,
   server: { name: string; env: Record<string, string> }
 ) {
-  console.log("Saving server:", server);
+  logger.debug("Saving server:", server);
   await sql`
     INSERT INTO mcp_servers (agent_id, name, env)
     VALUES (${agentId}, ${server.name}, ${JSON.stringify(server.env)})
@@ -265,6 +270,7 @@ export async function saveMcpServer(
 }
 
 export async function deleteMcpServer(agentId: string, serverName: string) {
+  logger.debug("Deleting server:", serverName);
   await sql`
     DELETE FROM mcp_servers 
     WHERE agent_id = ${agentId} 

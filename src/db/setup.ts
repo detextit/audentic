@@ -1,4 +1,7 @@
 import { sql } from "@vercel/postgres";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("DB Setup");
 
 export async function setupDatabase() {
   try {
@@ -30,7 +33,11 @@ export async function setupDatabase() {
           session_id VARCHAR(255) PRIMARY KEY,
           agent_id VARCHAR(255),
           started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ended_at TIMESTAMP
+          ended_at TIMESTAMP,
+          total_cost DECIMAL(10, 6) DEFAULT 0,
+          usage_stats JSONB DEFAULT NULL,
+          cost_breakdown JSONB DEFAULT NULL,
+          model_type VARCHAR(50) DEFAULT NULL
         )
       `,
 
@@ -97,11 +104,12 @@ export async function setupDatabase() {
     ];
 
     await Promise.all(setupOperations);
-    console.log(
+    logger.info(
       "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers, Widget Config - initiated"
+
     );
   } catch (error) {
-    console.error("Error setting up database:", error);
+    logger.error("Error setting up database:", error);
     throw error;
   }
 }

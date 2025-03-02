@@ -1,10 +1,10 @@
 import { FileClock, Clock, Search, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useAgents } from "@/hooks/useAgents";
 import { useSessions } from "@/hooks/useSessions";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 
 export interface Session {
   session_id: string;
@@ -14,44 +14,83 @@ export interface Session {
   agent_name?: string;
 }
 
-export const HistorySidebar = React.memo(function HistorySidebar() {
+interface HistorySidebarProps {
+  onSelectSession: (sessionId: string) => void;
+}
+
+export const HistorySidebar = React.memo(function HistorySidebar({
+  onSelectSession,
+}: HistorySidebarProps) {
   const { sessions } = useSessions();
-  const router = useRouter();
   const { agents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
+  const pathname = usePathname();
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
-  const handleSessionClick = (sessionId: string) => {
-    router.replace(`/history/${sessionId}`);
-  };
+  // Update active session based on URL
+  useEffect(() => {
+    if (pathname.startsWith("/history/")) {
+      const sessionId = pathname.split("/history/")[1];
+      setActiveSessionId(sessionId);
+    } else {
+      setActiveSessionId(null);
+    }
+  }, [pathname]);
 
-  const sessionsWithAgentNames = sessions.map((session: Session) => ({
-    ...session,
-    agent_name:
-      agents.find((agent) => agent.id === session.agent_id)?.name ||
-      "Unnamed Agent",
-  }));
+  const handleSessionClick = useCallback(
+    (sessionId: string) => {
+      setActiveSessionId(sessionId);
+      onSelectSession(sessionId);
+    },
+    [onSelectSession]
+  );
 
-  const filteredSessions = sessionsWithAgentNames.filter((session) =>
-    session.agent_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  const sessionsWithAgentNames = useMemo(
+    () =>
+      sessions.map((session: Session) => ({
+        ...session,
+        agent_name:
+          agents.find((agent) => agent.id === session.agent_id)?.name ||
+          "Unnamed Agent",
+      })),
+    [sessions, agents]
+  );
+
+  const filteredSessions = useMemo(
+    () =>
+      sessionsWithAgentNames.filter((session) =>
+        session.agent_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [sessionsWithAgentNames, searchQuery]
   );
 
   // Group sessions by date
-  const groupedSessions = filteredSessions.reduce((groups, session) => {
-    const date = new Date(session.started_at).toLocaleDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(session);
-    return groups;
-  }, {} as Record<string, Session[]>);
-
-  // Sort dates in descending order (newest first)
-  const sortedDates = Object.keys(groupedSessions).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  const groupedSessions = useMemo(
+    () =>
+      filteredSessions.reduce((groups, session) => {
+        const date = new Date(session.started_at).toLocaleDateString();
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(session);
+        return groups;
+      }, {} as Record<string, Session[]>),
+    [filteredSessions]
   );
 
-  const isActive = (sessionId: string) =>
-    window.location.pathname === `/history/${sessionId}`;
+  // Sort dates in descending order (newest first)
+  const sortedDates = useMemo(
+    () =>
+      Object.keys(groupedSessions).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime()
+      ),
+    [groupedSessions]
+  );
+
+  const isActive = useCallback(
+    (sessionId: string) => sessionId === activeSessionId,
+    [activeSessionId]
+  );
 
   return (
     <div
