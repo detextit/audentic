@@ -696,6 +696,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     className="text-sm font-medium cursor-pointer flex-1"
                   >
                     Use Advanced Model
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (5x pricing)
+                    </span>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Enable more powerful AI capabilities
                     </p>

@@ -55,8 +55,8 @@ export function KnowledgeBaseEditor({
   isLoading = false,
 }: KnowledgeBaseEditorProps) {
   const [open, setOpen] = useState(false);
-  const [isPendingOpen, setIsPendingOpen] = useState(true);
-  const [isExistingOpen, setIsExistingOpen] = useState(true);
+  const [isPendingOpen, setIsPendingOpen] = useState(false);
+  const [isExistingOpen, setIsExistingOpen] = useState(false);
   const [inputMethod, setInputMethod] = useState<"manual" | "url" | "file">(
     "manual"
   );
