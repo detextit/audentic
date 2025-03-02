@@ -1,5 +1,8 @@
 import arcjet, { detectBot, shield, tokenBucket } from "@arcjet/next";
 import { NextResponse } from "next/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Arcjet API");
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY!, // Get your site key from https://app.arcjet.com
@@ -31,7 +34,7 @@ const aj = arcjet({
 
 export async function GET(req: Request) {
   const decision = await aj.protect(req, { requested: 5 }); // Deduct 5 tokens from the bucket
-  console.log("Arcjet decision", decision);
+  logger.info("Arcjet decision", decision);
 
   if (decision.isDenied()) {
     if (decision.reason.isRateLimit()) {

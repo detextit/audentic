@@ -2,6 +2,9 @@ import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { TranscriptItem } from "@audentic/react";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Sessions End API");
 
 export async function POST(request: Request) {
   try {
@@ -39,17 +42,6 @@ export async function POST(request: Request) {
     // Process usage data and calculate costs
     const totalStats = processUsageData(usageData);
     const { costs, totalCost } = calculateCosts(totalStats, isPro);
-
-    console.log(
-      "Session end - Usage data:",
-      JSON.stringify(usageData, null, 2)
-    );
-    console.log(
-      "Session end - Total stats:",
-      JSON.stringify(totalStats, null, 2)
-    );
-    console.log("Session end - Costs:", JSON.stringify(costs, null, 2));
-    console.log("Session end - Total cost:", totalCost);
 
     // End the session and update with all cost and usage information
     await sql`
@@ -104,7 +96,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error ending session:", error);
+    logger.error("Error ending session:", error);
     return NextResponse.json(
       { error: "Failed to end session" },
       { status: 500 }

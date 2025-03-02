@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Form Processing");
 
 interface FormMetadata {
   title: string;
@@ -74,7 +77,7 @@ export async function fetchFormSchema(formUrl: string) {
       const jsonStr = fbDataMatch[1].replace(/[\u0000-\u001F]/g, "");
       fbData = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error("Raw data:", fbDataMatch[1]);
+      logger.error("Raw data:", fbDataMatch[1]);
       throw new Error(
         `Failed to parse form data: ${
           parseError instanceof Error ? parseError.message : "Unknown error"
@@ -100,7 +103,6 @@ export async function fetchFormSchema(formUrl: string) {
 
     fields.forEach((field: any) => {
       try {
-        console.log("field", field);
         const [
           id,
           title,
@@ -219,7 +221,7 @@ export async function fetchFormSchema(formUrl: string) {
           placeholder: `Enter ${title.toLowerCase()}`,
         });
       } catch (fieldError) {
-        console.warn(`Failed to process field:`, field, fieldError);
+        logger.warn(`Failed to process field:`, field, fieldError);
       }
     });
 
@@ -232,7 +234,7 @@ export async function fetchFormSchema(formUrl: string) {
       zodSchema,
     };
   } catch (error) {
-    console.error("Form processing error:", error);
+    logger.error("Form processing error:", error);
     throw new Error(
       `Failed to parse form: ${
         error instanceof Error ? error.message : "Unknown error"

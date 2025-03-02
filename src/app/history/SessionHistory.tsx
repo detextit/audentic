@@ -12,6 +12,9 @@ import { CostSummary } from "./CostSummary";
 import { TranscriptItem } from "@audentic/react";
 import { Loader } from "lucide-react";
 import { CostData } from "@/types/cost";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Session History");
 
 interface SessionHistoryProps {
   sessionId?: string;
@@ -107,7 +110,7 @@ const SessionHistory = React.memo(function SessionHistory({
           setCostData(data.costData);
         }
       } catch (error) {
-        console.error("Error fetching session data:", error);
+        logger.error("Error fetching session data:", error);
         if (isMounted.current) {
           setError("Failed to load session data");
         }

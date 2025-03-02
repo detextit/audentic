@@ -60,6 +60,9 @@ import {
   Line,
   Tooltip as RechartsTooltip,
 } from "recharts";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Usage Dialog");
 
 // Types for API responses
 interface AgentCostData {
@@ -229,7 +232,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
         setSelectedAgent(data.stats[0].agent_id);
       }
     } catch (error) {
-      console.error("Failed to fetch usage data:", error);
+      logger.error("Failed to fetch usage data:", error);
       setError("Could not load usage data. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -255,7 +258,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
       const data = await response.json();
       setAgentCostData(data);
     } catch (error) {
-      console.error("Failed to fetch agent cost data:", error);
+      logger.error("Failed to fetch agent cost data:", error);
       setError("Could not load agent cost data. Please try again later.");
     } finally {
       setIsAgentLoading(false);
