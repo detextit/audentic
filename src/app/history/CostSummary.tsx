@@ -49,7 +49,6 @@ export function CostSummary({
         return;
       }
 
-      console.log("Fetching cost data for session:", sessionId);
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -65,7 +64,6 @@ export function CostSummary({
         }
 
         const data = await response.json();
-        console.log("Cost data received:", data.costData);
         setCostData(data.costData);
       } catch (error) {
         console.error("Error fetching cost data:", error);

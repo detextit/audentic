@@ -40,17 +40,6 @@ export async function POST(request: Request) {
     const totalStats = processUsageData(usageData);
     const { costs, totalCost } = calculateCosts(totalStats, isPro);
 
-    console.log(
-      "Session end - Usage data:",
-      JSON.stringify(usageData, null, 2)
-    );
-    console.log(
-      "Session end - Total stats:",
-      JSON.stringify(totalStats, null, 2)
-    );
-    console.log("Session end - Costs:", JSON.stringify(costs, null, 2));
-    console.log("Session end - Total cost:", totalCost);
-
     // End the session and update with all cost and usage information
     await sql`
       UPDATE sessions 

@@ -100,7 +100,6 @@ export async function fetchFormSchema(formUrl: string) {
 
     fields.forEach((field: any) => {
       try {
-        console.log("field", field);
         const [
           id,
           title,
