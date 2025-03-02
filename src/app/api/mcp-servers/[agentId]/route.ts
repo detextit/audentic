@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMcpServers } from "@/db";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("MCP Servers API");
 
 export async function GET(
   _request: Request,
@@ -17,7 +20,7 @@ export async function GET(
     const mcpServers = await getMcpServers(agentId);
     return NextResponse.json(mcpServers);
   } catch (error) {
-    console.error("Failed to get MCP servers:", error);
+    logger.error("Failed to get MCP servers:", error);
     return NextResponse.json(
       { error: "Failed to get MCP servers" },
       { status: 500 }

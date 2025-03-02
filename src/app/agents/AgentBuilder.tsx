@@ -58,6 +58,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { createLogger } from "@/utils/logger";
+
+// Create a logger instance for this component
+const logger = createLogger("Agent Builder");
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -174,7 +178,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   }, []);
 
   useEffect(() => {
-    console.log("AgentBuilder useEffect", {
+    logger.debug("AgentBuilder useEffect", {
       agentId,
       agentsLength: agents.length,
       loading,
@@ -183,18 +187,18 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     if (agents.length > 0) {
       const agent = agents.find((a) => a.id === agentId);
       if (agent) {
-        console.log("Found agent:", agent.name);
+        logger.info("Found agent:", agent.name);
         setCurrentAgent(agent);
         resetDirtyFields();
       } else {
-        console.error(`Agent with ID ${agentId} not found`);
+        logger.error(`Agent with ID ${agentId} not found`);
         // If the agent isn't found but we have other agents, redirect to the first one
         if (agents.length > 0) {
           router.push(`/agents/${agents[0].id}`);
         }
       }
     }
-  }, [agentId, agents, router]);
+  }, [agentId, agents, router, resetDirtyFields]);
 
   useEffect(() => {
     if (currentAgent?.id) {
@@ -211,7 +215,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         const servers = await getMcpServers(currentAgent.id);
         setMcpServers(servers);
       } catch (error) {
-        console.error("Failed to load MCP servers:", error);
+        logger.error("Failed to load MCP servers:", error);
       }
     };
 
@@ -245,7 +249,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     try {
       await handler();
     } catch (error) {
-      console.error(`Failed to update ${name}:`, error);
+      logger.error(`Failed to update ${name}:`, error);
       toast({
         variant: "destructive",
         title: "Update Failed",
@@ -412,7 +416,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
       resetDirtyFields();
     } catch (error) {
-      console.error("Failed to update agent:", error);
+      logger.error("Failed to update agent:", error);
       toast({
         variant: "destructive",
         title: "Update Failed",
@@ -451,7 +455,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       // Still need to use router.push for actual navigation
       router.push(nextUrl);
     } catch (error) {
-      console.error("Failed to delete agent:", error);
+      logger.error("Failed to delete agent:", error);
       toast({
         variant: "destructive",
         title: "Delete Failed",
@@ -495,7 +499,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   // If we have agents but the current agent isn't found, show a loading state
   // This helps with the initial load when agents exist but currentAgent isn't set yet
   if (agents.length > 0 && !currentAgent) {
-    console.log("Showing loading state for agent:", agentId);
+    logger.info("Showing loading state for agent:", agentId);
     return (
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -526,7 +530,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   }
 
   if (!currentAgent) {
-    console.log("No current agent found for ID:", agentId);
+    logger.warn("No current agent found for ID:", agentId);
     return null;
   }
 

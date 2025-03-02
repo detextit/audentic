@@ -3,6 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { getUserAgents } from "@/db";
 import { AgentDBConfig } from "@/agentBuilder/types";
 import { sql } from "@vercel/postgres";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Usage API");
 
 export async function GET(request: Request) {
   try {
@@ -140,7 +143,7 @@ export async function GET(request: Request) {
       weekly_usage: weeklyUsage,
     });
   } catch (error) {
-    console.error("Error fetching usage data:", error);
+    logger.error("Error fetching usage data:", error);
     return NextResponse.json(
       { error: "Failed to fetch usage data" },
       { status: 500 }

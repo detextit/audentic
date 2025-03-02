@@ -2,6 +2,9 @@ import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
 import { TranscriptItem } from "@audentic/react";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Sessions End API");
 
 export async function POST(request: Request) {
   try {
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error ending session:", error);
+    logger.error("Error ending session:", error);
     return NextResponse.json(
       { error: "Failed to end session" },
       { status: 500 }

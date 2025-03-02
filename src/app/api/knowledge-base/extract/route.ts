@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { knowledgeBaseMetaPrompt } from "@/agentBuilder/metaPrompts";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("KB Extract API");
+
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({
@@ -196,7 +200,7 @@ export async function POST(request: NextRequest) {
       content: textContent,
     });
   } catch (error) {
-    console.error("Error processing content:", error);
+    logger.error("Error processing content:", error);
     return NextResponse.json(
       { error: "Failed to process content" },
       { status: 500 }

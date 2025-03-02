@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Stripe Subscription API");
 
 // This is a placeholder for Stripe integration
 // In a real implementation, you would:
@@ -55,7 +58,7 @@ export async function GET(_req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching subscription:", error);
+    logger.error("Error fetching subscription:", error);
     return NextResponse.json(
       { error: "Failed to fetch subscription" },
       { status: 500 }

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { AgentDBConfig } from "@/agentBuilder/types";
+import { createLogger } from "@/utils/logger";
+
+const logger = createLogger("Use Agents");
 
 // Simple debounce function
 function debounce<T extends (...args: any[]) => any>(
@@ -216,7 +219,7 @@ export function useAgents() {
 
       return newAgent;
     } catch (err: any) {
-      console.error("Detailed error:", {
+      logger.error("Detailed error:", {
         error: err,
         message: err.message,
         stack: err.stack,
