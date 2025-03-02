@@ -5,7 +5,7 @@ import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("Budget API");
 
-// Get user budget
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
