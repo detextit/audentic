@@ -38,15 +38,18 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     displayName: "Puppeteer",
     description: "Integration for Puppeteer",
     icon: "🎭",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-puppeteer"],
+    command: "node",
+    args: [ "/home/info_detextit/app/servers/src/puppeteer/dist/index.js"],
+    defaultEnv: {
+      PATH: "/usr/bin",
+    },
   },
   "brave-search": {
     displayName: "Brave Search",
     description: "Integration for Brave Search",
     icon: "🔍",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-brave-search"],
+    command: "node",
+    args: ["/home/info_detextit/app/servers/src/brave-search/dist/index.js"],
     envVars: [
       {
         name: "BRAVE_API_KEY",
@@ -62,8 +65,8 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     displayName: "Google Maps",
     description: "Integration for Google Maps",
     icon: "🗺️",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-google-maps"],
+    command: "node",
+    args: ["/home/info_detextit/app/servers/src/google-maps/dist/index.js"],
     envVars: [
       {
         name: "GOOGLE_MAPS_API_KEY",
@@ -80,19 +83,102 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     displayName: "Memory",
     description: "Integration for Memory",
     icon: "🧠",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-memory"],
+    command: "node",
+    args: [ "/home/info_detextit/app/servers/src/memory/dist/index.js"],
     defaultEnv: {
       MEMORY_FILE_PATH: "/home/info_detextit/server-memory/${agentId}/memory.json",
       PATH: "/usr/bin",
     },
   },
+  "aws-kb-retrieval": {
+    displayName: "AWS Knowledge Base",
+    description: "Integration for AWS Knowledge Base Retrieval",
+    icon: "🗃️",
+    command: "node",
+    args: [
+      "/home/info_detextit/app/servers/src/aws-kb-retrieval/dist/index.js",
+    ],
+    envVars: [
+      {
+        name: "AWS_ACCESS_KEY_ID",
+        description: "AWS Access Key ID",
+        required: true,
+      },
+      {
+        name: "AWS_SECRET_ACCESS_KEY",
+        description: "AWS Secret Access Key",
+        required: true,
+      },
+      {
+        name: "AWS_REGION",
+        description: "AWS Region",
+        required: true,
+      },
+    ],
+    defaultEnv: {
+      PATH: "/usr/bin",
+    },
+  },
+  stagehand: {
+    displayName: "Stagehand",
+    description: "Integration for Stagehand - Browserbase",
+    icon: "🤘",
+    command: "node",
+    args: [
+      "/home/info_detextit/app/mcp-server-browserbase/stagehand/dist/index.js",
+    ],
+    envVars: [
+      {
+        name: "BROWSERBASE_API_KEY",
+        description: "Browserbase API Key",
+        required: true,
+      },
+      {
+        name: "BROWSERBASE_PROJECT_ID",
+        description: "Browserbase Project ID",
+        required: true,
+      },
+      {
+        name: "OPENAI_API_KEY",
+        description: "OpenAI API Key",
+        required: true,
+      },
+    ],
+    defaultEnv: {
+      PATH: "/usr/bin",
+    },
+  },
+  "browserbase": {
+    displayName: "Browserbase",
+    description: "Integration for Browserbase",
+    icon: "🅱️",
+    command: "node",
+    args: [
+      "/home/info_detextit/app/mcp-server-browserbase/browserbase/dist/index.js",
+    ],
+    envVars: [
+      {
+        name: "BROWSERBASE_API_KEY",
+        description: "Browserbase API Key",
+        required: true,
+      },
+      {
+        name: "BROWSERBASE_PROJECT_ID",
+        description: "Browserbase Project ID",
+        required: true,
+      },
+    ],
+    defaultEnv: {
+      PATH: "/usr/bin",
+    },
+  },
+
   // "sequential-thinking": {
   //   displayName: "Sequential Thinking",
   //   description: "Integration for dynamic and reflective problem-solving",
   //   icon: "🔗",
-  //   command: "npx",
-  //   args: ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+  //   command: "node",
+  //   args: [ "/home/info_detextit/app/servers/src/sequential-thinking"],
   //   defaultEnv: {
   //     PATH: "/usr/bin",
   //   },
@@ -102,8 +188,8 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
   //   displayName: "Everything",
   //   description: "Integration for Testing",
   //   icon: "🔬",
-  //   command: "npx",
-  //   args: ["-y", "@modelcontextprotocol/server-everything"],
+  //   command: "node",
+  //   args: [ "/home/info_detextit/app/servers/src/everything"],
   //   defaultEnv: {
   //     PATH: "/usr/bin",
   //   },

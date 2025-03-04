@@ -65,7 +65,6 @@ import { createLogger } from "@/utils/logger";
 // Create a logger instance for this component
 const logger = createLogger("Agent Builder");
 
-
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
   const { agents, loading, updateAgent, deleteAgent } = useAgents();
@@ -129,6 +128,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [pendingMcpServers, setPendingMcpServers] = useState<
     Array<{ name: string; env: Record<string, string> }>
   >([]);
+  const [invalidFields, setInvalidFields] = useState<Record<string, string[]>>(
+    {}
+  );
 
   // Add state for widget configuration
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfiguration | null>(
@@ -143,6 +145,12 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         typeof value === "boolean" ? value : Object.values(value).some((v) => v)
       ),
     [dirtyFields]
+  );
+
+  // Helper to check if there are any invalid fields
+  const hasInvalidFields = useMemo(
+    () => Object.keys(invalidFields).length > 0,
+    [invalidFields]
   );
 
   // Helper to mark a field as dirty
@@ -490,6 +498,32 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         {
           condition: dirtyFields.settings.mcpServers,
           handler: async () => {
+            // Validate required environment variables
+            const newInvalidFields: Record<string, string[]> = {};
+            let hasInvalidFields = false;
+
+            for (const server of mcpServers) {
+              const definition = AVAILABLE_MCP_SERVERS[server.name];
+              if (!definition) continue;
+
+              const missingRequiredVars = definition.envVars
+                ?.filter((envVar) => envVar.required)
+                .filter((envVar) => !server.env[envVar.name]);
+
+              if (missingRequiredVars && missingRequiredVars.length > 0) {
+                newInvalidFields[server.name] = missingRequiredVars.map(
+                  (v) => v.name
+                );
+                hasInvalidFields = true;
+              }
+            }
+
+            if (hasInvalidFields) {
+              setInvalidFields(newInvalidFields);
+              // Don't throw error, just return early
+              return;
+            }
+
             // Get list of removed servers
             const existingServerNames = currentAgent.settings?.mcpServers || [];
             const removedServers = existingServerNames.filter(
@@ -513,6 +547,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 mcpServers: mcpServers.map((s) => s.name),
               },
             });
+
+            // Clear invalid fields on success
+            setInvalidFields({});
           },
           name: "integrations",
         },
@@ -529,13 +566,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         asyncUpdates.map((update) => handleAsyncUpdate(update))
       );
 
-      // Show success toast only after all updates complete
-      toast({
-        title: `${currentAgent.name} Updated`,
-        description: "Your agent is deployed and ready to go!",
-      });
-
-      resetDirtyFields();
+      // Only show success toast if there are no invalid fields
+      if (Object.keys(invalidFields).length === 0) {
+        toast({
+          title: `${currentAgent.name} Updated`,
+          description: "Your agent is deployed and ready to go!",
+        });
+        resetDirtyFields();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Validation Failed",
+          description: "Please fill in all required fields before saving.",
+        });
+      }
     } catch (error) {
       logger.error("Failed to update agent:", error);
       toast({
@@ -689,7 +733,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button onClick={handleUpdate} disabled={isUpdating || !hasChanges}>
+          <Button
+            onClick={handleUpdate}
+            disabled={isUpdating || (!hasChanges && !hasInvalidFields)}
+          >
             Save
           </Button>
           <Button
@@ -872,7 +919,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   >
                     Use browser tools
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Allow agent to interact with browser elements
+                      Allow agent to access browser tools (clipboard, popups)
                     </p>
                   </Label>
                   <Switch
@@ -1011,7 +1058,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                             value={
                               server.env[envVar.name] || envVar.default || ""
                             }
-                            className="h-8 text-sm"
+                            className={`h-8 text-sm ${
+                              invalidFields[server.name]?.includes(envVar.name)
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }`}
                             onChange={(e) => {
                               const updatedServers = mcpServers.map((s) =>
                                 s.name === server.name
@@ -1026,6 +1077,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                               );
                               setMcpServers(updatedServers);
                               markFieldDirty("settings", "mcpServers");
+
+                              // Clear invalid state for this field when user types
+                              if (
+                                invalidFields[server.name]?.includes(
+                                  envVar.name
+                                )
+                              ) {
+                                setInvalidFields((prev) => ({
+                                  ...prev,
+                                  [server.name]: prev[server.name].filter(
+                                    (v) => v !== envVar.name
+                                  ),
+                                }));
+                              }
                             }}
                           />
                         </div>

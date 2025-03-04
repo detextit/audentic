@@ -92,7 +92,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
     title: "Need Help?",
     backgroundColor: "#FFFFFF",
     textColor: "#666666",
-    width: "200",
+    width: "220",
     height: "110",
     buttonText: "Voice Agent",
     primaryColor: "#000000",
