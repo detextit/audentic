@@ -1,6 +1,22 @@
 import { AgentConfig, Tool } from "./types";
 
 const browserActions: Record<string, Tool> = {
+  goToUrlTool: {
+    type: "function",
+    name: "go_to_url",
+    description: "Navigate to URL on a new tab",
+    parameters: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "The URL to navigate to",
+        },
+      },
+      required: ["url"],
+    },
+  } as Tool,
+
   searchGoogleTool: {
     type: "function",
     name: "search_google",
@@ -15,22 +31,6 @@ const browserActions: Record<string, Tool> = {
         },
       },
       required: ["query"],
-    },
-  } as Tool,
-
-  goToUrlTool: {
-    type: "function",
-    name: "go_to_url",
-    description: "Navigate to URL on a new tab",
-    parameters: {
-      type: "object",
-      properties: {
-        url: {
-          type: "string",
-          description: "The URL to navigate to",
-        },
-      },
-      required: ["url"],
     },
   } as Tool,
 
@@ -150,7 +150,7 @@ export function getBrowserAction(name: string): Tool {
 }
 
 // Helper function to get all tool schemas
-export function getAllBrowserActions(): Tool[] {
+function getAllBrowserActions(): Tool[] {
   return Object.values(browserActions);
 }
 
@@ -166,7 +166,7 @@ export function injectBrowserActions(
   if (actions === "all") {
     agentDef.tools.push(...getAllBrowserActions());
   } else if (actions === "minimal") {
-    agentDef.tools.push(...getAllBrowserActions().slice(0, 2));
+    agentDef.tools.push(getBrowserAction("goToUrlTool"));
   } else if (Array.isArray(actions)) {
     actions.forEach((action) => {
       agentDef.tools.push(getBrowserAction(action));
