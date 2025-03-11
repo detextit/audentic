@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { AgentDBConfig } from "@/agentBuilder/types";
 import { createLogger } from "@/utils/logger";
 import { getAgentById } from "@/db";
 const logger = createLogger("Agent ID API");
