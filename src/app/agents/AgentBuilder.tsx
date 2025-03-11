@@ -91,6 +91,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       isAdvancedModel: false,
       mcpServers: false,
     },
+    webUI: false,
     widgetConfig: false,
   });
 
@@ -201,6 +202,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         isAdvancedModel: false,
         mcpServers: false,
       },
+      webUI: false,
       widgetConfig: false,
     });
   }, []);
@@ -595,11 +597,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleTestClick = () => {
     // Open in new tab
-    if (currentAgent?.settings?.isFormAgent) {
-      window.open(`/agents/${agentId}/form`, "_blank");
-    } else {
-      window.open(`/agents/${agentId}/talk`, "_blank");
-    }
+    window.open(`/agents/${agentId}/talk`, "_blank");
   };
 
   const handleDeleteAgent = useCallback(async () => {

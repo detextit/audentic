@@ -22,6 +22,7 @@ export async function setupDatabase() {
           tools JSONB DEFAULT '[]',
           tool_logic JSONB DEFAULT '{}',
           settings JSONB DEFAULT '{}',
+          webui TEXT DEFAULT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -117,7 +118,6 @@ export async function setupDatabase() {
     await Promise.all(setupOperations);
     logger.info(
       "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers, Widget Config - initiated"
-
     );
   } catch (error) {
     logger.error("Error setting up database:", error);
