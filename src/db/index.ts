@@ -34,7 +34,7 @@ export async function createAgent(
       ${JSON.stringify(agent.tools || [])},
       ${JSON.stringify(agent.toolLogic || {})},
       ${JSON.stringify(agent.settings || {})},
-      ${agent.webui || null}
+      ${agent.webUI || null}
     )
     RETURNING *;
   `;
