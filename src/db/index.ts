@@ -21,7 +21,8 @@ export async function createAgent(
       instructions,
       tools,
       tool_logic,
-      settings
+      settings,
+      webui
     )
     VALUES (
       ${userId},
@@ -32,7 +33,8 @@ export async function createAgent(
       ${agent.instructions},
       ${JSON.stringify(agent.tools || [])},
       ${JSON.stringify(agent.toolLogic || {})},
-      ${JSON.stringify(agent.settings || {})}
+      ${JSON.stringify(agent.settings || {})},
+      ${agent.webui || null}
     )
     RETURNING *;
   `;
@@ -135,6 +137,7 @@ function transformDBAgent(dbAgent: any): AgentDBConfig {
     tools: dbAgent.tools || [],
     toolLogic: dbAgent.tool_logic || {},
     settings: dbAgent.settings || {},
+    webUI: dbAgent.webui || "",
     createdAt: dbAgent.created_at,
     updatedAt: dbAgent.updated_at,
   };
@@ -527,4 +530,22 @@ export async function saveWidgetConfig(
   `;
 
   return result.rows[0].config;
+}
+
+// Update agent UI
+export async function updateAgentUI(
+  agentId: string,
+  webUI: string
+): Promise<boolean> {
+  try {
+    await sql`
+      UPDATE agents
+      SET webui = ${webUI}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${agentId}
+    `;
+    return true;
+  } catch (error) {
+    logger.error("Failed to update agent UI:", error);
+    return false;
+  }
 }
