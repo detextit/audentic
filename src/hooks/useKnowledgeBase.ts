@@ -1,8 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  KnowledgeBaseArticle,
-  KnowledgeBaseDBArticle,
-} from "@/agentBuilder/types";
+import { KnowledgeBaseArticle, KnowledgeBaseDBArticle } from "@/types/agent";
 
 export function useKnowledgeBase() {
   const [loading, setLoading] = useState(true);

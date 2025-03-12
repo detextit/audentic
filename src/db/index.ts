@@ -1,5 +1,5 @@
 import { sql } from "@vercel/postgres";
-import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
+import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/types/agent";
 import { setupDatabase } from "@/db/setup";
 import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";

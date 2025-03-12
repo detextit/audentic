@@ -5,7 +5,7 @@ import {
   AgentDBConfig,
   KnowledgeBaseArticle,
   KnowledgeBaseDBArticle,
-} from "@/agentBuilder/types";
+} from "@/types/agent";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { fetchFormSchema } from "@/agentBuilder/processForm";
 

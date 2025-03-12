@@ -2,7 +2,7 @@
 
 import { JSX, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { createLogger } from "@/utils/logger";
 import { SessionControl, WidgetConfiguration } from "@audentic/react";
 import {

@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "./types";
+import { AgentConfig, Tool } from "@/types/agent";
 import { FormQuestion } from "./processForm";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
