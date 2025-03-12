@@ -929,7 +929,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                {/* <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
                   <Label
                     htmlFor="isFormAgent"
                     className="text-sm font-medium cursor-pointer flex-1"
@@ -946,7 +946,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                       handleSettingChange("isFormAgent", checked)
                     }
                   />
-                </div>
+                </div> */}
 
                 {currentAgent.settings?.isFormAgent && (
                   <div className="mt-1 p-3 pl-4 border-l-2 border-primary/20 bg-muted/10 rounded-sm space-y-2">

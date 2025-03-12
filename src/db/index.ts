@@ -1,7 +1,7 @@
 import { sql } from "@vercel/postgres";
 import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
 import { setupDatabase } from "@/db/setup";
-import { WidgetConfiguration } from "@/app/agents/WidgetConfiguration";
+import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("DB Actions");
@@ -505,7 +505,7 @@ export async function hasEnoughBudget(
 // Get widget configuration for an agent
 export async function getWidgetConfig(
   agentId: string
-): Promise<WidgetConfiguration | null> {
+): Promise<WidgetBuilderConfiguration | null> {
   const result = await sql`
     SELECT config FROM widget_config 
     WHERE agent_id = ${agentId}
@@ -517,8 +517,8 @@ export async function getWidgetConfig(
 // Save or update widget configuration
 export async function saveWidgetConfig(
   agentId: string,
-  config: WidgetConfiguration
-): Promise<WidgetConfiguration> {
+  config: WidgetBuilderConfiguration
+): Promise<WidgetBuilderConfiguration> {
   const result = await sql`
     INSERT INTO widget_config (agent_id, config)
     VALUES (${agentId}, ${JSON.stringify(config)})
