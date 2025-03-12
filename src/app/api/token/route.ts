@@ -7,7 +7,7 @@ import {
 } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
-import { AgentConfig, AgentDBConfig, Tool } from "@/agentBuilder/types";
+import { AgentConfig, AgentDBConfig, Tool } from "@/types/agent";
 import {
   createFormToolLogic,
   FormToolState,

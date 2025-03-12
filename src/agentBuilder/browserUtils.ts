@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "./types";
+import { AgentConfig, Tool } from "@/types/agent";
 
 const browserAPITools: Record<string, Tool> = {
   copyFromClipboardTool: {

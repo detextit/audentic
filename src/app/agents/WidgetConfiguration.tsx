@@ -9,7 +9,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, PhoneOff } from "lucide-react";
 import {
