@@ -59,7 +59,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { Widget, WidgetConfiguration } from "./WidgetConfiguration";
+import { Widget } from "./WidgetConfiguration";
+import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
 
 // Create a logger instance for this component
@@ -134,9 +135,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   );
 
   // Add state for widget configuration
-  const [widgetConfig, setWidgetConfig] = useState<WidgetConfiguration | null>(
-    null
-  );
+  const [widgetConfig, setWidgetConfig] =
+    useState<WidgetBuilderConfiguration | null>(null);
   const [isWidgetConfigLoading, setIsWidgetConfigLoading] = useState(true);
 
   // Helper to check if any fields are dirty
@@ -350,7 +350,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   };
 
   // Handle widget configuration changes
-  const handleWidgetConfigChange = (newConfig: WidgetConfiguration) => {
+  const handleWidgetConfigChange = (newConfig: WidgetBuilderConfiguration) => {
     setWidgetConfig(newConfig);
     setDirtyFields((prev) => ({ ...prev, widgetConfig: true }));
   };
