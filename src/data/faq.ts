@@ -56,7 +56,7 @@ The key is abstracting technical complexity while delivering sophisticated funct
 
 \`\`\`html
 <audentic-embed agent-id="AGENT-ID"></audentic-embed>
-<script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript">
+<script src="https://unpkg.com/@audentic/react/dist/embed.js" async type="text/javascript">
 </script>
 \`\`\``,
   },

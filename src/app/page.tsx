@@ -302,7 +302,7 @@ export default function LandingPage() {
                             ...props
                           }: React.HTMLProps<HTMLPreElement>) => (
                             <pre
-                              className="bg-slate-100 rounded p-4 overflow-x-auto my-4"
+                              className="bg-slate-500 rounded p-4 overflow-x-auto my-4"
                               {...props}
                             >
                               {children}
