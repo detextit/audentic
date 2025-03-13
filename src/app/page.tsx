@@ -343,7 +343,7 @@ export default function LandingPage() {
           <SessionControl
             agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57"
             widgetConfiguration={{
-              showBackgroundCard: true,
+              showBackgroundCard: false,
               title: "Need Help?",
               backgroundColor: "#FFFFFF",
               textColor: "#666666",
