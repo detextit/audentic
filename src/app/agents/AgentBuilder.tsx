@@ -5,7 +5,7 @@ import {
   AgentDBConfig,
   KnowledgeBaseArticle,
   KnowledgeBaseDBArticle,
-} from "@/agentBuilder/types";
+} from "@/types/agent";
 import { getVoiceAgentInstruction } from "@/agentBuilder/metaPrompts";
 import { fetchFormSchema } from "@/agentBuilder/processForm";
 
@@ -59,12 +59,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { Widget, WidgetConfiguration } from "./WidgetConfiguration";
+import { Widget } from "./WidgetConfiguration";
+import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
 
 // Create a logger instance for this component
 const logger = createLogger("Agent Builder");
-
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -92,6 +92,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       isAdvancedModel: false,
       mcpServers: false,
     },
+    webUI: false,
     widgetConfig: false,
   });
 
@@ -129,11 +130,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [pendingMcpServers, setPendingMcpServers] = useState<
     Array<{ name: string; env: Record<string, string> }>
   >([]);
+  const [invalidFields, setInvalidFields] = useState<Record<string, string[]>>(
+    {}
+  );
 
   // Add state for widget configuration
-  const [widgetConfig, setWidgetConfig] = useState<WidgetConfiguration | null>(
-    null
-  );
+  const [widgetConfig, setWidgetConfig] =
+    useState<WidgetBuilderConfiguration | null>(null);
   const [isWidgetConfigLoading, setIsWidgetConfigLoading] = useState(true);
 
   // Helper to check if any fields are dirty
@@ -143,6 +146,12 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         typeof value === "boolean" ? value : Object.values(value).some((v) => v)
       ),
     [dirtyFields]
+  );
+
+  // Helper to check if there are any invalid fields
+  const hasInvalidFields = useMemo(
+    () => Object.keys(invalidFields).length > 0,
+    [invalidFields]
   );
 
   // Helper to mark a field as dirty
@@ -193,6 +202,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         isAdvancedModel: false,
         mcpServers: false,
       },
+      webUI: false,
       widgetConfig: false,
     });
   }, []);
@@ -340,7 +350,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   };
 
   // Handle widget configuration changes
-  const handleWidgetConfigChange = (newConfig: WidgetConfiguration) => {
+  const handleWidgetConfigChange = (newConfig: WidgetBuilderConfiguration) => {
     setWidgetConfig(newConfig);
     setDirtyFields((prev) => ({ ...prev, widgetConfig: true }));
   };
@@ -490,6 +500,32 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         {
           condition: dirtyFields.settings.mcpServers,
           handler: async () => {
+            // Validate required environment variables
+            const newInvalidFields: Record<string, string[]> = {};
+            let hasInvalidFields = false;
+
+            for (const server of mcpServers) {
+              const definition = AVAILABLE_MCP_SERVERS[server.name];
+              if (!definition) continue;
+
+              const missingRequiredVars = definition.envVars
+                ?.filter((envVar) => envVar.required)
+                .filter((envVar) => !server.env[envVar.name]);
+
+              if (missingRequiredVars && missingRequiredVars.length > 0) {
+                newInvalidFields[server.name] = missingRequiredVars.map(
+                  (v) => v.name
+                );
+                hasInvalidFields = true;
+              }
+            }
+
+            if (hasInvalidFields) {
+              setInvalidFields(newInvalidFields);
+              // Don't throw error, just return early
+              return;
+            }
+
             // Get list of removed servers
             const existingServerNames = currentAgent.settings?.mcpServers || [];
             const removedServers = existingServerNames.filter(
@@ -513,6 +549,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 mcpServers: mcpServers.map((s) => s.name),
               },
             });
+
+            // Clear invalid fields on success
+            setInvalidFields({});
           },
           name: "integrations",
         },
@@ -529,13 +568,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         asyncUpdates.map((update) => handleAsyncUpdate(update))
       );
 
-      // Show success toast only after all updates complete
-      toast({
-        title: `${currentAgent.name} Updated`,
-        description: "Your agent is deployed and ready to go!",
-      });
-
-      resetDirtyFields();
+      // Only show success toast if there are no invalid fields
+      if (Object.keys(invalidFields).length === 0) {
+        toast({
+          title: `${currentAgent.name} Updated`,
+          description: "Your agent is deployed and ready to go!",
+        });
+        resetDirtyFields();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Validation Failed",
+          description: "Please fill in all required fields before saving.",
+        });
+      }
     } catch (error) {
       logger.error("Failed to update agent:", error);
       toast({
@@ -551,11 +597,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
 
   const handleTestClick = () => {
     // Open in new tab
-    if (currentAgent?.settings?.isFormAgent) {
-      window.open(`/agents/${agentId}/form`, "_blank");
-    } else {
-      window.open(`/agents/${agentId}/talk`, "_blank");
-    }
+    window.open(`/agents/${agentId}/talk`, "_blank");
   };
 
   const handleDeleteAgent = useCallback(async () => {
@@ -689,7 +731,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button onClick={handleUpdate} disabled={isUpdating || !hasChanges}>
+          <Button
+            onClick={handleUpdate}
+            disabled={isUpdating || (!hasChanges && !hasInvalidFields)}
+          >
             Save
           </Button>
           <Button
@@ -872,7 +917,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   >
                     Use browser tools
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Allow agent to interact with browser elements
+                      Allow agent to access browser tools (clipboard, popups)
                     </p>
                   </Label>
                   <Switch
@@ -884,7 +929,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
+                {/* <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
                   <Label
                     htmlFor="isFormAgent"
                     className="text-sm font-medium cursor-pointer flex-1"
@@ -901,7 +946,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                       handleSettingChange("isFormAgent", checked)
                     }
                   />
-                </div>
+                </div> */}
 
                 {currentAgent.settings?.isFormAgent && (
                   <div className="mt-1 p-3 pl-4 border-l-2 border-primary/20 bg-muted/10 rounded-sm space-y-2">
@@ -1011,7 +1056,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                             value={
                               server.env[envVar.name] || envVar.default || ""
                             }
-                            className="h-8 text-sm"
+                            className={`h-8 text-sm ${
+                              invalidFields[server.name]?.includes(envVar.name)
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }`}
                             onChange={(e) => {
                               const updatedServers = mcpServers.map((s) =>
                                 s.name === server.name
@@ -1026,6 +1075,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                               );
                               setMcpServers(updatedServers);
                               markFieldDirty("settings", "mcpServers");
+
+                              // Clear invalid state for this field when user types
+                              if (
+                                invalidFields[server.name]?.includes(
+                                  envVar.name
+                                )
+                              ) {
+                                setInvalidFields((prev) => ({
+                                  ...prev,
+                                  [server.name]: prev[server.name].filter(
+                                    (v) => v !== envVar.name
+                                  ),
+                                }));
+                              }
                             }}
                           />
                         </div>

@@ -302,7 +302,7 @@ export default function LandingPage() {
                             ...props
                           }: React.HTMLProps<HTMLPreElement>) => (
                             <pre
-                              className="bg-slate-100 rounded p-4 overflow-x-auto my-4"
+                              className="bg-slate-500 rounded p-4 overflow-x-auto my-4"
                               {...props}
                             >
                               {children}
@@ -343,7 +343,7 @@ export default function LandingPage() {
           <SessionControl
             agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57"
             widgetConfiguration={{
-              showBackgroundCard: true,
+              showBackgroundCard: false,
               title: "Need Help?",
               backgroundColor: "#FFFFFF",
               textColor: "#666666",

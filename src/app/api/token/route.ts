@@ -7,7 +7,7 @@ import {
 } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
-import { AgentConfig, AgentDBConfig, Tool } from "@/agentBuilder/types";
+import { AgentConfig, AgentDBConfig, Tool } from "@/types/agent";
 import {
   createFormToolLogic,
   FormToolState,
@@ -126,6 +126,7 @@ export async function POST(request: Request) {
     const mcpTools: Record<string, string[]> = {};
     const mcpBaseUrl = process.env.MCP_SERVER_URL; // TODO: make this unique per agent with secure token
 
+    logger.debug("MCP base URL:", mcpBaseUrl);
     // get MCP servers
     const mcpServers = await getMcpServers(apiKey);
     if (mcpServers.length > 0) {

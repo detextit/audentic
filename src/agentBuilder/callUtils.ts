@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "./types";
+import { AgentConfig, Tool } from "@/types/agent";
 
 // Create the end_conversation tool specific to this agent
 const endConversationTool = {

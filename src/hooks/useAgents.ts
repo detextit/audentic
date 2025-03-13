@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("Use Agents");

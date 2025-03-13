@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { AgentForm } from "@/components/agent-form";
 
 interface AgentFormDialogProps {

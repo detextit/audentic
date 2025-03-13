@@ -1,5 +1,5 @@
-import type { MCPServers } from "./mcp";
-import type { Tool } from "@/agentBuilder/types";
+import type { MCPServers } from "@/types/mcp";
+import type { Tool } from "@/types/agent";
 
 /**
  * Check connection status for a server

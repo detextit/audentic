@@ -28,10 +28,7 @@ import {
   PenLine,
 } from "lucide-react";
 import { useState } from "react";
-import {
-  KnowledgeBaseArticle,
-  KnowledgeBaseDBArticle,
-} from "@/agentBuilder/types";
+import { KnowledgeBaseArticle, KnowledgeBaseDBArticle } from "@/types/agent";
 import { cn } from "@/lib/utils";
 import { createLogger } from "@/utils/logger";
 
