@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Mistral } from "@mistralai/mistralai";
 import { knowledgeBaseMetaPrompt } from "@/agentBuilder/metaPrompts";
 import { createLogger } from "@/utils/logger";
 
@@ -14,6 +15,11 @@ const model = genAI.getGenerativeModel({
     maxOutputTokens: 8192,
     temperature: 0.0,
   },
+});
+
+// Initialize Mistral AI
+const mistralClient = new Mistral({
+  apiKey: process.env.MISTRAL_API_KEY!,
 });
 
 // Helper function to check if file is text-based
@@ -67,6 +73,30 @@ function isTextBasedFile(mimeType: string, fileName: string): boolean {
   return extension ? textExtensions.has(extension) : false;
 }
 
+// Helper function to check if file is a PDF
+function isPdfFile(mimeType: string, fileName: string): boolean {
+  if (mimeType === "application/pdf") return true;
+  const extension = fileName.toLowerCase().match(/\.[^.]*$/)?.[0];
+  return extension === ".pdf";
+}
+
+// Helper function to check if file is an image
+function isImageFile(mimeType: string, fileName: string): boolean {
+  if (mimeType.startsWith("image/")) return true;
+  const imageExtensions = new Set([
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".tiff",
+    ".tif",
+  ]);
+  const extension = fileName.toLowerCase().match(/\.[^.]*$/)?.[0];
+  return extension ? imageExtensions.has(extension) : false;
+}
+
 // Constants for file upload limits
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 // const ALLOWED_FILE_TYPES = new Set([
@@ -90,7 +120,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 //   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 // ]);
 
-// Helper function to convert file to GenerativePart
+// Helper function to convert file to GenerativePart for Gemini
 async function fileToGenerativePart(file: File) {
   const buffer = await file.arrayBuffer();
   return {
@@ -99,6 +129,80 @@ async function fileToGenerativePart(file: File) {
       mimeType: file.type,
     },
   };
+}
+
+// Helper function to process PDF with Mistral OCR
+async function processPdfWithMistralOcr(file: File): Promise<string> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const fileBuffer = Buffer.from(buffer);
+
+    // Upload the PDF file
+    const uploadedPdf = await mistralClient.files.upload({
+      file: {
+        fileName: file.name,
+        content: fileBuffer,
+      },
+      purpose: "ocr" as any,
+    });
+
+    // Get a signed URL for the uploaded file
+    const signedUrl = await mistralClient.files.getSignedUrl({
+      fileId: uploadedPdf.id,
+    });
+
+    // Process the PDF using the signed URL
+    const ocrResponse = await mistralClient.ocr.process({
+      model: "mistral-ocr-latest",
+      document: {
+        type: "document_url",
+        documentUrl: signedUrl.url,
+      },
+    });
+
+    // Extract the markdown content from the first page
+    let extractedText = "";
+    if (ocrResponse.pages && ocrResponse.pages.length > 0) {
+      extractedText = ocrResponse.pages
+        .map((page) => page.markdown || "")
+        .join("\n\n");
+    }
+
+    return extractedText;
+  } catch (error) {
+    logger.error("Error processing PDF with Mistral OCR:", error);
+    throw new Error("Failed to process PDF with Mistral OCR");
+  }
+}
+
+// Helper function to process image with Mistral OCR
+async function processImageWithMistralOcr(file: File): Promise<string> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const base64Image = Buffer.from(buffer).toString("base64");
+    const dataUrl = `data:${file.type};base64,${base64Image}`;
+
+    const ocrResponse = await mistralClient.ocr.process({
+      model: "mistral-ocr-latest",
+      document: {
+        type: "image_url",
+        imageUrl: dataUrl,
+      },
+    });
+
+    // Extract the markdown content from the first page
+    let extractedText = "";
+    if (ocrResponse.pages && ocrResponse.pages.length > 0) {
+      extractedText = ocrResponse.pages
+        .map((page) => page.markdown || "")
+        .join("\n\n");
+    }
+
+    return extractedText;
+  } catch (error) {
+    logger.error("Error processing image with Mistral OCR:", error);
+    throw new Error("Failed to process image with Mistral OCR");
+  }
 }
 
 export const maxDuration = 60; // This is the time in seconds that this function is allowed to execute within. Setting it to 30s.
@@ -128,11 +232,17 @@ export async function POST(request: NextRequest) {
       fileType = file.type;
 
       if (isTextBasedFile(fileType, fileName)) {
+        // For text-based files, just read the text content
         content = await file.text();
+      } else if (isPdfFile(fileType, fileName)) {
+        // For PDFs, use Mistral OCR
+        content = await processPdfWithMistralOcr(file);
+      } else if (isImageFile(fileType, fileName)) {
+        // For images, use Mistral OCR
+        content = await processImageWithMistralOcr(file);
       } else {
-        // For PDFs, images, and other supported formats, use Gemini's built-in processing
+        // For other formats, use Gemini's built-in processing
         const generativePart = await fileToGenerativePart(file);
-
         const result = await model.generateContent([
           knowledgeBaseMetaPrompt,
           generativePart,

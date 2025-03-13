@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAgents } from "@/hooks/useAgents";

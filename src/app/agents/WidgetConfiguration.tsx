@@ -9,35 +9,25 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, PhoneOff } from "lucide-react";
-
-// Define the WidgetConfiguration interface
-export interface WidgetConfiguration {
-  showBackgroundCard?: boolean;
-  title?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  width?: string;
-  height?: string;
-  buttonText?: string;
-  primaryColor?: string;
-  buttonTextColor?: string;
-  borderRadius?: string;
-}
+import {
+  WidgetBuilderConfiguration,
+  defaultWidgetConfig,
+} from "@/types/widget";
 
 // Define the WidgetSettings interface
 interface WidgetSettings {
   agentId: string;
-  config: WidgetConfiguration;
+  config: WidgetBuilderConfiguration;
 }
 
 // Add props interface for the Widget component
 interface WidgetProps {
   agent: AgentDBConfig;
-  widgetConfig: WidgetConfiguration;
-  onConfigChange: (config: WidgetConfiguration) => void;
+  widgetConfig: WidgetBuilderConfiguration;
+  onConfigChange: (config: WidgetBuilderConfiguration) => void;
 }
 
 const ConnectionButton = ({
@@ -85,20 +75,6 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
   // Add state for validation warnings
   const [widthWarning, setWidthWarning] = useState<string | null>(null);
   const [heightWarning, setHeightWarning] = useState<string | null>(null);
-
-  // Default widget configuration
-  const defaultWidgetConfig: WidgetConfiguration = {
-    showBackgroundCard: true,
-    title: "Need Help?",
-    backgroundColor: "#FFFFFF",
-    textColor: "#666666",
-    width: "200",
-    height: "110",
-    buttonText: "Voice Agent",
-    primaryColor: "#000000",
-    buttonTextColor: "#FFFFFF",
-    borderRadius: "12",
-  };
 
   // Create state for widget settings with default values
   const [widgetSettings, setWidgetSettings] = useState<WidgetSettings>({

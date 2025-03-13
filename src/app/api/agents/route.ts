@@ -7,7 +7,7 @@ import {
   updateAgent,
   deleteAgent,
 } from "@/db";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("Agents API");

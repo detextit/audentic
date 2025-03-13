@@ -1,5 +1,5 @@
 import { getUserAgents } from "@/db";
-import { AgentDBConfig } from "@/agentBuilder/types";
+import { AgentDBConfig } from "@/types/agent";
 import { auth } from "@clerk/nextjs/server";
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";

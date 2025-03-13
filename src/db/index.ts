@@ -1,7 +1,7 @@
 import { sql } from "@vercel/postgres";
-import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/agentBuilder/types";
+import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/types/agent";
 import { setupDatabase } from "@/db/setup";
-import { WidgetConfiguration } from "@/app/agents/WidgetConfiguration";
+import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("DB Actions");
@@ -21,7 +21,8 @@ export async function createAgent(
       instructions,
       tools,
       tool_logic,
-      settings
+      settings,
+      webui
     )
     VALUES (
       ${userId},
@@ -32,7 +33,8 @@ export async function createAgent(
       ${agent.instructions},
       ${JSON.stringify(agent.tools || [])},
       ${JSON.stringify(agent.toolLogic || {})},
-      ${JSON.stringify(agent.settings || {})}
+      ${JSON.stringify(agent.settings || {})},
+      ${agent.webUI || null}
     )
     RETURNING *;
   `;
@@ -135,6 +137,7 @@ function transformDBAgent(dbAgent: any): AgentDBConfig {
     tools: dbAgent.tools || [],
     toolLogic: dbAgent.tool_logic || {},
     settings: dbAgent.settings || {},
+    webUI: dbAgent.webui || "",
     createdAt: dbAgent.created_at,
     updatedAt: dbAgent.updated_at,
   };
@@ -502,7 +505,7 @@ export async function hasEnoughBudget(
 // Get widget configuration for an agent
 export async function getWidgetConfig(
   agentId: string
-): Promise<WidgetConfiguration | null> {
+): Promise<WidgetBuilderConfiguration | null> {
   const result = await sql`
     SELECT config FROM widget_config 
     WHERE agent_id = ${agentId}
@@ -514,8 +517,8 @@ export async function getWidgetConfig(
 // Save or update widget configuration
 export async function saveWidgetConfig(
   agentId: string,
-  config: WidgetConfiguration
-): Promise<WidgetConfiguration> {
+  config: WidgetBuilderConfiguration
+): Promise<WidgetBuilderConfiguration> {
   const result = await sql`
     INSERT INTO widget_config (agent_id, config)
     VALUES (${agentId}, ${JSON.stringify(config)})
@@ -527,4 +530,22 @@ export async function saveWidgetConfig(
   `;
 
   return result.rows[0].config;
+}
+
+// Update agent UI
+export async function updateAgentUI(
+  agentId: string,
+  webUI: string
+): Promise<boolean> {
+  try {
+    await sql`
+      UPDATE agents
+      SET webui = ${webUI}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${agentId}
+    `;
+    return true;
+  } catch (error) {
+    logger.error("Failed to update agent UI:", error);
+    return false;
+  }
 }
