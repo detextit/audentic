@@ -1,33 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { saveOpenAIApiKey, deleteOpenAIApiKey, getUserBudget } from "@/db";
+import { saveOpenAIApiKey, deleteOpenAIApiKey } from "@/db";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("API Key Settings");
-
-// GET: Retrieve API key information (status only, not the actual key for security)
-export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userBudget = await getUserBudget(userId);
-
-    return NextResponse.json({
-      isEnabled: userBudget.planType === "byok" && !!userBudget.openaiApiKey,
-      planType: userBudget.planType,
-    });
-  } catch (error) {
-    logger.error("Error retrieving API key info:", error);
-    return NextResponse.json(
-      { error: "Failed to retrieve API key information" },
-      { status: 500 }
-    );
-  }
-}
 
 // POST: Save or update an API key
 export async function POST(request: NextRequest) {
@@ -74,7 +50,8 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE: Remove an API key
-export async function DELETE(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function DELETE(_request: NextRequest) {
   try {
     const { userId } = await auth();
 
@@ -98,42 +75,8 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// Endpoint to verify an API key without saving it
-export async function PATCH(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { apiKey } = body;
-
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "API key is required" },
-        { status: 400 }
-      );
-    }
-
-    // Just verify the API key without saving
-    const isValid = await verifyOpenAIApiKey(apiKey);
-
-    return NextResponse.json({
-      isValid,
-    });
-  } catch (error) {
-    logger.error("Error verifying API key:", error);
-    return NextResponse.json(
-      { error: "Failed to verify API key" },
-      { status: 500 }
-    );
-  }
-}
-
 // Verify if the API key for a user is valid by testing against the OpenAI API
-export async function verifyOpenAIApiKey(apiKey: string): Promise<boolean> {
+async function verifyOpenAIApiKey(apiKey: string): Promise<boolean> {
   try {
     const response = await fetch("https://api.openai.com/v1/models", {
       method: "GET",

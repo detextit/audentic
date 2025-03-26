@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -15,13 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, Sparkles, Mail, Calendar, Zap, Key } from "lucide-react";
+import { Check, Sparkles, Mail, Calendar, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createLogger } from "@/utils/logger";
-import { Input } from "./ui/input";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
 const logger = createLogger("Subscription Dialog");
 interface PlanFeature {
   name: string;
@@ -40,7 +39,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   const [userBudget, setUserBudget] = useState<any>(null);
   const [isLoadingBudget, setIsLoadingBudget] = useState(true);
   const [apiKey, setApiKey] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -216,6 +214,13 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
     ));
   }, []);
 
+  // Mask the API key to show only first 2 and last 4 characters
+  const maskApiKey = (key: string) => {
+    if (!key) return "";
+    if (key.length <= 6) return key; // Don't mask if too short
+    return `${key.substring(0, 2)}••••••••••${key.substring(key.length - 4)}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1100px]">
@@ -224,10 +229,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
             <Sparkles className="h-5 w-5" />
             Plans & Pricing
           </DialogTitle>
-          <DialogDescription>
-            Start with our free plan or contact us for a custom solution
-            tailored to your needs.
-          </DialogDescription>
         </DialogHeader>
 
         {/* Budget Summary */}
@@ -241,7 +242,7 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Total Usage</h3>
+                <h3 className="text-sm font-medium">Current Usage</h3>
                 <p className="text-2xl font-bold">
                   ${userBudget.usedAmount.toFixed(2)}
                 </p>
@@ -282,18 +283,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
               <p className="text-sm font-medium mb-2">Features include:</p>
               <ul className="space-y-2">{renderFeatureList(freeFeatures)}</ul>
             </CardContent>
-            <CardFooter className="mt-auto">
-              <Button
-                className="w-full"
-                variant="outline"
-                disabled={userBudget?.planType === "free"}
-              >
-                <Zap className="mr-2 h-4 w-4" />
-                {userBudget?.planType === "free"
-                  ? "Current Plan"
-                  : "Switch to Free"}
-              </Button>
-            </CardFooter>
           </Card>
 
           {/* BYOK Plan Card */}
@@ -322,9 +311,9 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
             <CardFooter className="mt-auto flex flex-col gap-2">
               {userBudget?.planType === "byok" ? (
                 <>
-                  <p className="text-sm text-primary w-full text-center">
-                    ✓ API Key Configured
-                  </p>
+                  <Label className="w-full text-center h-6">
+                    {maskApiKey(userBudget.openaiApiKey)}
+                  </Label>
                   <Button
                     className="w-full"
                     variant="outline"
