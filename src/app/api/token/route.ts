@@ -3,7 +3,7 @@ import {
   getAgentById,
   getAgentKnowledgeBase,
   getMcpServers,
-  hasEnoughBudget,
+  getUserBudget,
 } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
@@ -22,6 +22,7 @@ import {
 import { configureServers, listTools } from "@/mcp/mcpUtils";
 import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 import { createLogger } from "@/utils/logger";
+import { UserBudget } from "@/types/budget";
 
 const logger = createLogger("Token API");
 
@@ -56,47 +57,37 @@ export async function POST(request: Request) {
     }
 
     // Get agent config from allAgentSets
-    const agentConfig = await getAgentConfig(apiKey);
+    const { agentConfig, userBudget } = await getAgentConfig(apiKey);
 
-    if (!agentConfig) {
+    if (!agentConfig || !userBudget) {
       return NextResponse.json(
-        { error: "Agent configuration not found - Invalid Agent ID" },
+        { error: "Agent configuration cannot be retrieved" },
         {
           status: 404,
           headers: corsHeaders,
         }
       );
     }
-
-    // Check if the user has enough budget
-    const agent = await getAgentById(apiKey);
-    if (!agent || !agent.userId) {
-      return NextResponse.json(
-        { error: "Agent user information not found" },
-        {
-          status: 404,
-          headers: corsHeaders,
-        }
-      );
-    }
-
     // Check if user has enough budget (require $1 per session)
-    const budgetCheck = await hasEnoughBudget(agent.userId, 1);
+    const hasEnough = await hasEnoughBudget(userBudget, 1);
 
-    if (!budgetCheck.hasEnough) {
+    if (!hasEnough) {
+      logger.error(
+        `Insufficient budget for agent ${agentConfig.name}, budget: ${userBudget}`
+      );
       return NextResponse.json(
+        { error: "Insufficient budget" },
         {
-          error: "Insufficient budget",
-          budget: budgetCheck.budget,
-          message:
-            "Please add more funds to your account to continue using the service.",
-        },
-        {
-          status: 402, // Payment Required
+          status: 400,
           headers: corsHeaders,
         }
       );
     }
+
+    const apiKeyToUse =
+      userBudget.planType === "byok"
+        ? userBudget.openaiApiKey
+        : process.env.OPENAI_API_KEY;
 
     // Fetch knowledge base articles
     const knowledgeBase = await getAgentKnowledgeBase(apiKey);
@@ -126,52 +117,56 @@ export async function POST(request: Request) {
     const mcpTools: Record<string, string[]> = {};
     const mcpBaseUrl = process.env.MCP_SERVER_URL; // TODO: make this unique per agent with secure token
 
-    logger.debug("MCP base URL:", mcpBaseUrl);
-    // get MCP servers
-    const mcpServers = await getMcpServers(apiKey);
-    if (mcpServers.length > 0) {
-      // Configure MCP servers and get tools
-      const mcpServerConfig: Record<string, any> = {};
-      const configuredServerNames: string[] = [];
+    if (userBudget.planType !== "byok") {
+      // BYOK users do not have MCP server support
 
-      for (const server of mcpServers) {
-        if (AVAILABLE_MCP_SERVERS[server.name]) {
-          // Create a deep copy of the defaultEnv to avoid modifying the original
-          const defaultEnv = {
-            ...AVAILABLE_MCP_SERVERS[server.name].defaultEnv,
-          };
+      logger.debug("MCP base URL:", mcpBaseUrl);
+      // get MCP servers
+      const mcpServers = await getMcpServers(apiKey);
+      if (mcpServers.length > 0) {
+        // Configure MCP servers and get tools
+        const mcpServerConfig: Record<string, any> = {};
+        const configuredServerNames: string[] = [];
 
-          // Customize MEMORY_FILE_PATH if it exists
-          if (defaultEnv?.MEMORY_FILE_PATH) {
-            defaultEnv.MEMORY_FILE_PATH = defaultEnv.MEMORY_FILE_PATH.replace(
-              "${agentId}",
-              apiKey
-            );
+        for (const server of mcpServers) {
+          if (AVAILABLE_MCP_SERVERS[server.name]) {
+            // Create a deep copy of the defaultEnv to avoid modifying the original
+            const defaultEnv = {
+              ...AVAILABLE_MCP_SERVERS[server.name].defaultEnv,
+            };
+
+            // Customize MEMORY_FILE_PATH if it exists
+            if (defaultEnv?.MEMORY_FILE_PATH) {
+              defaultEnv.MEMORY_FILE_PATH = defaultEnv.MEMORY_FILE_PATH.replace(
+                "${agentId}",
+                apiKey
+              );
+            }
+
+            mcpServerConfig[server.name] = {
+              command: AVAILABLE_MCP_SERVERS[server.name].command,
+              env: {
+                ...server.env,
+                ...defaultEnv,
+              },
+              args: AVAILABLE_MCP_SERVERS[server.name].args,
+            };
+            configuredServerNames.push(server.name);
+          } else {
+            logger.error(`MCP server ${server.name} not found`);
           }
-
-          mcpServerConfig[server.name] = {
-            command: AVAILABLE_MCP_SERVERS[server.name].command,
-            env: {
-              ...server.env,
-              ...defaultEnv,
-            },
-            args: AVAILABLE_MCP_SERVERS[server.name].args,
-          };
-          configuredServerNames.push(server.name);
-        } else {
-          logger.error(`MCP server ${server.name} not found`);
         }
-      }
 
-      // Configure servers and get available tools
-      const result = await configureServers(mcpServerConfig);
-      logger.info("MCP servers configured:", result);
+        // Configure servers and get available tools
+        const result = await configureServers(mcpServerConfig);
+        logger.info("MCP servers configured:", result);
 
-      // Get tools from each configured server
-      for (const serverName of configuredServerNames) {
-        const serverTools: Tool[] = await listTools(serverName);
-        tools.push(...serverTools);
-        mcpTools[serverName] = serverTools.map((tool) => tool.name);
+        // Get tools from each configured server
+        for (const serverName of configuredServerNames) {
+          const serverTools: Tool[] = await listTools(serverName);
+          tools.push(...serverTools);
+          mcpTools[serverName] = serverTools.map((tool) => tool.name);
+        }
       }
     }
 
@@ -204,7 +199,7 @@ export async function POST(request: Request) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${apiKeyToUse}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(sessionSettings),
@@ -214,6 +209,22 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const error = await response.text();
       logger.error("Token fetch error:", error);
+
+      // If using user's API key and there's an error, it might be an invalid or expired key
+      if (userBudget.planType === "byok" && userBudget.openaiApiKey) {
+        return NextResponse.json(
+          {
+            error:
+              "Your OpenAI API key seems to be invalid or expired. Please update your API key in settings.",
+            code: "invalid_api_key",
+          },
+          {
+            status: 401,
+            headers: corsHeaders,
+          }
+        );
+      }
+
       return NextResponse.json({ error }, { status: response.status });
     }
 
@@ -251,59 +262,83 @@ export async function POST(request: Request) {
 }
 
 // Function to get agent config using the agents API
-async function getAgentConfig(agentId: string): Promise<AgentConfig | null> {
+async function getAgentConfig(
+  agentId: string
+): Promise<{ agentConfig: AgentConfig | null; userBudget: UserBudget | null }> {
   try {
     const agent: AgentDBConfig | null = await getAgentById(agentId);
-    if (agent) {
-      let agentConfig: AgentConfig = {
-        name: agent.name,
-        model: agent.settings?.isAdvancedModel
-          ? "gpt-4o-realtime-preview"
-          : "gpt-4o-mini-realtime-preview",
-        initiateConversation: agent.initiateConversation,
-        instructions: agent.instructions,
-        tools: agent.tools,
-        toolLogic: agent.toolLogic,
-      } as AgentConfig;
-
-      agentConfig = injectCallTools(agentConfig);
-      // Add browser tools if enabled
-      if (agent.settings?.useBrowserTools) {
-        agentConfig = injectBrowserActions(
-          injectBrowserTools(agentConfig, "all"),
-          "minimal"
-        );
-      }
-
-      // Add form tools if form data exists
-      if (agent.settings?.isFormAgent) {
-        agentConfig.instructions =
-          formAgentMetaPrompt + "\n" + agentConfig.instructions;
-        const formFields = createFormFieldEnum(
-          agent.settings.formSchema.formItems
-        );
-        agentConfig = injectFormTools(agentConfig, formFields);
-        const formState: FormToolState = {
-          formFields,
-          formItems: agent.settings.formSchema.formItems,
-          formState: {},
-          zodSchema: agent.settings.formSchema.zodSchema,
-        };
-        const formToolLogic = createFormToolLogic(formState);
-        logger.info("Form tool logic:", formToolLogic);
-        // Merge the form tool logic with existing tool logic
-        agentConfig.toolLogic = {
-          ...agentConfig.toolLogic,
-          ...formToolLogic,
-        };
-      }
-
-      return agentConfig;
+    if (!agent || !agent.userId) {
+      return { agentConfig: null, userBudget: null };
     }
-    return null;
+
+    const userBudget = await getUserBudget(agent.userId);
+    if (!userBudget) {
+      return { agentConfig: null, userBudget: null };
+    }
+
+    let agentConfig: AgentConfig = {
+      name: agent.name,
+      model: agent.settings?.isAdvancedModel
+        ? "gpt-4o-realtime-preview"
+        : "gpt-4o-mini-realtime-preview",
+      initiateConversation: agent.initiateConversation,
+      instructions: agent.instructions,
+      tools: agent.tools,
+      toolLogic: agent.toolLogic,
+    } as AgentConfig;
+
+    agentConfig = injectCallTools(agentConfig);
+    // Add browser tools if enabled
+    if (agent.settings?.useBrowserTools) {
+      agentConfig = injectBrowserActions(
+        injectBrowserTools(agentConfig, "all"),
+        "minimal"
+      );
+    }
+
+    // Add form tools if form data exists
+    if (agent.settings?.isFormAgent) {
+      agentConfig.instructions =
+        formAgentMetaPrompt + "\n" + agentConfig.instructions;
+      const formFields = createFormFieldEnum(
+        agent.settings.formSchema.formItems
+      );
+      agentConfig = injectFormTools(agentConfig, formFields);
+      const formState: FormToolState = {
+        formFields,
+        formItems: agent.settings.formSchema.formItems,
+        formState: {},
+        zodSchema: agent.settings.formSchema.zodSchema,
+      };
+      const formToolLogic = createFormToolLogic(formState);
+      logger.info("Form tool logic:", formToolLogic);
+      // Merge the form tool logic with existing tool logic
+      agentConfig.toolLogic = {
+        ...agentConfig.toolLogic,
+        ...formToolLogic,
+      };
+    }
+
+    return { agentConfig, userBudget };
   } catch (error) {
     logger.error("Error fetching agent config:", error);
-    return null;
+    return { agentConfig: null, userBudget: null };
+  }
+}
+
+async function hasEnoughBudget(
+  userBudget: UserBudget,
+  estimatedCost: number = 0.01
+): Promise<boolean> {
+  try {
+    if (userBudget.planType !== "byok") {
+      return userBudget.totalBudget - userBudget.usedAmount >= estimatedCost;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    logger.error("Error checking budget:", error);
+    return false;
   }
 }
 
