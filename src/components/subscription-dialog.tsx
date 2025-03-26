@@ -238,7 +238,7 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
               <div>
                 <h3 className="text-sm font-medium">Available Credits</h3>
                 <p className="text-2xl font-bold text-primary">
-                  ${userBudget.totalBudget - userBudget.usedAmount}
+                  ${(userBudget.totalBudget - userBudget.usedAmount).toFixed(2)}
                 </p>
               </div>
               <div>
