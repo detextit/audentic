@@ -27,19 +27,12 @@ import { SubscriptionDialog } from "@/components/subscription-dialog";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { createLogger } from "@/utils/logger";
-
+import { UserBudget } from "@/types/budget";
 const logger = createLogger("Nav User");
 
 interface NavUserProps {
   userName: string;
   isCollapsed: boolean;
-}
-
-interface UserSubscription {
-  status: "active" | "inactive" | "trialing" | "past_due" | "canceled";
-  plan: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
 }
 
 const getDisplayName = (user: UserResource | null | undefined): string => {
@@ -84,10 +77,8 @@ export const NavUser = React.memo(function NavUser({
   const [showUsageDialog, setShowUsageDialog] = useState(false);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(
-    null
-  );
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [userBudget, setUserBudget] = useState<UserBudget | null>(null);
+  const [isLoadingUserBudget, setIsLoadingUserBudget] = useState(true);
 
   // Memoize computed values
   const displayName = useMemo(
@@ -120,25 +111,28 @@ export const NavUser = React.memo(function NavUser({
   }, []);
 
   const fetchUserSubscription = useCallback(async () => {
-    setIsLoadingSubscription(true);
+    setIsLoadingUserBudget(true);
     try {
-      const response = await fetch("/api/subscription/stripe");
+      const response = await fetch("/api/subscription/budget");
       if (!response.ok) {
         throw new Error("Failed to fetch subscription");
       }
       const data = await response.json();
-      setSubscription(data.subscription);
+      setUserBudget(data.budget);
     } catch (error) {
       logger.error("Error fetching subscription:", error);
       // Default to free plan if there's an error
-      setSubscription({
-        status: "active",
-        plan: "free",
-        currentPeriodEnd: new Date().toISOString(),
-        cancelAtPeriodEnd: false,
+      setUserBudget({
+        totalBudget: 0,
+        usedAmount: 0,
+        nextRefreshDate: new Date(),
+        planType: "free",
+        userId: user?.id || "",
+        lastUpdated: new Date(),
+        openaiApiKey: "",
       });
     } finally {
-      setIsLoadingSubscription(false);
+      setIsLoadingUserBudget(false);
     }
   }, []);
 
@@ -168,9 +162,9 @@ export const NavUser = React.memo(function NavUser({
 
   // Memoize the subscription badge component
   const subscriptionBadge = useMemo(() => {
-    if (isLoadingSubscription || !subscription) return null;
+    if (isLoadingUserBudget || !userBudget) return null;
 
-    if (subscription.plan === "free") {
+    if (userBudget.planType === "free") {
       return (
         <Badge
           variant="outline"
@@ -189,7 +183,7 @@ export const NavUser = React.memo(function NavUser({
         </Badge>
       );
     }
-  }, [isLoadingSubscription, subscription]);
+  }, [isLoadingUserBudget, userBudget]);
 
   return (
     <>
@@ -245,23 +239,23 @@ export const NavUser = React.memo(function NavUser({
               <div className="flex items-center">
                 <Sparkles className="mr-2 h-4 w-4" />
                 <span>
-                  {!isLoadingSubscription && subscription ? (
+                  {!isLoadingUserBudget && userBudget ? (
                     <span className="flex items-center">
                       <span className="mr-2">
                         Plan:{" "}
-                        {subscription.plan.charAt(0).toUpperCase() +
-                          subscription.plan.slice(1)}
+                        {userBudget.planType.charAt(0).toUpperCase() +
+                          userBudget.planType.slice(1)}
                       </span>
-                      {subscription.plan === "free" && subscriptionBadge}
+                      {userBudget.planType === "free" && subscriptionBadge}
                     </span>
                   ) : (
                     "Subscription"
                   )}
                 </span>
               </div>
-              {!isLoadingSubscription &&
-                subscription &&
-                subscription.plan !== "free" &&
+              {!isLoadingUserBudget &&
+                userBudget &&
+                userBudget.planType !== "free" &&
                 subscriptionBadge}
             </DropdownMenuItem>
           </DropdownMenuGroup>

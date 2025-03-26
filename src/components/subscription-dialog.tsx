@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -15,11 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, Sparkles, Mail, Calendar, Zap } from "lucide-react";
+import { Check, Sparkles, Mail, Calendar, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createLogger } from "@/utils/logger";
-
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 const logger = createLogger("Subscription Dialog");
 interface PlanFeature {
   name: string;
@@ -37,6 +38,10 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
 }: SubscriptionDialogProps) {
   const [userBudget, setUserBudget] = useState<any>(null);
   const [isLoadingBudget, setIsLoadingBudget] = useState(true);
+  const [apiKey, setApiKey] = useState("");
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Memoize feature lists to prevent recreating on each render
   const freeFeatures = useMemo<PlanFeature[]>(
     () => [
@@ -45,6 +50,19 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
       { name: "Basic analytics", included: true },
       { name: "Community support", included: true },
       { name: "Shared compute", included: true },
+      { name: "Custom branding", included: false },
+      { name: "Custom integrations", included: false },
+    ],
+    []
+  );
+
+  const byokFeatures = useMemo<PlanFeature[]>(
+    () => [
+      { name: "Unlimited voice agents", included: true },
+      { name: "Use your OpenAI credit", included: true },
+      { name: "Basic analytics", included: true },
+      { name: "Community support", included: true },
+      { name: "Shared compute", included: false },
       { name: "Custom branding", included: false },
       { name: "Custom integrations", included: false },
     ],
@@ -91,9 +109,90 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
     }
   };
 
+  // Handle API key verification
+  const verifyAndSaveApiKey = async () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("/api/subscription/api-key", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ apiKey }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save API key");
+      }
+
+      toast({
+        title: "API Key Saved",
+        description: "Your OpenAI API key has been saved successfully",
+      });
+
+      // Refresh user budget to show updated plan
+      fetchUserBudget();
+      setApiKey("");
+    } catch (error: any) {
+      logger.error("Error saving API key:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save API key",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle API key removal
+  const removeApiKey = async () => {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("/api/subscription/api-key", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to remove API key");
+      }
+
+      toast({
+        title: "API Key Removed",
+        description: "Your OpenAI API key has been removed",
+      });
+
+      // Refresh user budget to show updated plan
+      fetchUserBudget();
+    } catch (error: any) {
+      logger.error("Error removing API key:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove API key",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Effect to fetch budget when dialog opens
   useEffect(() => {
     if (open) {
       fetchUserBudget();
+      setApiKey("");
     }
   }, [open]);
 
@@ -115,18 +214,21 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
     ));
   }, []);
 
+  // Mask the API key to show only first 2 and last 4 characters
+  const maskApiKey = (key: string) => {
+    if (!key) return "";
+    if (key.length <= 6) return key; // Don't mask if too short
+    return `${key.substring(0, 2)}••••••••••${key.substring(key.length - 4)}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px]">
+      <DialogContent className="sm:max-w-[1100px]">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
             Plans & Pricing
           </DialogTitle>
-          <DialogDescription>
-            Start with our free plan or contact us for a custom solution
-            tailored to your needs.
-          </DialogDescription>
         </DialogHeader>
 
         {/* Budget Summary */}
@@ -136,11 +238,11 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
               <div>
                 <h3 className="text-sm font-medium">Available Credits</h3>
                 <p className="text-2xl font-bold text-primary">
-                  ${userBudget.remainingBudget.toFixed(2)}
+                  ${(userBudget.totalBudget - userBudget.usedAmount).toFixed(2)}
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Total Usage</h3>
+                <h3 className="text-sm font-medium">Current Usage</h3>
                 <p className="text-2xl font-bold">
                   ${userBudget.usedAmount.toFixed(2)}
                 </p>
@@ -157,13 +259,15 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Free Plan Card */}
           <Card className="border border-border relative overflow-hidden flex flex-col">
             <div className="absolute top-0 right-0">
-              <Badge className="bg-primary text-primary-foreground text-xs font-medium py-1 px-3 rounded-bl-lg">
-                Current Plan
-              </Badge>
+              {userBudget?.planType === "free" && (
+                <Badge className="bg-primary text-primary-foreground text-xs font-medium py-1 px-3 rounded-bl-lg">
+                  Current Plan
+                </Badge>
+              )}
             </div>
             <CardHeader>
               <CardTitle>Free</CardTitle>
@@ -179,11 +283,66 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
               <p className="text-sm font-medium mb-2">Features include:</p>
               <ul className="space-y-2">{renderFeatureList(freeFeatures)}</ul>
             </CardContent>
-            <CardFooter className="mt-auto">
-              <Button className="w-full" variant="outline" disabled={true}>
-                <Zap className="mr-2 h-4 w-4" />
-                Current Plan
-              </Button>
+          </Card>
+
+          {/* BYOK Plan Card */}
+          <Card className="border border-border relative overflow-hidden flex flex-col">
+            <div className="absolute top-0 right-0">
+              {userBudget?.planType === "byok" && (
+                <Badge className="bg-primary text-primary-foreground text-xs font-medium py-1 px-3 rounded-bl-lg">
+                  Current Plan
+                </Badge>
+              )}
+            </div>
+            <CardHeader>
+              <CardTitle>BYOK</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Bring Your Own Key (OpenAI)
+              </p>
+              <div className="mt-2">
+                <span className="text-3xl font-bold">$0</span>
+                <span className="text-muted-foreground ml-1">/month</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 flex-grow">
+              <p className="text-sm font-medium mb-2">Features include:</p>
+              <ul className="space-y-2">{renderFeatureList(byokFeatures)}</ul>
+            </CardContent>
+            <CardFooter className="mt-auto flex flex-col gap-2">
+              {userBudget?.planType === "byok" ? (
+                <>
+                  <Label className="w-full text-center h-6">
+                    {maskApiKey(userBudget.openaiApiKey)}
+                  </Label>
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={removeApiKey}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Removing..." : "Remove API Key"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Input
+                    className="w-full"
+                    placeholder="Enter your OpenAI API key"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    type="password"
+                  />
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={verifyAndSaveApiKey}
+                    disabled={isSubmitting || !apiKey.trim()}
+                  >
+                    <Key className="mr-2 h-4 w-4" />
+                    {isSubmitting ? "Verifying..." : "Add API Key"}
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
 

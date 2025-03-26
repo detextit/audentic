@@ -3,6 +3,12 @@ import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/types/agent";
 import { setupDatabase } from "@/db/setup";
 import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
+import {
+  UserBudget,
+  NEW_USER_BUDGET,
+  TRIAL_BUDGET,
+  TRIAL_REFRESH_DAYS,
+} from "@/types/budget";
 
 const logger = createLogger("DB Actions");
 
@@ -286,8 +292,7 @@ export async function deleteMcpServer(agentId: string, serverName: string) {
 }
 
 // User Budget Management
-
-export async function getUserBudget(userId: string) {
+export async function getUserBudget(userId: string): Promise<UserBudget> {
   try {
     const result = await sql`
       SELECT * FROM user_budget
@@ -295,36 +300,38 @@ export async function getUserBudget(userId: string) {
     `;
 
     if (result.rows.length === 0) {
-      // Initialize budget for new user with default values (free plan gets $5)
-      const defaultBudget = 5.0;
       const nextRefreshDate = new Date();
-      nextRefreshDate.setDate(nextRefreshDate.getDate() + 30); // 30 days from now
+      nextRefreshDate.setDate(nextRefreshDate.getDate() + TRIAL_REFRESH_DAYS); // 30 days from now
 
-      await sql`
+      const insertResult = await sql`
         INSERT INTO user_budget (
           user_id, 
           total_budget, 
           used_amount, 
           next_refresh_date, 
-          plan_type
+          plan_type,
+          openai_api_key
         )
         VALUES (
           ${userId}, 
-          ${defaultBudget}, 
-          0, 
+          ${NEW_USER_BUDGET.totalBudget}, 
+          ${NEW_USER_BUDGET.usedAmount}, 
           ${nextRefreshDate.toISOString()}, 
-          'free'
+          ${NEW_USER_BUDGET.planType},
+          ${NEW_USER_BUDGET.openaiApiKey}
         )
+        RETURNING *
       `;
 
+      const newUserBudget = insertResult.rows[0];
       return {
-        userId,
-        totalBudget: defaultBudget,
-        usedAmount: 0,
-        remainingBudget: defaultBudget,
-        lastUpdated: new Date(),
-        nextRefreshDate: nextRefreshDate,
-        planType: "free",
+        userId: newUserBudget.user_id,
+        totalBudget: parseFloat(newUserBudget.total_budget),
+        usedAmount: parseFloat(newUserBudget.used_amount),
+        lastUpdated: newUserBudget.last_updated,
+        nextRefreshDate: new Date(newUserBudget.next_refresh_date),
+        planType: newUserBudget.plan_type,
+        openaiApiKey: newUserBudget.openai_api_key || "",
       };
     }
 
@@ -336,14 +343,13 @@ export async function getUserBudget(userId: string) {
 
     if (now >= nextRefresh && userBudget.plan_type === "free") {
       // It's time to refresh the budget for free users
-      const refreshAmount = 5.0; // $5 for free plan
       const newNextRefresh = new Date();
-      newNextRefresh.setDate(nextRefresh.getDate() + 30); // 30 days from next refresh
+      newNextRefresh.setDate(nextRefresh.getDate() + TRIAL_REFRESH_DAYS); // 30 days from next refresh
 
       const refreshResult = await sql`
         UPDATE user_budget
         SET 
-          total_budget = total_budget + ${refreshAmount},
+          total_budget = ${TRIAL_BUDGET},
           next_refresh_date = ${newNextRefresh.toISOString()},
           last_updated = CURRENT_TIMESTAMP
         WHERE user_id = ${userId}
@@ -355,12 +361,10 @@ export async function getUserBudget(userId: string) {
         userId: refreshedBudget.user_id,
         totalBudget: parseFloat(refreshedBudget.total_budget),
         usedAmount: parseFloat(refreshedBudget.used_amount),
-        remainingBudget:
-          parseFloat(refreshedBudget.total_budget) -
-          parseFloat(refreshedBudget.used_amount),
         lastUpdated: refreshedBudget.last_updated,
-        nextRefreshDate: new Date(refreshedBudget.next_refresh_date),
+        nextRefreshDate: refreshedBudget.next_refresh_date,
         planType: refreshedBudget.plan_type,
+        openaiApiKey: refreshedBudget.openai_api_key,
       };
     }
 
@@ -368,15 +372,73 @@ export async function getUserBudget(userId: string) {
       userId: userBudget.user_id,
       totalBudget: parseFloat(userBudget.total_budget),
       usedAmount: parseFloat(userBudget.used_amount),
-      remainingBudget:
-        parseFloat(userBudget.total_budget) -
-        parseFloat(userBudget.used_amount),
       lastUpdated: userBudget.last_updated,
-      nextRefreshDate: new Date(userBudget.next_refresh_date),
+      nextRefreshDate: userBudget.next_refresh_date,
       planType: userBudget.plan_type,
+      openaiApiKey: userBudget.openai_api_key,
     };
   } catch (error) {
     logger.error("Error getting user budget:", error);
+    throw error;
+  }
+}
+
+// Save OpenAI API Key for a user
+export async function saveOpenAIApiKey(userId: string, apiKey: string) {
+  try {
+    // Update the plan type to 'byok' and save the API key
+    const result = await sql`
+      UPDATE user_budget
+      SET 
+        openai_api_key = ${apiKey},
+        plan_type = 'byok',
+        last_updated = CURRENT_TIMESTAMP
+      WHERE user_id = ${userId}
+      RETURNING *
+    `;
+
+    const updatedBudget = result.rows[0];
+    return {
+      userId: updatedBudget.user_id,
+      totalBudget: parseFloat(updatedBudget.total_budget),
+      usedAmount: parseFloat(updatedBudget.used_amount),
+      lastUpdated: updatedBudget.last_updated,
+      nextRefreshDate: updatedBudget.next_refresh_date,
+      planType: updatedBudget.plan_type,
+      openaiApiKey: updatedBudget.openai_api_key,
+    };
+  } catch (error) {
+    logger.error("Error saving OpenAI API key:", error);
+    throw error;
+  }
+}
+
+// Delete OpenAI API Key for a user
+export async function deleteOpenAIApiKey(userId: string) {
+  try {
+    // Update the plan type back to 'free' and remove the API key
+    const result = await sql`
+      UPDATE user_budget
+      SET 
+        openai_api_key = NULL,
+        plan_type = 'free',
+        last_updated = CURRENT_TIMESTAMP
+      WHERE user_id = ${userId}
+      RETURNING *
+    `;
+
+    const updatedBudget = result.rows[0];
+    return {
+      userId: updatedBudget.user_id,
+      totalBudget: parseFloat(updatedBudget.total_budget),
+      usedAmount: parseFloat(updatedBudget.used_amount),
+      lastUpdated: updatedBudget.last_updated,
+      nextRefreshDate: new Date(updatedBudget.next_refresh_date),
+      planType: updatedBudget.plan_type,
+      openaiApiKey: null,
+    };
+  } catch (error) {
+    logger.error("Error deleting OpenAI API key:", error);
     throw error;
   }
 }
@@ -392,7 +454,7 @@ export async function addUserBudget(
     // If plan type is changing, update the next refresh date
     const updatePlanType = planType && planType !== currentBudget.planType;
     const nextRefreshDate = updatePlanType
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      ? new Date(Date.now() + TRIAL_REFRESH_DAYS * 24 * 60 * 60 * 1000) // 30 days from now
       : currentBudget.nextRefreshDate;
 
     let query;
@@ -425,12 +487,10 @@ export async function addUserBudget(
       userId: updatedBudget.user_id,
       totalBudget: parseFloat(updatedBudget.total_budget),
       usedAmount: parseFloat(updatedBudget.used_amount),
-      remainingBudget:
-        parseFloat(updatedBudget.total_budget) -
-        parseFloat(updatedBudget.used_amount),
       lastUpdated: updatedBudget.last_updated,
       nextRefreshDate: new Date(updatedBudget.next_refresh_date),
       planType: updatedBudget.plan_type,
+      openaiApiKey: updatedBudget.openai_api_key,
     };
   } catch (error) {
     logger.error("Error updating user budget:", error);
@@ -441,15 +501,6 @@ export async function addUserBudget(
 export async function recordUsage(userId: string, cost: number) {
   try {
     const currentBudget = await getUserBudget(userId);
-
-    // Check if user has enough budget
-    if (currentBudget.remainingBudget < cost) {
-      return {
-        success: false,
-        message: "Insufficient budget",
-        budget: currentBudget,
-      };
-    }
 
     const result = await sql`
       UPDATE user_budget
@@ -468,9 +519,6 @@ export async function recordUsage(userId: string, cost: number) {
         userId: updatedBudget.user_id,
         totalBudget: parseFloat(updatedBudget.total_budget),
         usedAmount: parseFloat(updatedBudget.used_amount),
-        remainingBudget:
-          parseFloat(updatedBudget.total_budget) -
-          parseFloat(updatedBudget.used_amount),
         lastUpdated: updatedBudget.last_updated,
         nextRefreshDate: new Date(updatedBudget.next_refresh_date),
         planType: updatedBudget.plan_type,
@@ -479,26 +527,6 @@ export async function recordUsage(userId: string, cost: number) {
   } catch (error) {
     logger.error("Error recording usage:", error);
     throw error;
-  }
-}
-
-export async function hasEnoughBudget(
-  userId: string,
-  estimatedCost: number = 0.01
-) {
-  try {
-    const userBudget = await getUserBudget(userId);
-    return {
-      hasEnough: userBudget.remainingBudget >= estimatedCost,
-      budget: userBudget,
-    };
-  } catch (error) {
-    logger.error("Error checking budget:", error);
-    return {
-      hasEnough: false,
-      budget: null,
-      error: "Failed to check budget",
-    };
   }
 }
 

@@ -10,18 +10,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { UserBudget } from "@/types/budget";
 
 const logger = createLogger("Budget Warning");
-
-interface UserBudget {
-  userId: string;
-  totalBudget: number;
-  usedAmount: number;
-  remainingBudget: number;
-  lastUpdated: string;
-  nextRefreshDate: Date;
-  planType: string;
-}
 
 interface BudgetWarningProps {
   threshold?: number;
@@ -63,8 +54,14 @@ export function BudgetWarning({
     return null;
   }
 
-  const isBelowThreshold = userBudget.remainingBudget <= threshold;
-  const isCritical = userBudget.remainingBudget <= criticalThreshold;
+  if (userBudget.planType === "byok") {
+    return null;
+  }
+
+  const remainingBudget = userBudget.totalBudget - userBudget.usedAmount;
+
+  const isBelowThreshold = remainingBudget <= threshold;
+  const isCritical = remainingBudget <= criticalThreshold;
 
   if (!isBelowThreshold) {
     return null;
@@ -104,8 +101,8 @@ export function BudgetWarning({
                   isCritical ? "text-red-700" : "text-amber-700"
                 }`}
               >
-                You have ${userBudget.remainingBudget.toFixed(2)} remaining in
-                your account.
+                You have ${remainingBudget.toFixed(2)} remaining in your
+                account.
               </p>
             </div>
           </div>
