@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { AgentDBConfig } from "@/types/agent";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Phone, PhoneOff } from "lucide-react";
+import { AudioLines, X } from "lucide-react";
 import {
   WidgetBuilderConfiguration,
   defaultWidgetConfig,
@@ -51,21 +51,21 @@ const ConnectionButton = ({
     onClick={onToggle}
     className="flex items-center justify-center gap-2 py-3 px-6 rounded-full w-full text-sm"
     style={{
-      backgroundColor: isConnected ? "#FFFFFF" : primaryColor || "#000000",
-      color: isConnected ? "#FF4444" : buttonTextColor || "#FFFFFF",
-      borderRadius: `${Math.min(Number(borderRadius || 12) * 2, 24)}px`,
+      backgroundColor: isConnected ? "#FFFFFF" : primaryColor,
+      color: isConnected ? "#FF4444" : buttonTextColor,
+      borderRadius: `${Math.min(Number(borderRadius) * 2, 24)}px`,
       border: isConnected ? "1px solid #FF4444" : "none",
     }}
   >
     {isConnected ? (
       <>
-        <PhoneOff size={20} />
-        <span>End call</span>
+        <X size={20} />
+        <span>Disconnect</span>
       </>
     ) : (
       <>
-        <Phone size={20} />
-        <span>{isConnecting ? "Connecting..." : buttonText}</span>
+        <AudioLines size={20} />
+        <span>{isConnecting ? "Connecting" : buttonText}</span>
       </>
     )}
   </button>
@@ -266,7 +266,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                     <Input
                       id="backgroundColor"
                       type="color"
-                      value={widgetSettings.config.backgroundColor || "#FFFFFF"}
+                      value={widgetSettings.config.backgroundColor}
                       onChange={(e) => {
                         handleSettingChange("widget", {
                           backgroundColor: e.target.value,
@@ -275,7 +275,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                       className="w-12 h-9 p-1"
                     />
                     <Input
-                      value={widgetSettings.config.backgroundColor || "#FFFFFF"}
+                      value={widgetSettings.config.backgroundColor}
                       onChange={(e) => {
                         handleSettingChange("widget", {
                           backgroundColor: e.target.value,
@@ -295,7 +295,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                     <Input
                       id="textColor"
                       type="color"
-                      value={widgetSettings.config.textColor || "#666666"}
+                      value={widgetSettings.config.textColor}
                       onChange={(e) => {
                         handleSettingChange("widget", {
                           textColor: e.target.value,
@@ -304,7 +304,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                       className="w-12 h-9 p-1"
                     />
                     <Input
-                      value={widgetSettings.config.textColor || "#666666"}
+                      value={widgetSettings.config.textColor}
                       onChange={(e) => {
                         handleSettingChange("widget", {
                           textColor: e.target.value,
@@ -407,7 +407,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                 <Input
                   id="primaryColor"
                   type="color"
-                  value={widgetSettings.config.primaryColor || "#000000"}
+                  value={widgetSettings.config.primaryColor}
                   onChange={(e) => {
                     handleSettingChange("widget", {
                       primaryColor: e.target.value,
@@ -416,7 +416,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                   className="w-12 h-9 p-1"
                 />
                 <Input
-                  value={widgetSettings.config.primaryColor || "#000000"}
+                  value={widgetSettings.config.primaryColor}
                   onChange={(e) => {
                     handleSettingChange("widget", {
                       primaryColor: e.target.value,
@@ -436,7 +436,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                 <Input
                   id="buttonTextColor"
                   type="color"
-                  value={widgetSettings.config.buttonTextColor || "#FFFFFF"}
+                  value={widgetSettings.config.buttonTextColor}
                   onChange={(e) => {
                     handleSettingChange("widget", {
                       buttonTextColor: e.target.value,
@@ -445,7 +445,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                   className="w-12 h-9 p-1"
                 />
                 <Input
-                  value={widgetSettings.config.buttonTextColor || "#FFFFFF"}
+                  value={widgetSettings.config.buttonTextColor}
                   onChange={(e) => {
                     handleSettingChange("widget", {
                       buttonTextColor: e.target.value,
@@ -467,7 +467,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                   type="range"
                   min="0"
                   max="24"
-                  value={widgetSettings.config.borderRadius || "12"}
+                  value={widgetSettings.config.borderRadius}
                   onChange={(e) => {
                     handleSettingChange("widget", {
                       borderRadius: e.target.value,
@@ -476,7 +476,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                   className="flex-1"
                 />
                 <span className="text-sm w-8 text-center">
-                  {widgetSettings.config.borderRadius || "12"}px
+                  {widgetSettings.config.borderRadius}px
                 </span>
               </div>
             </div>
@@ -493,13 +493,10 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                   <div
                     className="relative rounded-lg shadow-lg overflow-hidden flex flex-col"
                     style={{
-                      backgroundColor:
-                        widgetSettings.config.backgroundColor || "#FFFFFF",
-                      borderRadius: `${
-                        widgetSettings.config.borderRadius || 12
-                      }px`,
-                      width: `${widgetSettings.config.width || 200}px`,
-                      height: `${widgetSettings.config.height || 110}px`,
+                      backgroundColor: widgetSettings.config.backgroundColor,
+                      borderRadius: `${widgetSettings.config.borderRadius}px`,
+                      width: `${widgetSettings.config.width}px`,
+                      height: `${widgetSettings.config.height}px`,
                     }}
                   >
                     <div className="flex flex-col justify-center items-center h-full p-6">
@@ -507,7 +504,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                         <h3
                           className="text-sm font-medium mb-3"
                           style={{
-                            color: widgetSettings.config.textColor || "#666666",
+                            color: widgetSettings.config.textColor,
                           }}
                         >
                           {widgetSettings.config.title}
@@ -518,9 +515,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                         isConnected={false}
                         isConnecting={false}
                         onToggle={() => {}}
-                        buttonText={
-                          widgetSettings.config.buttonText || "Voice Agent"
-                        }
+                        buttonText={widgetSettings.config.buttonText || ""}
                         primaryColor={
                           widgetSettings.config.primaryColor || "#000000"
                         }
@@ -538,9 +533,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
                     isConnected={false}
                     isConnecting={false}
                     onToggle={() => {}}
-                    buttonText={
-                      widgetSettings.config.buttonText || "Voice Agent"
-                    }
+                    buttonText={widgetSettings.config.buttonText || ""}
                     primaryColor={
                       widgetSettings.config.primaryColor || "#000000"
                     }
@@ -554,9 +547,7 @@ export function Widget({ agent, widgetConfig, onConfigChange }: WidgetProps) {
 
               <p className="text-xs text-muted-foreground">
                 {widgetSettings.config.showBackgroundCard !== false
-                  ? `Widget with background card (${
-                      widgetSettings.config.width || 200
-                    }px × ${widgetSettings.config.height || 110}px)`
+                  ? `Widget with background card (${widgetSettings.config.width}px × ${widgetSettings.config.height}px)`
                   : "Button-only widget"}
               </p>
             </div>

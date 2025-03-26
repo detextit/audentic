@@ -59,6 +59,7 @@ import {
   Tooltip as RechartsTooltip,
 } from "recharts";
 import { createLogger } from "@/utils/logger";
+import { UserBudget } from "@/types/budget";
 
 const logger = createLogger("Usage Dialog");
 
@@ -181,7 +182,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
   const [isAgentLoading, setIsAgentLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [userBudget, setUserBudget] = useState<any>(null);
+  const [userBudget, setUserBudget] = useState<UserBudget | null>(null);
   const [isLoadingBudget, setIsLoadingBudget] = useState(true);
 
   // Calculate date ranges based on selected time range
@@ -374,11 +375,11 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
               <div>
                 <h3 className="text-sm font-medium">Available Credits</h3>
                 <p className="text-2xl font-bold text-primary">
-                  ${userBudget.remainingBudget.toFixed(2)}
+                  ${(userBudget.totalBudget - userBudget.usedAmount).toFixed(2)}
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Total Usage</h3>
+                <h3 className="text-sm font-medium">Current Usage</h3>
                 <p className="text-2xl font-bold">
                   ${userBudget.usedAmount.toFixed(2)}
                 </p>

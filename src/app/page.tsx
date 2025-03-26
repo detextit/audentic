@@ -279,7 +279,7 @@ export default function LandingPage() {
                           }: React.HTMLProps<HTMLElement>) => (
                             <div className="relative">
                               <button
-                                className="absolute right-0 top-0 p-1 text-gray-500 hover:text-gray-700"
+                                className="absolute right-0 top-0 p-1 text-slate-100 hover:text-slate-200"
                                 onClick={() => {
                                   navigator.clipboard.writeText(
                                     children as string
