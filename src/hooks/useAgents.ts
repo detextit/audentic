@@ -288,6 +288,19 @@ export function useAgents() {
       setAgents(updatedAgents);
       agentsCache = updatedAgents;
       lastFetchTime = Date.now();
+
+      // Navigate to the next agent if available
+      if (updatedAgents.length > 0) {
+        // Get the next agent
+        const nextAgent = updatedAgents[0];
+
+        // Use window.location to navigate to the next agent
+        // This is a more direct approach that will work regardless of component structure
+        window.location.href = `/agents/${nextAgent.id}`;
+      } else {
+        // If no agents left, go to the main agents page
+        window.location.href = "/agents";
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete agent";

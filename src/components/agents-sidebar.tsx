@@ -1,7 +1,7 @@
 import { Plus, Bot, Search } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { Button } from "@/components/ui/button";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React from "react";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface AgentsSidebarProps {
   onCreateClick: () => void;
   onSelectAgent: (agentId: string) => void;
+  refreshTrigger?: number;
 }
 
 // Skeleton loader for agents
@@ -32,9 +33,14 @@ const AgentsSkeleton = () => (
 export const AgentsSidebar = React.memo(function AgentsSidebar({
   onCreateClick,
   onSelectAgent,
+  refreshTrigger = 0,
 }: AgentsSidebarProps) {
-  const { agents, loading } = useAgents();
+  const { agents, loading, refreshAgents } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    refreshAgents(true);
+  }, [refreshTrigger, refreshAgents]);
 
   const handleAgentClick = useCallback(
     (agentId: string) => {
