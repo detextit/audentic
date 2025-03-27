@@ -125,12 +125,7 @@ const Home = React.memo(function Home() {
       });
     }
 
-    // Set a single timeout for loading state
-    const loadingTimer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(loadingTimer);
+    setIsLoading(false);
   }, []);
 
   // Handle initial URL-based selection only once
