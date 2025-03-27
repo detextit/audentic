@@ -199,15 +199,13 @@ const Home = React.memo(function Home() {
     setIsCreateDialogOpen(true);
   };
 
+  const [agentRefreshTrigger, setAgentRefreshTrigger] = useState(0);
+
   const handleDialogClose = useCallback(async () => {
     setIsCreateDialogOpen(false);
-    // Call refreshAgents but don't expect a return value
-    await refreshAgents(true);
-    // Use the agents from state instead
-    if (agents && agents.length > 0) {
-      handleSelectAgent(agents[0].id);
-    }
-  }, [agents, refreshAgents, handleSelectAgent]);
+    // Increment the refresh trigger to force the sidebar to refresh
+    setAgentRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   const handleHistoryClick = useCallback(() => {
     setSidebarOpen("History");
@@ -372,6 +370,7 @@ const Home = React.memo(function Home() {
           <AgentsSidebar
             onCreateClick={handleCreateAgent}
             onSelectAgent={handleSelectAgent}
+            refreshTrigger={agentRefreshTrigger}
           />
         ) : (
           <HistorySidebar onSelectSession={handleSelectSession} />
