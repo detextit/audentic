@@ -2,12 +2,6 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
-import { Montserrat } from "next/font/google";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-});
 
 export const metadata: Metadata = {
   title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
@@ -72,10 +66,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html
-        lang="en"
-        className={`${montserrat.variable} font-sans suppressHydrationWarning`}
-      >
+      <html>
         <head>
           <script
             type="application/ld+json"
@@ -89,10 +80,6 @@ export default function RootLayout({
                   logo: "https://www.audentic.io/icon.png",
                   description:
                     "Leading provider of No-Code Voice AI Agents for Websites. We specialize in creating intelligent, conversational AI solutions that enhance website functionality and user experience. Our platform enables businesses to implement sophisticated voice interactions without technical expertise.",
-                  sameAs: [
-                    "https://x.com/audentic_io",
-                    // Add other social media URLs
-                  ],
                 },
                 {
                   "@context": "https://schema.org",
