@@ -18,10 +18,10 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     displayName: "E-Signatures",
     description: "Integration for handling electronic signatures",
     icon: "✍️",
-    command: "/home/info_detextit/.local/bin/uv",
+    command: "/home/audentic_io/.local/bin/uv",
     args: [
       "--directory",
-      "/home/info_detextit/app/mcp-server-esignatures",
+      "/home/audentic_io/app/mcp-server-esignatures",
       "run",
       "mcp-server-esignatures",
     ],
@@ -39,7 +39,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     description: "Integration for Puppeteer",
     icon: "🎭",
     command: "node",
-    args: [ "/home/info_detextit/app/servers/src/puppeteer/dist/index.js"],
+    args: [ "/home/audentic_io/app/servers/src/puppeteer/dist/index.js"],
     defaultEnv: {
       PATH: "/usr/bin",
     },
@@ -49,7 +49,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     description: "Integration for Brave Search",
     icon: "🔍",
     command: "node",
-    args: ["/home/info_detextit/app/servers/src/brave-search/dist/index.js"],
+    args: ["/home/audentic_io/app/servers/src/brave-search/dist/index.js"],
     envVars: [
       {
         name: "BRAVE_API_KEY",
@@ -66,7 +66,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     description: "Integration for Google Maps",
     icon: "🗺️",
     command: "node",
-    args: ["/home/info_detextit/app/servers/src/google-maps/dist/index.js"],
+    args: ["/home/audentic_io/app/servers/src/google-maps/dist/index.js"],
     envVars: [
       {
         name: "GOOGLE_MAPS_API_KEY",
@@ -84,9 +84,9 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     description: "Integration for Memory",
     icon: "🧠",
     command: "node",
-    args: [ "/home/info_detextit/app/servers/src/memory/dist/index.js"],
+    args: [ "/home/audentic_io/app/servers/src/memory/dist/index.js"],
     defaultEnv: {
-      MEMORY_FILE_PATH: "/home/info_detextit/server-memory/${agentId}/memory.json",
+      MEMORY_FILE_PATH: "/home/audentic_io/server-memory/${agentId}/memory.json",
       PATH: "/usr/bin",
     },
   },
@@ -95,9 +95,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     description: "Integration for AWS Knowledge Base Retrieval",
     icon: "🗃️",
     command: "node",
-    args: [
-      "/home/info_detextit/app/servers/src/aws-kb-retrieval/dist/index.js",
-    ],
+    args: ["/home/audentic_io/app/servers/src/aws-kb-retrieval/dist/index.js"],
     envVars: [
       {
         name: "AWS_ACCESS_KEY_ID",
@@ -125,7 +123,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     icon: "🤘",
     command: "node",
     args: [
-      "/home/info_detextit/app/mcp-server-browserbase/stagehand/dist/index.js",
+      "/home/audentic_io/app/mcp-server-browserbase/stagehand/dist/index.js",
     ],
     envVars: [
       {
@@ -154,7 +152,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
     icon: "🅱️",
     command: "node",
     args: [
-      "/home/info_detextit/app/mcp-server-browserbase/browserbase/dist/index.js",
+      "/home/audentic_io/app/mcp-server-browserbase/browserbase/dist/index.js",
     ],
     envVars: [
       {
@@ -178,7 +176,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
   //   description: "Integration for dynamic and reflective problem-solving",
   //   icon: "🔗",
   //   command: "node",
-  //   args: [ "/home/info_detextit/app/servers/src/sequential-thinking"],
+  //   args: [ "/home/audentic_io/app/servers/src/sequential-thinking"],
   //   defaultEnv: {
   //     PATH: "/usr/bin",
   //   },
@@ -189,7 +187,7 @@ export const AVAILABLE_MCP_SERVERS: Record<string, MCPServerDefinition> = {
   //   description: "Integration for Testing",
   //   icon: "🔬",
   //   command: "node",
-  //   args: [ "/home/info_detextit/app/servers/src/everything"],
+  //   args: [ "/home/audentic_io/app/servers/src/everything"],
   //   defaultEnv: {
   //     PATH: "/usr/bin",
   //   },
