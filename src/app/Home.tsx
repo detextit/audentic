@@ -98,7 +98,7 @@ const Home = React.memo(function Home() {
   });
 
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const { agents, refreshAgents } = useAgents();
+  const { agents } = useAgents();
   const { sessions } = useSessions();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
