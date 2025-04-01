@@ -10,7 +10,9 @@ export const faqData: FAQItem[] = [
 
 * Focus on browser-native actions that let voice agents interact with web elements
 * End-to-end voice processing that removes the speech-to-text-to-speech pipeline
-* Integration in minutes with no-code platforms`,
+* Integration in minutes with no-code platforms
+
+Our platform is currently built entirely around *OpenAI Realtime API*. We will expand to other providers when a competitive end-to-end voice model is made available.`,
   },
   {
     question: "What makes Audentic different from chatbots?",
@@ -73,6 +75,6 @@ The key is abstracting technical complexity while delivering sophisticated funct
     answer: `Pricing details coming soon!
 
 * Stay tuned for flexible plans for businesses of all sizes
-* In the meantime, reach out to us at info@audentic.io for a quote`,
+* In the meantime, reach out to us at info@audentic.io to initiate a conversation`,
   },
 ];
