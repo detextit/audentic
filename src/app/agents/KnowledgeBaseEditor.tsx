@@ -233,8 +233,7 @@ export function KnowledgeBaseEditor({
           <DialogHeader>
             <DialogTitle>Add Knowledge Base Article</DialogTitle>
             <DialogDescription>
-              Add information that the agent can reference when answering
-              questions.
+              Add information that further personalizes your agent.
             </DialogDescription>
           </DialogHeader>
 

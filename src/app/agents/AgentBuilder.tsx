@@ -833,8 +833,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             <CardHeader className="p-4 pb-2 bg-muted/20">
               <CardTitle className="text-base">Knowledge Base</CardTitle>
               <CardDescription className="text-xs">
-                Manage information that the agent can reference when answering
-                questions.
+                Manage information that further personalizes your agent.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-3">
