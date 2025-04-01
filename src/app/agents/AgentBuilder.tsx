@@ -104,7 +104,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
       widgetConfig
     )}'></audentic-embed>
-    <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
+    <script src="https://unpkg.com/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
   };
 
   const handleCopy = async () => {

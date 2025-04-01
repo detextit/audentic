@@ -1,6 +1,6 @@
 "use client";
 
-import { History, Bot, Clock } from "lucide-react";
+import { History, Bot, Clock, BookOpen } from "lucide-react";
 import React, {
   useState,
   useEffect,
@@ -347,6 +347,29 @@ const Home = React.memo(function Home() {
               </TooltipProvider>
               {!isCollapsed && <span>History</span>}
             </div>
+            <a
+              href="https://audentic.mintlify.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center ${
+                isCollapsed ? "justify-center px-2" : "space-x-3"
+              } 
+                            cursor-pointer hover:text-[hsl(var(--sidebar-primary))] rounded-md ${
+                              isCollapsed ? "p-2" : "pl-1 pr-2 py-2"
+                            }`}
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <BookOpen size={24} className="min-w-6" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Documentation</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {!isCollapsed && <span>Documentation</span>}
+            </a>
           </div>
 
           <div className="mt-auto mb-4">
