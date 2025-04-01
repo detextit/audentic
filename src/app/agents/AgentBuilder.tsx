@@ -104,7 +104,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
       widgetConfig
     )}'></audentic-embed>
-    <script src="https://unpkg.com/browse/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
+    <script src="https://unpkg.com/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
   };
 
   const handleCopy = async () => {
@@ -833,8 +833,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
             <CardHeader className="p-4 pb-2 bg-muted/20">
               <CardTitle className="text-base">Knowledge Base</CardTitle>
               <CardDescription className="text-xs">
-                Manage information that the agent can reference when answering
-                questions.
+                Manage information that further personalizes your agent.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-3">

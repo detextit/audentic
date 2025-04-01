@@ -91,6 +91,9 @@ export default function LandingPage() {
                   Create, test, and integrate voice AI agents into your web
                   applications.
                 </p>
+                <p className="text-lg text-primary font-medium">
+                  Sign up now and get started with free credits!
+                </p>
                 <div className="flex gap-4">
                   <Button
                     size="lg"
@@ -99,7 +102,7 @@ export default function LandingPage() {
                   >
                     Start Building
                   </Button>
-                  <Button
+                  {/* <Button
                     size="lg"
                     variant="outline"
                     onClick={() =>
@@ -108,7 +111,7 @@ export default function LandingPage() {
                     }
                   >
                     Try it out!
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
               <div className="lg:w-2/3">
