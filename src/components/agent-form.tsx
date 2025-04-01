@@ -23,7 +23,7 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
     name: agent?.name ?? "",
     description: agent?.description ?? "",
     instructions: agent?.instructions ?? "",
-    initiateConversation: agent?.initiateConversation ?? false,
+    initiateConversation: agent?.initiateConversation ?? true,
     tools: agent?.tools ?? [],
   });
 
@@ -31,10 +31,17 @@ export function AgentForm({ agent, onClose }: AgentFormProps) {
     e.preventDefault();
     try {
       logger.info("Submitting form data:", formData); // Debug log
+      let newAgent;
       if (agent) {
-        await updateAgent(agent.id, formData);
+        newAgent = await updateAgent(agent.id, formData);
       } else {
-        await createAgent(formData);
+        newAgent = await createAgent(formData);
+        // Navigate to the newly created agent
+        if (newAgent && newAgent.id) {
+          window.history.pushState({}, "", `/agents/${newAgent.id}`);
+          // Force a reload of the current page to ensure the agent builder refreshes
+          window.location.href = `/agents/${newAgent.id}`;
+        }
       }
       onClose();
     } catch (error) {
