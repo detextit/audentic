@@ -186,7 +186,7 @@ export async function POST(request: Request) {
         interrupt_response: true,
         create_response: true,
       },
-      input_audio_noise_reduction: "far_field",
+      input_audio_noise_reduction: { type: "far_field" },
       temperature: 0.6,
       tools,
       tool_choice: "auto",
