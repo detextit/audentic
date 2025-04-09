@@ -41,5 +41,3 @@ logger.error("Error message"); // Always shown
 import { logger } from "@/utils/logger";
 logger.info("Using default logger");
 ```
-
-Environment is determined by the `NEXT_PUBLIC_NODE_ENV` environment variable.
