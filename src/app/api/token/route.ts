@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       "\n" +
       getVoiceAgentDefaultInstructions(
         agentConfig.name,
-        new Date().toLocaleString()
+        new Date().toDateString()
       );
 
     const tools = agentConfig.tools || [];
@@ -181,8 +181,8 @@ export async function POST(request: Request) {
         model: "whisper-1",
       },
       turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
+        type: "semantic_vad",
+        eagerness: "auto",
         interrupt_response: true,
         create_response: true,
       },
