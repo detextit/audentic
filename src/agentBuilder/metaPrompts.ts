@@ -64,7 +64,7 @@ The final prompt you output should adhere to the following structure below. Do n
 
 # Examples [optional]
 
-[Optional: 1-3 well-defined examples with placeholders if necessary. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
+[Optional: 1 or 2 well-defined examples with placeholders for complex use cases. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
 [If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
 
 # Notes [optional]
