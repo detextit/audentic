@@ -106,12 +106,12 @@ export async function POST(request: Request) {
     const instructions =
       knowledgeBaseContent +
       "\n" +
-      agentConfig.instructions +
-      "\n" +
       getVoiceAgentDefaultInstructions(
         agentConfig.name,
         new Date().toDateString()
-      );
+      ) +
+      "\n#Agent Instruction\n" +
+      agentConfig.instructions;
 
     const tools = agentConfig.tools || [];
     const mcpTools: Record<string, string[]> = {};
@@ -181,8 +181,8 @@ export async function POST(request: Request) {
         model: "whisper-1",
       },
       turn_detection: {
-        type: "semantic_vad",
-        eagerness: "auto",
+        type: "server_vad",
+        threshold: 0.5,
         interrupt_response: true,
         create_response: true,
       },
