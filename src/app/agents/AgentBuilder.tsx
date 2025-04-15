@@ -94,6 +94,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     },
     webUI: false,
     widgetConfig: false,
+    tools: false,
+    toolLogic: false,
   });
 
   const [copied, setCopied] = useState(false);
@@ -204,6 +206,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       },
       webUI: false,
       widgetConfig: false,
+      tools: false,
+      toolLogic: false,
     });
   }, []);
 
@@ -405,10 +409,14 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         updates.description = currentAgent.description;
       if (dirtyFields.personality)
         updates.personality = currentAgent.personality;
+      if (dirtyFields.instructions)
+        updates.instructions = currentAgent.instructions;
       if (dirtyFields.initiateConversation)
         updates.initiateConversation = currentAgent.initiateConversation;
       if (Object.values(dirtyFields.settings).some((v) => v))
         updates.settings = currentAgent.settings;
+      if (dirtyFields.tools) updates.tools = currentAgent.tools;
+      if (dirtyFields.toolLogic) updates.toolLogic = currentAgent.toolLogic;
 
       if (Object.keys(updates).length > 0) {
         await updateAgent(currentAgent.id, updates);
@@ -778,6 +786,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="widget">Widget</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-6">
@@ -1215,6 +1224,290 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               onConfigChange={handleWidgetConfigChange}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-6">
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Instruction</CardTitle>
+              <CardDescription className="text-xs">
+                The instruction that is passed to the agent.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-3">
+              <Textarea
+                value={currentAgent.instructions || ""}
+                onChange={(e) => {
+                  setCurrentAgent({
+                    ...currentAgent,
+                    instructions: e.target.value,
+                  });
+                  markFieldDirty("instructions");
+                }}
+                className="min-h-[200px] font-mono text-sm"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow">
+            <CardHeader className="p-4 pb-2 bg-muted/20">
+              <CardTitle className="text-base">Tools</CardTitle>
+              <CardDescription className="text-xs">
+                Define the functions (tools) available to the agent. Each tool
+                should have a unique name, a description, and a JSON schema for
+                parameters.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-3">
+              <div className="space-y-4">
+                {currentAgent.tools?.map((tool, index) => {
+                  // Validation helpers
+                  const nameError = !tool.name
+                    ? "Name is required"
+                    : currentAgent.tools?.some(
+                        (t, i) => t.name === tool.name && i !== index
+                      )
+                    ? "Name must be unique"
+                    : null;
+                  let paramsError = null;
+                  try {
+                    if (
+                      tool.parameters &&
+                      typeof tool.parameters !== "object"
+                    ) {
+                      throw new Error();
+                    }
+                    // Try to stringify to check validity
+                    JSON.stringify(tool.parameters || {});
+                  } catch {
+                    paramsError = "Parameters must be valid JSON";
+                  }
+                  // Tool logic association
+                  const logicValue = currentAgent.toolLogic?.[tool.name] || "";
+                  return (
+                    <div
+                      key={tool.name + index}
+                      className="border border-border/40 rounded-md p-4 bg-muted/10 hover:bg-muted/20 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex flex-col gap-2 flex-1">
+                          <Label className="text-xs mb-1">Name</Label>
+                          <Input
+                            className={`text-sm ${
+                              nameError
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }`}
+                            value={tool.name}
+                            onChange={(e) => {
+                              const newName = e.target.value;
+                              // Update tool name and toolLogic key if needed
+                              const updatedTools = [
+                                ...(currentAgent.tools || []),
+                              ];
+                              const oldName = tool.name;
+                              updatedTools[index] = { ...tool, name: newName };
+                              const updatedToolLogic = {
+                                ...currentAgent.toolLogic,
+                              };
+                              if (
+                                oldName &&
+                                oldName !== newName &&
+                                updatedToolLogic[oldName]
+                              ) {
+                                updatedToolLogic[newName] =
+                                  updatedToolLogic[oldName];
+                                delete updatedToolLogic[oldName];
+                              }
+                              setCurrentAgent({
+                                ...currentAgent,
+                                tools: updatedTools,
+                                toolLogic: updatedToolLogic,
+                              });
+                              markFieldDirty("tools");
+                              markFieldDirty("toolLogic");
+                            }}
+                          />
+                          {nameError && (
+                            <span className="text-xs text-red-500">
+                              {nameError}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 mt-6"
+                          onClick={() => {
+                            // Remove tool and its logic
+                            const updatedTools = [
+                              ...(currentAgent.tools || []),
+                            ];
+                            const removedTool = updatedTools.splice(
+                              index,
+                              1
+                            )[0];
+                            const updatedToolLogic = {
+                              ...currentAgent.toolLogic,
+                            };
+                            if (
+                              removedTool &&
+                              updatedToolLogic[removedTool.name]
+                            ) {
+                              delete updatedToolLogic[removedTool.name];
+                            }
+                            setCurrentAgent({
+                              ...currentAgent,
+                              tools: updatedTools,
+                              toolLogic: updatedToolLogic,
+                            });
+                            markFieldDirty("tools");
+                            markFieldDirty("toolLogic");
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="mt-2">
+                        <Label className="text-xs mb-1">Description</Label>
+                        <Textarea
+                          className="text-xs"
+                          value={tool.description}
+                          onChange={(e) => {
+                            const updatedTools = [
+                              ...(currentAgent.tools || []),
+                            ];
+                            updatedTools[index] = {
+                              ...tool,
+                              description: e.target.value,
+                            };
+                            setCurrentAgent({
+                              ...currentAgent,
+                              tools: updatedTools,
+                            });
+                            markFieldDirty("tools");
+                          }}
+                        />
+                      </div>
+                      <div className="mt-2">
+                        <Label className="text-xs mb-1">
+                          Parameters (JSON Schema)
+                        </Label>
+                        <Textarea
+                          className={`font-mono text-xs h-32 ${
+                            paramsError
+                              ? "border-red-500 focus-visible:ring-red-500"
+                              : ""
+                          }`}
+                          value={
+                            typeof tool.parameters === "string"
+                              ? tool.parameters
+                              : JSON.stringify(tool.parameters || {}, null, 2)
+                          }
+                          onChange={(e) => {
+                            let parsedParams = tool.parameters;
+                            try {
+                              const candidate = JSON.parse(e.target.value);
+                              // Ensure required fields for ToolParameters
+                              if (
+                                typeof candidate === "object" &&
+                                candidate !== null &&
+                                typeof candidate.type === "string" &&
+                                typeof candidate.properties === "object"
+                              ) {
+                                parsedParams = candidate;
+                                paramsError = null;
+                              } else {
+                                paramsError =
+                                  "Parameters must include 'type' and 'properties' fields";
+                              }
+                            } catch {
+                              paramsError = "Parameters must be valid JSON";
+                            }
+                            const updatedTools = [
+                              ...(currentAgent.tools || []),
+                            ];
+                            updatedTools[index] = {
+                              ...tool,
+                              parameters: parsedParams,
+                            };
+                            setCurrentAgent({
+                              ...currentAgent,
+                              tools: updatedTools,
+                            });
+                            markFieldDirty("tools");
+                          }}
+                        />
+                        {paramsError && (
+                          <span className="text-xs text-red-500">
+                            {paramsError}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <Label className="text-xs mb-1">Type</Label>
+                        <Input
+                          className="text-xs"
+                          value="function"
+                          readOnly
+                          disabled
+                        />
+                      </div>
+                      <details className="mt-4">
+                        <summary className="cursor-pointer text-xs font-semibold text-primary">
+                          Edit Tool Logic
+                        </summary>
+                        <div className="mt-2">
+                          <Label className="text-xs mb-1">
+                            Logic (TypeScript)
+                          </Label>
+                          <Textarea
+                            className="font-mono text-xs h-48"
+                            value={logicValue}
+                            onChange={(e) => {
+                              const updatedToolLogic = {
+                                ...currentAgent.toolLogic,
+                                [tool.name]: e.target.value,
+                              };
+                              setCurrentAgent({
+                                ...currentAgent,
+                                toolLogic: updatedToolLogic,
+                              });
+                              markFieldDirty("toolLogic");
+                            }}
+                          />
+                        </div>
+                      </details>
+                    </div>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  className="mt-2 w-full flex items-center gap-2"
+                  onClick={() => {
+                    const newTool = {
+                      type: "function" as const,
+                      name: "",
+                      description: "",
+                      parameters: {
+                        type: "object",
+                        properties: {},
+                        required: [],
+                      },
+                    };
+                    setCurrentAgent({
+                      ...currentAgent,
+                      tools: [...(currentAgent.tools || []), newTool],
+                    });
+                    markFieldDirty("tools");
+                  }}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add New Tool
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
