@@ -409,6 +409,8 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         updates.description = currentAgent.description;
       if (dirtyFields.personality)
         updates.personality = currentAgent.personality;
+      if (dirtyFields.instructions)
+        updates.instructions = currentAgent.instructions;
       if (dirtyFields.initiateConversation)
         updates.initiateConversation = currentAgent.initiateConversation;
       if (Object.values(dirtyFields.settings).some((v) => v))
