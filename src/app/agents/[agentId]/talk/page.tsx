@@ -51,7 +51,11 @@ export default function TalkAgentPage(): JSX.Element {
   }, [agentId]);
 
   function handleUpdates(updateArr: { id: string; value: any }[]) {
-    setUpdates((prev) => [...updateArr, ...prev]);
+    // To update the previous value if the id already exists, filter out any existing update with the same id:
+    setUpdates((prev) => [
+      ...updateArr,
+      ...prev.filter((u) => !updateArr.some((newU) => newU.id === u.id)),
+    ]);
   }
 
   function handleCopy(update: { id: string; value: any }, idx: number) {
@@ -92,7 +96,7 @@ export default function TalkAgentPage(): JSX.Element {
         <div className="w-full flex justify-center">
           <div className="w-3/4 mx-auto space-y-4 bg-muted/30 rounded-xl p-6 border border-border/30 shadow-sm">
             <h2 className="text-lg font-semibold text-center mb-2">
-              Recent Updates
+              Voice Updates
             </h2>
             {updates.map((update, idx) => (
               <Card
