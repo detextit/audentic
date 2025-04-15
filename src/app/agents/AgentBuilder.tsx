@@ -1307,7 +1307,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                               ];
                               const oldName = tool.name;
                               updatedTools[index] = { ...tool, name: newName };
-                              let updatedToolLogic = {
+                              const updatedToolLogic = {
                                 ...currentAgent.toolLogic,
                               };
                               if (
@@ -1347,7 +1347,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                               index,
                               1
                             )[0];
-                            let updatedToolLogic = {
+                            const updatedToolLogic = {
                               ...currentAgent.toolLogic,
                             };
                             if (
