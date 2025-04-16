@@ -12,10 +12,10 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini-2025-04-14",
       messages,
       temperature: 0,
-      max_tokens: 1024,
+      max_tokens: 2048,
     });
 
     return NextResponse.json(completion);
