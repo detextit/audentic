@@ -9,6 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  getToolSchemaFromLLM,
+  getToolLogicFromLLM,
+} from "@/agentBuilder/metaPrompts";
+import { WandSparkles } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface ToolDialogProps {
   open: boolean;
@@ -20,7 +31,6 @@ export interface ToolDialogProps {
     parameters: object;
     logic?: string;
   }) => void;
-  existingToolNames: string[];
 }
 
 const defaultParams = { type: "object", properties: {}, required: [] };
@@ -29,61 +39,20 @@ const ToolDialog: React.FC<ToolDialogProps> = ({
   open,
   onOpenChange,
   onAddTool,
-  existingToolNames,
 }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [parameters, setParameters] = useState(
     JSON.stringify(defaultParams, null, 2)
   );
-  const [nameError, setNameError] = useState<string | null>(null);
-  const [paramsError, setParamsError] = useState<string | null>(null);
+  const [logic, setLogic] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const paramsInputRef = useRef<HTMLTextAreaElement>(null);
-  const [logic, setLogic] = useState("");
-  const [descriptionError, setDescriptionError] = useState<string | null>(null);
-
-  const validate = () => {
-    let valid = true;
-    if (!name) {
-      setNameError("Name is required");
-      valid = false;
-    } else if (existingToolNames.includes(name)) {
-      setNameError("Name must be unique");
-      valid = false;
-    } else {
-      setNameError(null);
-    }
-    if (!description) {
-      setDescriptionError("Description is required");
-      valid = false;
-    } else {
-      setDescriptionError(null);
-    }
-    try {
-      const parsed = JSON.parse(parameters);
-      if (
-        typeof parsed !== "object" ||
-        parsed === null ||
-        typeof parsed.type !== "string" ||
-        typeof parsed.properties !== "object"
-      ) {
-        setParamsError(
-          "Parameters must include 'type' and 'properties' fields"
-        );
-        valid = false;
-      } else {
-        setParamsError(null);
-      }
-    } catch {
-      setParamsError("Parameters must be valid JSON");
-      valid = false;
-    }
-    return valid;
-  };
+  const [isGeneratingSchema, setIsGeneratingSchema] = useState(false);
+  const [isGeneratingLogic, setIsGeneratingLogic] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const handleAdd = () => {
-    if (!validate()) return;
     setIsSubmitting(true);
     onAddTool({
       type: "function",
@@ -100,9 +69,35 @@ const ToolDialog: React.FC<ToolDialogProps> = ({
     onOpenChange(false);
   };
 
-  // For future: LLM-based tool generation
-  const handleGenerateWithAI = () => {
-    // TODO: Integrate LLM tool schema/logic generation
+  const handleGenerateSchema = async () => {
+    if (!description) {
+      return;
+    }
+    setIsGeneratingSchema(true);
+    setGenerateError(null);
+    try {
+      const toolObj = await getToolSchemaFromLLM(description);
+      setName(toolObj.name);
+      setDescription(toolObj.description);
+      setParameters(JSON.stringify(toolObj.parameters, null, 2));
+    } catch (err: any) {
+      setGenerateError(err.message || "Unknown error generating schema");
+    } finally {
+      setIsGeneratingSchema(false);
+    }
+  };
+
+  const handleGenerateLogic = async () => {
+    setIsGeneratingLogic(true);
+    setGenerateError(null);
+    try {
+      let logicStr = await getToolLogicFromLLM(description, parameters);
+      setLogic(logicStr);
+    } catch (err: any) {
+      setGenerateError(err.message || "Unknown error generating logic");
+    } finally {
+      setIsGeneratingLogic(false);
+    }
   };
 
   return (
@@ -115,54 +110,77 @@ const ToolDialog: React.FC<ToolDialogProps> = ({
           <div>
             <Label className="text-xs mb-1">Name</Label>
             <Input
-              className={`text-sm ${
-                nameError ? "border-red-500 focus-visible:ring-red-500" : ""
-              }`}
+              className="text-sm"
               value={name}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setName(e.target.value)
               }
               autoFocus
             />
-            {nameError && (
-              <span className="text-xs text-red-500">{nameError}</span>
-            )}
           </div>
           <div>
-            <Label className="text-xs mb-1">Description</Label>
+            <div className="flex items-center">
+              <Label className="text-xs mb-1">Description</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={handleGenerateSchema}
+                      disabled={isGeneratingSchema || isGeneratingLogic}
+                    >
+                      <WandSparkles className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate schema from description</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
-              className={`text-xs ${
-                descriptionError
-                  ? "border-red-500 focus-visible:ring-red-500"
-                  : ""
-              }`}
+              className="text-xs"
               value={description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setDescription(e.target.value)
               }
             />
-            {descriptionError && (
-              <span className="text-xs text-red-500">{descriptionError}</span>
-            )}
           </div>
           <div>
             <Label className="text-xs mb-1">Parameters (JSON Schema)</Label>
             <Textarea
               ref={paramsInputRef}
-              className={`font-mono text-xs h-32 ${
-                paramsError ? "border-red-500 focus-visible:ring-red-500" : ""
-              }`}
+              className="font-mono text-xs h-32"
               value={parameters}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setParameters(e.target.value)
               }
             />
-            {paramsError && (
-              <span className="text-xs text-red-500">{paramsError}</span>
-            )}
           </div>
           <div>
-            <Label className="text-xs mb-1">Tool Logic (TypeScript)</Label>
+            <div className="flex items-center">
+              <Label className="text-xs mb-1">Tool Logic (TypeScript)</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={handleGenerateLogic}
+                      disabled={isGeneratingSchema || isGeneratingLogic}
+                    >
+                      <WandSparkles className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate logic</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
               className="font-mono text-xs h-32"
               value={logic}
@@ -172,18 +190,13 @@ const ToolDialog: React.FC<ToolDialogProps> = ({
               placeholder="Enter TypeScript logic for this tool"
             />
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={handleGenerateWithAI}
-              disabled
-            >
-              Generate with AI (coming soon)
-            </Button>
+          <div className="flex gap-2 flex-wrap">
+            {generateError && (
+              <span className="text-xs text-red-500">{generateError}</span>
+            )}
             <Button
               onClick={handleAdd}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGeneratingSchema || isGeneratingLogic}
               className="ml-auto"
             >
               Add Tool

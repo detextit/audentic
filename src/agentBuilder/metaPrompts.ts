@@ -1,3 +1,5 @@
+import { Tool } from "@/types/agent";
+
 export const formAgentMetaPrompt = `
 # Form Filling Instruction
 - Follow the Conversation States, if available, closely to ensure a structured and consistent interaction.
@@ -64,7 +66,7 @@ The final prompt you output should adhere to the following structure below. Do n
 
 # Examples [optional]
 
-[Optional: 1 or 2 well-defined examples with placeholders for complex use cases. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
+[Optional: 1 well-defined examples with placeholders for complex use cases. Start with assistant greeting. Clearly mark where examples start and end, and what the input and output are. User placeholders as necessary.]
 [If the examples are shorter than what a realistic example is expected to be, make a reference with () explaining how real examples should be longer / shorter / different. AND USE PLACEHOLDERS! ]
 
 # Notes [optional]
@@ -211,3 +213,284 @@ The Great Depression was a severe economic downturn that had a big impact on Ame
 The bad example paraphrases the information and loses specific details, dates, and names, which makes it less useful for a knowledge base.
 Remember to focus on extracting factual information and avoid adding your own interpretations or summaries. The goal is to provide a condensed version of the original document that retains the most important and relevant information in its original wording.
 `;
+
+const toolMetaSchema = {
+  name: "function-metaschema",
+  schema: {
+    type: "object",
+    properties: {
+      name: {
+        type: "string",
+        description: "The name of the function",
+      },
+      description: {
+        type: "string",
+        description: "A description of what the function does",
+      },
+      parameters: {
+        $ref: "#/$defs/schema_definition",
+        description: "A JSON schema that defines the function's parameters",
+      },
+      type: {
+        const: "function",
+      },
+    },
+    required: ["name", "description", "parameters"],
+    additionalProperties: false,
+    $defs: {
+      schema_definition: {
+        type: "object",
+        properties: {
+          type: {
+            type: "string",
+            enum: ["array", "string", "number", "boolean"],
+          },
+          properties: {
+            type: "object",
+            additionalProperties: {
+              $ref: "#/$defs/schema_definition",
+            },
+          },
+          items: {
+            anyOf: [
+              {
+                $ref: "#/$defs/schema_definition",
+              },
+              {
+                type: "array",
+                items: {
+                  $ref: "#/$defs/schema_definition",
+                },
+              },
+            ],
+          },
+          required: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+          additionalProperties: {
+            type: "boolean",
+          },
+        },
+        required: ["type"],
+        additionalProperties: false,
+        if: {
+          properties: {
+            type: {
+              const: "object",
+            },
+          },
+        },
+        then: {
+          required: ["properties"],
+        },
+      },
+    },
+  },
+};
+
+const toolSchemaMetaPrompt = `
+# Instructions
+Return a valid schema for the described function. The function definition will be used verbatim as one of the tools for OpenAI GPT4o Realtime model.
+
+Pay attention to making sure that the elements are defined at the correct level of nesting. 
+Make sure that every property, no matter how short, has a type and clear description that informs the model what it does, what input arguments it expects, and when to call the tool.
+
+# Examples
+*Input*: Tool call for ending conversation with rationale for hangup and summary of the conversation.
+*Output*:
+{
+  "type":"function",
+  "name":"end_conversation",
+  "description":"Ends the current conversation with a summary of the conversation. 
+      - Use this tool when the user signals hangup/end conversation or when the agent task is complete.
+      - Returns: { rationale_for_hangup: string, conversation_summary: string } containing the summary of the conversation",
+  "parameters": {
+    "type":"object",
+    "properties": {
+      "rationale_for_hangup": {
+        "type":"string",
+        "description":"Reason for ending the conversation",
+        "enum":["user_requested","task_complete"]
+        },
+      "conversation_summary": {
+          "type":"string",
+          "description":"Summary of the conversation. Extract key points pertaining to the agent task."
+        }
+      },
+    "required":["rationale_for_hangup","conversation_summary"]
+  }
+}
+
+*Input*: Function to create order for a pharmacy with list of compund orders with quantity.
+*Output*:
+{
+  "name":"create_order",
+  "type":"function",
+  "parameters":{
+    "type":"object",
+    "required":["name","pharmacy_id","order_items"],
+    "properties":{
+      "name":{
+        "type":"string",
+        "description":"The name of the pharmacy placing the order."
+      },
+      "order_items":{
+        "type":"array",
+          "items":{
+            "type":"object",
+            "required":["compound","quantity"],
+            "properties":{
+              "compound":{
+                "type":"string",
+                "description":"The name of the compound being ordered."
+              },
+              "quantity":{
+                "type":"string",
+                "description":"The quantity of the compound being ordered."
+              }
+            }
+          },
+        "description":"A list of compounds being ordered along with their quantities."
+      },
+      "pharmacy_id":{
+        "type":"string",
+        "description":"The unique identifier for the pharmacy placing the order."
+      }
+    }
+  },
+  "description":"Use this function to create an order based on the conversation with the user. Include the pharmacy name, pharmacy ID, and a structured list of compounds with their quantities."
+}
+`;
+
+export const getToolSchemaFromLLM = async (
+  user_description: string
+): Promise<Tool> => {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const response = await fetch(`${baseUrl}/api/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: toolSchemaMetaPrompt },
+        { role: "user", content: user_description },
+      ],
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to generate tool schema");
+  }
+  const data = await response.json();
+  let content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("No content returned from LLM");
+  let jsonStart = content.indexOf("{");
+  let jsonEnd = content.lastIndexOf("}");
+  if (jsonStart === -1 || jsonEnd === -1)
+    throw new Error("No JSON found in LLM response");
+  let toolObj;
+  try {
+    toolObj = JSON.parse(content.slice(jsonStart, jsonEnd + 1)) as Tool;
+  } catch (e) {
+    throw new Error("Failed to parse JSON from LLM response");
+  }
+  return toolObj;
+};
+
+const toolLogicTypeScriptMetaPrompt = `
+# Instruction
+You are a specialist in TypeScript programming language. Given a user description and function schema, you are to generate the implementation for a function in TypeScript.
+The function generated will be used verbatim as **new Function('return ' + [YOUR OUTPUT])()**. Ensure the function is suitable for direct execution and must:
+
+- Be written in valid, modern TypeScript (or JavaScript compatible with TypeScript runtime).
+- Be self-contained and modular, using only standard JS/TS features (no Node.js-only APIs).
+- Include robust runtime validation and error handling for all input parameters.
+- Return clear, structured results (e.g., success/failure, messages, and any relevant data).
+- Follow the DRY principle and keep the code readable and maintainable.
+- Avoid any use of Python, pseudocode, or non-TypeScript syntax.
+- The output must be ready to run as a TypeScript/JavaScript function body (not a class, not a script, just the function implementation as a string).
+- Output updates from the function in formState Record<string, any> within the return. Use the example as reference for this situation.
+
+## Example 
+*Input*: 
+Function to create a post to be shared in my social network based on my conversation. 
+Function Schema: 
+{
+  "name": "add_post",
+  "type": "function",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "post_content"
+    ],
+    "properties": {
+      "post_content": {
+        "type": "string",
+        "description": "The post that will be shared on social media. The content here will be shared verbatim with almost no edits."
+      }
+    }
+  },
+  "description": "Use this function to draft the content for the social media post based on the discussion with the user.
+      - Use short sentences that are appropriate for media platforms.
+      - Structure your post with an initial hook, 3 to 4 specific takeaways or key points, and a final call to action (question or call for comment/discussion)."
+}
+
+*Output*:
+async function add_post(params) {
+  try {
+    const postContent = params.post_content;
+    if (typeof postContent !== 'string' || postContent.trim() === '') {
+      return { 
+        success: false, 
+        message: \"'post_content' parameter is required and must be a non-empty string.\" 
+      };
+    }
+    return {
+      success: true,
+      formState: { post: postContent },
+      message: \"Post content drafted and updated in state.\"
+    };
+  } catch (error) {
+    console.error(\"Error in add_post tool logic:\", error);
+    return {
+      success: false,
+      message: \"Internal server error processing add_post.\",
+    };
+  }
+}
+
+## Output Requirements
+- Output only the TypeScript function implementation as a string, ready to be injected and executed at runtime.
+- Do not include any extra commentary, markdown, or non-code content.
+- Ensure all logic is safe, robust, and compatible with the agent's runtime environment.
+`;
+
+export const getToolLogicFromLLM = async (
+  user_description: string,
+  schema: string
+): Promise<string> => {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const response = await fetch(`${baseUrl}/api/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: toolLogicTypeScriptMetaPrompt },
+        {
+          role: "user",
+          content: user_description + `\nFunction Schema: \n${schema}`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to generate Tool Logic");
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+};

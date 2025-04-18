@@ -1490,6 +1490,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     name: string;
                     description: string;
                     parameters: object;
+                    logic?: string;
                   }) => {
                     const newTool: Tool = {
                       type: "function",
@@ -1502,14 +1503,20 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                         ? {
                             ...prev,
                             tools: [...(prev.tools || []), newTool],
+                            toolLogic: tool.logic
+                              ? {
+                                  ...(prev.toolLogic || {}),
+                                  [tool.name]: tool.logic,
+                                }
+                              : prev.toolLogic,
                           }
                         : prev
                     );
                     markFieldDirty("tools");
+                    if (tool.logic) {
+                      markFieldDirty("toolLogic");
+                    }
                   }}
-                  existingToolNames={
-                    currentAgent.tools?.map((t) => t.name) || []
-                  }
                 />
               </div>
             </CardContent>
