@@ -91,7 +91,7 @@ const ToolDialog: React.FC<ToolDialogProps> = ({
     setIsGeneratingLogic(true);
     setGenerateError(null);
     try {
-      let logicStr = await getToolLogicFromLLM(description, parameters);
+      const logicStr = await getToolLogicFromLLM(description, parameters);
       setLogic(logicStr);
     } catch (err: any) {
       setGenerateError(err.message || "Unknown error generating logic");

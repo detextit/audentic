@@ -214,83 +214,6 @@ The bad example paraphrases the information and loses specific details, dates, a
 Remember to focus on extracting factual information and avoid adding your own interpretations or summaries. The goal is to provide a condensed version of the original document that retains the most important and relevant information in its original wording.
 `;
 
-const toolMetaSchema = {
-  name: "function-metaschema",
-  schema: {
-    type: "object",
-    properties: {
-      name: {
-        type: "string",
-        description: "The name of the function",
-      },
-      description: {
-        type: "string",
-        description: "A description of what the function does",
-      },
-      parameters: {
-        $ref: "#/$defs/schema_definition",
-        description: "A JSON schema that defines the function's parameters",
-      },
-      type: {
-        const: "function",
-      },
-    },
-    required: ["name", "description", "parameters"],
-    additionalProperties: false,
-    $defs: {
-      schema_definition: {
-        type: "object",
-        properties: {
-          type: {
-            type: "string",
-            enum: ["array", "string", "number", "boolean"],
-          },
-          properties: {
-            type: "object",
-            additionalProperties: {
-              $ref: "#/$defs/schema_definition",
-            },
-          },
-          items: {
-            anyOf: [
-              {
-                $ref: "#/$defs/schema_definition",
-              },
-              {
-                type: "array",
-                items: {
-                  $ref: "#/$defs/schema_definition",
-                },
-              },
-            ],
-          },
-          required: {
-            type: "array",
-            items: {
-              type: "string",
-            },
-          },
-          additionalProperties: {
-            type: "boolean",
-          },
-        },
-        required: ["type"],
-        additionalProperties: false,
-        if: {
-          properties: {
-            type: {
-              const: "object",
-            },
-          },
-        },
-        then: {
-          required: ["properties"],
-        },
-      },
-    },
-  },
-};
-
 const toolSchemaMetaPrompt = `
 # Instructions
 Return a valid schema for the described function. The function definition will be used verbatim as one of the tools for OpenAI GPT4o Realtime model.
@@ -383,17 +306,17 @@ export const getToolSchemaFromLLM = async (
     throw new Error("Failed to generate tool schema");
   }
   const data = await response.json();
-  let content = data.choices?.[0]?.message?.content;
+  const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("No content returned from LLM");
-  let jsonStart = content.indexOf("{");
-  let jsonEnd = content.lastIndexOf("}");
+  const jsonStart = content.indexOf("{");
+  const jsonEnd = content.lastIndexOf("}");
   if (jsonStart === -1 || jsonEnd === -1)
     throw new Error("No JSON found in LLM response");
   let toolObj;
   try {
     toolObj = JSON.parse(content.slice(jsonStart, jsonEnd + 1)) as Tool;
-  } catch (e) {
-    throw new Error("Failed to parse JSON from LLM response");
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to parse JSON from LLM response");
   }
   return toolObj;
 };

@@ -62,7 +62,7 @@ import {
 import { Widget } from "./WidgetConfiguration";
 import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
-import ToolDialog, { ToolDialogProps } from "./ToolDialog";
+import ToolDialog from "./ToolDialog";
 import type { Tool } from "@/types/agent";
 
 // Create a logger instance for this component
