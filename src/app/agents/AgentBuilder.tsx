@@ -62,6 +62,8 @@ import {
 import { Widget } from "./WidgetConfiguration";
 import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
+import ToolDialog from "./ToolDialog";
+import type { Tool } from "@/types/agent";
 
 // Create a logger instance for this component
 const logger = createLogger("Agent Builder");
@@ -140,6 +142,9 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [widgetConfig, setWidgetConfig] =
     useState<WidgetBuilderConfiguration | null>(null);
   const [isWidgetConfigLoading, setIsWidgetConfigLoading] = useState(true);
+
+  // Add state for addToolDialogOpen
+  const [addToolDialogOpen, setAddToolDialogOpen] = useState(false);
 
   // Helper to check if any fields are dirty
   const hasChanges = useMemo(
@@ -1277,7 +1282,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     ) {
                       throw new Error();
                     }
-                    // Try to stringify to check validity
                     JSON.stringify(tool.parameters || {});
                   } catch {
                     paramsError = "Parameters must be valid JSON";
@@ -1408,7 +1412,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                             let parsedParams = tool.parameters;
                             try {
                               const candidate = JSON.parse(e.target.value);
-                              // Ensure required fields for ToolParameters
                               if (
                                 typeof candidate === "object" &&
                                 candidate !== null &&
@@ -1444,15 +1447,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                           </span>
                         )}
                       </div>
-                      <div className="mt-2">
-                        <Label className="text-xs mb-1">Type</Label>
-                        <Input
-                          className="text-xs"
-                          value="function"
-                          readOnly
-                          disabled
-                        />
-                      </div>
                       <details className="mt-4">
                         <summary className="cursor-pointer text-xs font-semibold text-primary">
                           Edit Tool Logic
@@ -1484,27 +1478,46 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                 <Button
                   variant="outline"
                   className="mt-2 w-full flex items-center gap-2"
-                  onClick={() => {
-                    const newTool = {
-                      type: "function" as const,
-                      name: "",
-                      description: "",
-                      parameters: {
-                        type: "object",
-                        properties: {},
-                        required: [],
-                      },
-                    };
-                    setCurrentAgent({
-                      ...currentAgent,
-                      tools: [...(currentAgent.tools || []), newTool],
-                    });
-                    markFieldDirty("tools");
-                  }}
+                  onClick={() => setAddToolDialogOpen(true)}
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add New Tool
                 </Button>
+                <ToolDialog
+                  open={addToolDialogOpen}
+                  onOpenChange={setAddToolDialogOpen}
+                  onAddTool={(tool: {
+                    name: string;
+                    description: string;
+                    parameters: object;
+                    logic?: string;
+                  }) => {
+                    const newTool: Tool = {
+                      type: "function",
+                      name: tool.name,
+                      description: tool.description,
+                      parameters: tool.parameters as any, // ToolParameters type, but safe from dialog
+                    };
+                    setCurrentAgent((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            tools: [...(prev.tools || []), newTool],
+                            toolLogic: tool.logic
+                              ? {
+                                  ...(prev.toolLogic || {}),
+                                  [tool.name]: tool.logic,
+                                }
+                              : prev.toolLogic,
+                          }
+                        : prev
+                    );
+                    markFieldDirty("tools");
+                    if (tool.logic) {
+                      markFieldDirty("toolLogic");
+                    }
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
