@@ -52,7 +52,10 @@ export default function TalkAgentPage(): JSX.Element {
 
   function handleUpdates(updateArr: { id: string; value: any }[]) {
     // To update the previous value if the id already exists, filter out any existing update with the same id:
-    setUpdates((prev) => [...updateArr, ...prev]);
+    setUpdates((prev) => [
+      ...updateArr,
+      ...prev.filter((u) => !updateArr.some((newU) => newU.id === u.id)),
+    ]);
   }
 
   function handleCopy(update: { id: string; value: any }, idx: number) {
