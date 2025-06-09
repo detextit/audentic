@@ -279,7 +279,7 @@ async function getAgentConfig(
     let agentConfig: AgentConfig = {
       name: agent.name,
       model: agent.settings?.isAdvancedModel
-        ? "gpt-4o-realtime-preview"
+        ? "gpt-4o-realtime-preview-2025-06-03"
         : "gpt-4o-mini-realtime-preview",
       initiateConversation: agent.initiateConversation,
       instructions: agent.instructions,
