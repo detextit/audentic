@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       "\n#Agent Instruction\n" +
       agentConfig.instructions;
 
-    const tools = agentConfig.tools || [];
+    const tools = [...(agentConfig.tools || [])];
     const mcpTools: Record<string, string[]> = {};
     const mcpBaseUrl = process.env.MCP_SERVER_URL; // TODO: make this unique per agent with secure token
 
@@ -170,39 +170,28 @@ export async function POST(request: Request) {
       }
     }
 
-    const sessionSettings = {
-      model: agentConfig.model,
-      modalities: ["text", "audio"],
+    const agentConfigForClient: AgentConfig = {
+      ...agentConfig,
       instructions,
-      voice: "alloy",
-      input_audio_format: "pcm16",
-      output_audio_format: "pcm16",
-      input_audio_transcription: {
-        model: "whisper-1",
-      },
-      turn_detection: {
-        type: "semantic_vad",
-        eagerness: "auto",
-        interrupt_response: true,
-        create_response: true,
-      },
-      input_audio_noise_reduction: { type: "far_field" },
-      temperature: 0.6,
       tools,
-      tool_choice: "auto",
     };
 
-    logger.info("Session settings:", JSON.stringify(sessionSettings, null, 2));
+    const sessionConfig = {
+      session: {
+        type: "realtime",
+        model: agentConfigForClient.model ?? "gpt-realtime-mini",
+      },
+    };
 
     const response = await fetch(
-      "https://api.openai.com/v1/realtime/sessions",
+      "https://api.openai.com/v1/realtime/client_secrets",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKeyToUse}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(sessionSettings),
+        body: JSON.stringify(sessionConfig),
       }
     );
 
@@ -229,17 +218,21 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
+    const ephemeralKey = data?.value;
+    if (!ephemeralKey) {
+      logger.error("Client secret response missing value:", data);
+      return NextResponse.json(
+        { error: "Failed to create ephemeral key" },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
     // convert tooLogic values to strings
     const toolLogic = agentConfig.toolLogic || {};
 
-    logger.info("Tool logic:", JSON.stringify(toolLogic, null, 2));
-
     const tokenResponse = {
-      client_secret: data.client_secret,
-      session_id: data.id,
-      initiate_conversation: agentConfig.initiateConversation,
-      url: "https://api.openai.com/v1/realtime",
-      eventChannel: "oai-events",
+      ephemeral_key: ephemeralKey,
+      agent_config: agentConfigForClient,
       tool_logic: toolLogic,
       mcp_tools: mcpTools,
       mcp_base_url: mcpBaseUrl,
@@ -279,8 +272,8 @@ async function getAgentConfig(
     let agentConfig: AgentConfig = {
       name: agent.name,
       model: agent.settings?.isAdvancedModel
-        ? "gpt-4o-realtime-preview"
-        : "gpt-4o-mini-realtime-preview",
+        ? "gpt-realtime"
+        : "gpt-realtime-mini",
       initiateConversation: agent.initiateConversation,
       instructions: agent.instructions,
       tools: agent.tools,

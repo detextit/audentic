@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     `;
 
     let model = modelResult.rows[0]?.model;
-    let isPro = model === "gpt-4o-realtime-preview";
+    let isPro = model === "gpt-realtime";
 
     // If model is not found in events, try to get it from the agent table
     if (!model && agentId) {
@@ -52,9 +52,7 @@ export async function POST(request: Request) {
         const settings = agentResult.rows[0].settings;
         const isAdvancedModel = settings.isAdvancedModel === true;
 
-        model = isAdvancedModel
-          ? "gpt-4o-realtime-preview"
-          : "gpt-4o-mini-realtime-preview";
+        model = isAdvancedModel ? "gpt-realtime" : "gpt-realtime-mini";
 
         isPro = isAdvancedModel;
 
@@ -63,7 +61,7 @@ export async function POST(request: Request) {
         );
       } else {
         // Default to non-pro model if not found
-        model = "gpt-4o-mini-realtime-preview";
+        model = "gpt-realtime-mini";
         isPro = false;
         logger.warn(
           `Model not found for session ${sessionId}, defaulting to ${model}`
