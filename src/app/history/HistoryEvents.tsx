@@ -7,9 +7,24 @@ interface HistoryEventsProps {
 }
 
 export function HistoryEvents({ events }: HistoryEventsProps) {
-  const [expandedEvents, setExpandedEvents] = React.useState<Set<number>>(
+  const [expandedEvents, setExpandedEvents] = React.useState<Set<string>>(
     new Set()
   );
+
+  const hasEventError = (eventData: LoggedEvent["eventData"]) => {
+    const response =
+      eventData && typeof eventData === "object"
+        ? (eventData as Record<string, unknown>).response
+        : null;
+    if (!response || typeof response !== "object") {
+      return false;
+    }
+    const statusDetails = (response as Record<string, unknown>).status_details;
+    if (!statusDetails || typeof statusDetails !== "object") {
+      return false;
+    }
+    return (statusDetails as Record<string, unknown>).error != null;
+  };
 
   const getDirectionArrow = (direction: string) => {
     if (direction === "client") return { symbol: "▲", color: "#7f5af0" };
@@ -17,7 +32,7 @@ export function HistoryEvents({ events }: HistoryEventsProps) {
     return { symbol: "•", color: "#555" };
   };
 
-  const toggleEventExpansion = (eventId: number) => {
+  const toggleEventExpansion = (eventId: string) => {
     setExpandedEvents((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(eventId)) {
@@ -40,7 +55,7 @@ export function HistoryEvents({ events }: HistoryEventsProps) {
             const arrowInfo = getDirectionArrow(log.direction);
             const isError =
               log.eventName.toLowerCase().includes("error") ||
-              log.eventData?.response?.status_details?.error != null;
+              hasEventError(log.eventData);
 
             return (
               <div
