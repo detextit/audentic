@@ -6,6 +6,18 @@ const logger = createLogger("Chat Completions API");
 
 const openai = new OpenAI();
 const DEFAULT_MODEL = "gpt-5-mini-2025-08-07";
+const isReasoningModel = (modelId?: string) => {
+  if (!modelId) {
+    return false;
+  }
+  const normalized = modelId.toLowerCase();
+  return (
+    normalized.startsWith("gpt-5") ||
+    normalized.startsWith("o1") ||
+    normalized.startsWith("o3") ||
+    normalized.startsWith("o4")
+  );
+};
 
 const normalizeContentPart = (part: any) => {
   if (typeof part === "string") {
@@ -82,12 +94,18 @@ export async function POST(req: Request) {
           ? messages.map(normalizeMessageToInput)
           : "";
 
-    const response = await openai.responses.create({
-      model: model ?? DEFAULT_MODEL,
+    const resolvedModel = model ?? DEFAULT_MODEL;
+    const createParams: Record<string, unknown> = {
+      model: resolvedModel,
       input: responseInput,
-      temperature: temperature ?? 0,
       max_output_tokens: max_output_tokens ?? max_tokens ?? 2048,
-    });
+    };
+
+    if (typeof temperature === "number" && !isReasoningModel(resolvedModel)) {
+      createParams.temperature = temperature;
+    }
+
+    const response = await openai.responses.create(createParams);
 
     return NextResponse.json({
       output_text: response.output_text,
