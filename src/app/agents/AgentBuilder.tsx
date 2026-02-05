@@ -11,7 +11,6 @@ import { fetchFormSchema } from "@/agentBuilder/processForm";
 
 import { useAgents } from "@/hooks/useAgents";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
-import { useMcpServers } from "@/hooks/useMcpServers";
 
 import {
   Card,
@@ -40,18 +39,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, PlusCircle, HelpCircle, Copy, Check } from "lucide-react";
-import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Trash2, Copy, Check, PlusCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -79,7 +68,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
     loading: loadingArticles,
   } = useKnowledgeBase();
   const { toast } = useToast();
-  const { getMcpServers, saveMcpServer, deleteMcpServer } = useMcpServers();
 
   const [dirtyFields, setDirtyFields] = useState({
     description: false,
@@ -92,7 +80,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       formSchema: false,
       knowledgeBase: false,
       isAdvancedModel: false,
-      mcpServers: false,
     },
     webUI: false,
     widgetConfig: false,
@@ -103,11 +90,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [copied, setCopied] = useState(false);
   // Generate embed code based on current configuration
   const generateEmbedCode = () => {
-    return `<audentic-embed agent-id="${
-      currentAgent?.id
-    }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
-      widgetConfig
-    )}'></audentic-embed>
+    return `<audentic-embed agent-id="${currentAgent?.id
+      }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
+        widgetConfig
+      )}'></audentic-embed>
     <script src="https://unpkg.com/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
   };
 
@@ -124,19 +110,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [pendingKnowledgeBaseArticles, setPendingKnowledgeBaseArticles] =
     useState<KnowledgeBaseArticle[]>([]);
   const [pendingDeletions, setPendingDeletions] = useState<string[]>([]);
-  const [mcpServers, setMcpServers] = useState<
-    Array<{
-      name: string;
-      env: Record<string, string>;
-    }>
-  >([]);
-  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
-  const [pendingMcpServers, setPendingMcpServers] = useState<
-    Array<{ name: string; env: Record<string, string> }>
-  >([]);
-  const [invalidFields, setInvalidFields] = useState<Record<string, string[]>>(
-    {}
-  );
 
   // Add state for widget configuration
   const [widgetConfig, setWidgetConfig] =
@@ -153,12 +126,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         typeof value === "boolean" ? value : Object.values(value).some((v) => v)
       ),
     [dirtyFields]
-  );
-
-  // Helper to check if there are any invalid fields
-  const hasInvalidFields = useMemo(
-    () => Object.keys(invalidFields).length > 0,
-    [invalidFields]
   );
 
   // Helper to mark a field as dirty
@@ -182,12 +149,12 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       setCurrentAgent((prev) =>
         prev
           ? {
-              ...prev,
-              settings: {
-                ...prev.settings,
-                [setting]: value,
-              },
-            }
+            ...prev,
+            settings: {
+              ...prev.settings,
+              [setting]: value,
+            },
+          }
           : null
       );
       markFieldDirty("settings", setting);
@@ -207,7 +174,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         formSchema: false,
         knowledgeBase: false,
         isAdvancedModel: false,
-        mcpServers: false,
       },
       webUI: false,
       widgetConfig: false,
@@ -244,29 +210,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       fetchArticles(currentAgent.id);
     }
   }, [currentAgent?.id, fetchArticles]);
-
-  // Load MCP servers from database when agent loads
-  useEffect(() => {
-    if (!currentAgent?.id) return;
-
-    const loadMcpServers = async () => {
-      try {
-        const servers = await getMcpServers(currentAgent.id);
-        setMcpServers(servers);
-      } catch (error) {
-        logger.error("Failed to load MCP servers:", error);
-      }
-    };
-
-    loadMcpServers();
-  }, [currentAgent?.id]);
-
-  // When dialog opens, initialize pending servers with current servers
-  useEffect(() => {
-    if (integrationDialogOpen) {
-      setPendingMcpServers(mcpServers);
-    }
-  }, [integrationDialogOpen]);
 
   // Load widget configuration when agent loads
   useEffect(() => {
@@ -509,65 +452,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           },
           name: "knowledge base",
         },
-        // MCP servers update - update mcp server database  and agent
-        {
-          condition: dirtyFields.settings.mcpServers,
-          handler: async () => {
-            // Validate required environment variables
-            const newInvalidFields: Record<string, string[]> = {};
-            let hasInvalidFields = false;
-
-            for (const server of mcpServers) {
-              const definition = AVAILABLE_MCP_SERVERS[server.name];
-              if (!definition) continue;
-
-              const missingRequiredVars = definition.envVars
-                ?.filter((envVar) => envVar.required)
-                .filter((envVar) => !server.env[envVar.name]);
-
-              if (missingRequiredVars && missingRequiredVars.length > 0) {
-                newInvalidFields[server.name] = missingRequiredVars.map(
-                  (v) => v.name
-                );
-                hasInvalidFields = true;
-              }
-            }
-
-            if (hasInvalidFields) {
-              setInvalidFields(newInvalidFields);
-              // Don't throw error, just return early
-              return;
-            }
-
-            // Get list of removed servers
-            const existingServerNames = currentAgent.settings?.mcpServers || [];
-            const removedServers = existingServerNames.filter(
-              (name: string) => !mcpServers.some((s) => s.name === name)
-            );
-
-            // Delete removed servers
-            for (const serverName of removedServers) {
-              await deleteMcpServer(currentAgent.id, serverName);
-            }
-
-            // Save each MCP server to database
-            for (const server of mcpServers) {
-              await saveMcpServer(currentAgent.id, server);
-            }
-
-            // Update agent settings with just the list of server names
-            await updateAgent(currentAgent.id, {
-              settings: {
-                ...currentAgent.settings,
-                mcpServers: mcpServers.map((s) => s.name),
-              },
-            });
-
-            // Clear invalid fields on success
-            setInvalidFields({});
-          },
-          name: "integrations",
-        },
         // Add widget configuration update
         {
           condition: dirtyFields.widgetConfig,
@@ -581,20 +465,11 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         asyncUpdates.map((update) => handleAsyncUpdate(update))
       );
 
-      // Only show success toast if there are no invalid fields
-      if (Object.keys(invalidFields).length === 0) {
-        toast({
-          title: `${currentAgent.name} Updated`,
-          description: "Your agent is deployed and ready to go!",
-        });
-        resetDirtyFields();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Validation Failed",
-          description: "Please fill in all required fields before saving.",
-        });
-      }
+      toast({
+        title: `${currentAgent.name} Updated`,
+        description: "Your agent is deployed and ready to go!",
+      });
+      resetDirtyFields();
     } catch (error) {
       logger.error("Failed to update agent:", error);
       toast({
@@ -746,7 +621,7 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         <div className="flex gap-3">
           <Button
             onClick={handleUpdate}
-            disabled={isUpdating || (!hasChanges && !hasInvalidFields)}
+            disabled={isUpdating || !hasChanges}
           >
             Save
           </Button>
@@ -789,7 +664,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       <Tabs defaultValue="configuration" className="space-y-6">
         <TabsList>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="widget">Widget</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
@@ -986,232 +860,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-6">
-          <div className="grid gap-4">
-            {/* Integration cards section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mcpServers.map((server) => {
-                const definition = AVAILABLE_MCP_SERVERS[server.name];
-                if (!definition) return null;
-
-                return (
-                  <Card
-                    key={server.name}
-                    className="overflow-hidden border border-border/40 shadow-sm hover:shadow transition-shadow"
-                  >
-                    <CardHeader className="p-4 pb-2 bg-muted/20">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
-                            <span className="text-xl">{definition.icon}</span>
-                          </div>
-                          <div>
-                            <CardTitle className="text-base">
-                              {definition.displayName}
-                            </CardTitle>
-                            <CardDescription className="text-xs line-clamp-1">
-                              {definition.description}
-                            </CardDescription>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => {
-                            setMcpServers(
-                              mcpServers.filter((s) => s.name !== server.name)
-                            );
-                            markFieldDirty("settings", "mcpServers");
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-3 space-y-3">
-                      {definition.envVars?.map((envVar) => (
-                        <div key={envVar.name} className="space-y-1.5">
-                          <div className="flex items-center gap-1">
-                            <Label
-                              htmlFor={envVar.name}
-                              className="text-xs font-medium"
-                            >
-                              {envVar.name}
-                              {envVar.required && (
-                                <span className="text-red-500 ml-0.5">*</span>
-                              )}
-                            </Label>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    className="h-4 w-4 p-0 hover:bg-transparent"
-                                  >
-                                    <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs">
-                                  <p className="text-xs">
-                                    Please verify this value is correct before
-                                    saving. Credentials are stored securely in a
-                                    key vault.
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                          <Input
-                            id={envVar.name}
-                            type="password"
-                            placeholder={envVar.description}
-                            value={
-                              server.env[envVar.name] || envVar.default || ""
-                            }
-                            className={`h-8 text-sm ${
-                              invalidFields[server.name]?.includes(envVar.name)
-                                ? "border-red-500 focus-visible:ring-red-500"
-                                : ""
-                            }`}
-                            onChange={(e) => {
-                              const updatedServers = mcpServers.map((s) =>
-                                s.name === server.name
-                                  ? {
-                                      ...s,
-                                      env: {
-                                        ...s.env,
-                                        [envVar.name]: e.target.value,
-                                      },
-                                    }
-                                  : s
-                              );
-                              setMcpServers(updatedServers);
-                              markFieldDirty("settings", "mcpServers");
-
-                              // Clear invalid state for this field when user types
-                              if (
-                                invalidFields[server.name]?.includes(
-                                  envVar.name
-                                )
-                              ) {
-                                setInvalidFields((prev) => ({
-                                  ...prev,
-                                  [server.name]: prev[server.name].filter(
-                                    (v) => v !== envVar.name
-                                  ),
-                                }));
-                              }
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Add Integration button and dialog */}
-            <Dialog
-              open={integrationDialogOpen}
-              onOpenChange={setIntegrationDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="mt-2 flex items-center justify-center gap-2 h-10 w-full max-w-xs mx-auto border-dashed border-border/60 hover:border-primary/30 hover:bg-primary/5 transition-colors"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Add Integration</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Integrations</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                  {Object.entries(AVAILABLE_MCP_SERVERS).map(
-                    ([name, server]) => {
-                      const isSelected = pendingMcpServers.some(
-                        (s) => s.name === name
-                      );
-                      const isDisabled =
-                        mcpServers.some((s) => s.name === name) && !isSelected;
-
-                      return (
-                        <div
-                          key={name}
-                          className={`flex items-center space-x-4 p-3 rounded-lg border border-border/40 ${
-                            isSelected
-                              ? "bg-primary/5 border-primary/30"
-                              : isDisabled
-                              ? "opacity-50 cursor-not-allowed"
-                              : "hover:bg-muted/30"
-                          } transition-colors`}
-                        >
-                          <Checkbox
-                            id={name}
-                            checked={isSelected}
-                            disabled={isDisabled}
-                            className={
-                              isSelected ? "text-primary border-primary" : ""
-                            }
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setPendingMcpServers([
-                                  ...pendingMcpServers,
-                                  { name, env: {} },
-                                ]);
-                              } else {
-                                setPendingMcpServers(
-                                  pendingMcpServers.filter(
-                                    (s) => s.name !== name
-                                  )
-                                );
-                              }
-                              markFieldDirty("settings", "mcpServers");
-                            }}
-                          />
-                          <label
-                            htmlFor={name}
-                            className={`flex items-center gap-3 text-sm leading-none cursor-pointer flex-1 ${
-                              isDisabled ? "cursor-not-allowed" : ""
-                            }`}
-                          >
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                              <span className="text-lg">{server.icon}</span>
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                {server.displayName}
-                              </p>
-                              <p className="text-muted-foreground text-xs mt-1">
-                                {server.description}
-                              </p>
-                            </div>
-                          </label>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button
-                    onClick={() => {
-                      setMcpServers(pendingMcpServers);
-                      setIntegrationDialogOpen(false);
-                    }}
-                    className="w-full sm:w-auto"
-                  >
-                    Add Selected
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </TabsContent>
-
         <TabsContent value="widget" className="space-y-6">
           {isWidgetConfigLoading ? (
             <Card className="p-6">
@@ -1270,10 +918,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                   const nameError = !tool.name
                     ? "Name is required"
                     : currentAgent.tools?.some(
-                        (t, i) => t.name === tool.name && i !== index
-                      )
-                    ? "Name must be unique"
-                    : null;
+                      (t, i) => t.name === tool.name && i !== index
+                    )
+                      ? "Name must be unique"
+                      : null;
                   let paramsError = null;
                   try {
                     if (
@@ -1297,11 +945,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                         <div className="flex flex-col gap-2 flex-1">
                           <Label className="text-xs mb-1">Name</Label>
                           <Input
-                            className={`text-sm ${
-                              nameError
+                            className={`text-sm ${nameError
                                 ? "border-red-500 focus-visible:ring-red-500"
                                 : ""
-                            }`}
+                              }`}
                             value={tool.name}
                             onChange={(e) => {
                               const newName = e.target.value;
@@ -1398,11 +1045,10 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                           Parameters (JSON Schema)
                         </Label>
                         <Textarea
-                          className={`font-mono text-xs h-32 ${
-                            paramsError
+                          className={`font-mono text-xs h-32 ${paramsError
                               ? "border-red-500 focus-visible:ring-red-500"
                               : ""
-                          }`}
+                            }`}
                           value={
                             typeof tool.parameters === "string"
                               ? tool.parameters
@@ -1501,15 +1147,15 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     setCurrentAgent((prev) =>
                       prev
                         ? {
-                            ...prev,
-                            tools: [...(prev.tools || []), newTool],
-                            toolLogic: tool.logic
-                              ? {
-                                  ...(prev.toolLogic || {}),
-                                  [tool.name]: tool.logic,
-                                }
-                              : prev.toolLogic,
-                          }
+                          ...prev,
+                          tools: [...(prev.tools || []), newTool],
+                          toolLogic: tool.logic
+                            ? {
+                              ...(prev.toolLogic || {}),
+                              [tool.name]: tool.logic,
+                            }
+                            : prev.toolLogic,
+                        }
                         : prev
                     );
                     markFieldDirty("tools");

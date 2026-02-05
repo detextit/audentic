@@ -78,19 +78,6 @@ export async function setupDatabase() {
         )
       `,
 
-      // Create mcp_servers table
-      sql`
-        CREATE TABLE IF NOT EXISTS mcp_servers (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
-          name VARCHAR(255) NOT NULL,
-          env JSONB DEFAULT '{}',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE (agent_id, name)
-        )
-      `,
-
       // Create widget_config table
       sql`
         CREATE TABLE IF NOT EXISTS widget_config (
@@ -117,7 +104,7 @@ export async function setupDatabase() {
 
     await Promise.all(setupOperations);
     logger.info(
-      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, MCP Servers, Widget Config - initiated"
+      "Database setup - Agents, Sessions, Events, Transcript, Knowledge Base Articles, Widget Config - initiated"
     );
   } catch (error) {
     logger.error("Error setting up database:", error);

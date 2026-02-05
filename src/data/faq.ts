@@ -1,7 +1,14 @@
+import { getContactEmail } from "@/lib/site-url";
+
 export type FAQItem = {
   question: string;
   answer: string; // Markdown formatted string
 };
+
+const contactEmail = getContactEmail();
+const contactLine = contactEmail
+  ? `* In the meantime, reach out to us at ${contactEmail} to initiate a conversation`
+  : "* In the meantime, reach out to us to initiate a conversation";
 
 export const faqData: FAQItem[] = [
   {
@@ -75,6 +82,6 @@ The key is abstracting technical complexity while delivering sophisticated funct
     answer: `Pricing details coming soon!
 
 * Stay tuned for flexible plans for businesses of all sizes
-* In the meantime, reach out to us at info@audentic.io to initiate a conversation`,
+${contactLine}`,
   },
 ];

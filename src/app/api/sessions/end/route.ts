@@ -171,8 +171,7 @@ export async function POST(request: Request) {
             );
           } else {
             logger.info(
-              `Recorded usage of $${totalCost.toFixed(6)} for user ${
-                agent.userId
+              `Recorded usage of $${totalCost.toFixed(6)} for user ${agent.userId
               }`
             );
           }
@@ -192,8 +191,8 @@ export async function POST(request: Request) {
           !(
             item.role === "user" &&
             item.content.type === "text" &&
-            (item.content.text.trim() == "" ||
-              item.content.text.includes("Transcribing"))
+            ((item.content as any).text.trim() == "" ||
+              (item.content as any).text.includes("Transcribing"))
           )
       );
 

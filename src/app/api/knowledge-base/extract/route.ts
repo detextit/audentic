@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Mistral } from "@mistralai/mistralai";
+import OpenAI from "openai";
+import type { Responses } from "openai/resources/responses/responses";
 import { knowledgeBaseMetaPrompt } from "@/agentBuilder/metaPrompts";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("KB Extract API");
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash",
-  generationConfig: {
-    candidateCount: 1,
-    maxOutputTokens: 8192,
-    temperature: 0.0,
-  },
-});
-
-// Initialize Mistral AI
-const mistralClient = new Mistral({
-  apiKey: process.env.MISTRAL_API_KEY!,
-});
+const openai = new OpenAI();
+const KB_MODEL = "gpt-4.1";
 
 // Helper function to check if file is text-based
 function isTextBasedFile(mimeType: string, fileName: string): boolean {
@@ -120,89 +107,51 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 //   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 // ]);
 
-// Helper function to convert file to GenerativePart for Gemini
-async function fileToGenerativePart(file: File) {
+async function fileToInputImage(file: File) {
   const buffer = await file.arrayBuffer();
+  const base64Image = Buffer.from(buffer).toString("base64");
+  const dataUrl = `data:${file.type};base64,${base64Image}`;
+
   return {
-    inlineData: {
-      data: Buffer.from(buffer).toString("base64"),
-      mimeType: file.type,
-    },
+    type: "input_image" as const,
+    image_url: dataUrl,
+    detail: "auto" as const,
   };
 }
 
-// Helper function to process PDF with Mistral OCR
-async function processPdfWithMistralOcr(file: File): Promise<string> {
-  try {
-    const buffer = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(buffer);
+async function fileToInputFile(file: File) {
+  const buffer = await file.arrayBuffer();
+  const base64File = Buffer.from(buffer).toString("base64");
 
-    // Upload the PDF file
-    const uploadedPdf = await mistralClient.files.upload({
-      file: {
-        fileName: file.name,
-        content: fileBuffer,
-      },
-      purpose: "ocr" as any,
-    });
-
-    // Get a signed URL for the uploaded file
-    const signedUrl = await mistralClient.files.getSignedUrl({
-      fileId: uploadedPdf.id,
-    });
-
-    // Process the PDF using the signed URL
-    const ocrResponse = await mistralClient.ocr.process({
-      model: "mistral-ocr-latest",
-      document: {
-        type: "document_url",
-        documentUrl: signedUrl.url,
-      },
-    });
-
-    // Extract the markdown content from the first page
-    let extractedText = "";
-    if (ocrResponse.pages && ocrResponse.pages.length > 0) {
-      extractedText = ocrResponse.pages
-        .map((page) => page.markdown || "")
-        .join("\n\n");
-    }
-
-    return extractedText;
-  } catch (error) {
-    logger.error("Error processing PDF with Mistral OCR:", error);
-    throw new Error("Failed to process PDF with Mistral OCR");
-  }
+  return {
+    type: "input_file" as const,
+    file_data: base64File,
+    filename: file.name,
+  };
 }
 
-// Helper function to process image with Mistral OCR
-async function processImageWithMistralOcr(file: File): Promise<string> {
-  try {
-    const buffer = await file.arrayBuffer();
-    const base64Image = Buffer.from(buffer).toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64Image}`;
-
-    const ocrResponse = await mistralClient.ocr.process({
-      model: "mistral-ocr-latest",
-      document: {
-        type: "image_url",
-        imageUrl: dataUrl,
+async function extractWithOpenAI(content: Responses.ResponseInputContent[]) {
+  const response = await openai.responses.create({
+    model: KB_MODEL,
+    temperature: 0,
+    max_output_tokens: 4096,
+    input: [
+      {
+        role: "developer",
+        content: [{ type: "input_text", text: knowledgeBaseMetaPrompt }],
       },
-    });
+      {
+        role: "user",
+        content,
+      },
+    ],
+  });
 
-    // Extract the markdown content from the first page
-    let extractedText = "";
-    if (ocrResponse.pages && ocrResponse.pages.length > 0) {
-      extractedText = ocrResponse.pages
-        .map((page) => page.markdown || "")
-        .join("\n\n");
-    }
-
-    return extractedText;
-  } catch (error) {
-    logger.error("Error processing image with Mistral OCR:", error);
-    throw new Error("Failed to process image with Mistral OCR");
+  if (!response.output_text) {
+    throw new Error("No extracted content returned from OpenAI");
   }
+
+  return response.output_text;
 }
 
 export const maxDuration = 60; // This is the time in seconds that this function is allowed to execute within. Setting it to 30s.
@@ -232,22 +181,29 @@ export async function POST(request: NextRequest) {
       fileType = file.type;
 
       if (isTextBasedFile(fileType, fileName)) {
-        // For text-based files, just read the text content
-        content = await file.text();
-      } else if (isPdfFile(fileType, fileName)) {
-        // For PDFs, use Mistral OCR
-        content = await processPdfWithMistralOcr(file);
-      } else if (isImageFile(fileType, fileName)) {
-        // For images, use Mistral OCR
-        content = await processImageWithMistralOcr(file);
-      } else {
-        // For other formats, use Gemini's built-in processing
-        const generativePart = await fileToGenerativePart(file);
-        const result = await model.generateContent([
-          knowledgeBaseMetaPrompt,
-          generativePart,
+        // For text-based files, send text directly to the model
+        const textContent = await file.text();
+        content = await extractWithOpenAI([
+          { type: "input_text", text: textContent },
         ]);
-        content = result.response.text();
+      } else if (isPdfFile(fileType, fileName)) {
+        const fileInput = await fileToInputFile(file);
+        content = await extractWithOpenAI([
+          { type: "input_text", text: "Extract the document content." },
+          fileInput,
+        ]);
+      } else if (isImageFile(fileType, fileName)) {
+        const imageInput = await fileToInputImage(file);
+        content = await extractWithOpenAI([
+          { type: "input_text", text: "Extract the text from this image." },
+          imageInput,
+        ]);
+      } else {
+        const fileInput = await fileToInputFile(file);
+        content = await extractWithOpenAI([
+          { type: "input_text", text: "Extract the document content." },
+          fileInput,
+        ]);
       }
     } else {
       const body = await request.json();
@@ -283,9 +239,9 @@ export async function POST(request: NextRequest) {
         const url = new URL(content);
         title = url.hostname + url.pathname;
 
-        const prompt = `${knowledgeBaseMetaPrompt}\n\n HTML page: ${html}`;
-        const result = await model.generateContent(prompt);
-        textContent = result.response.text();
+        textContent = await extractWithOpenAI([
+          { type: "input_text", text: `HTML page: ${html}` },
+        ]);
       } catch (error: any) {
         if (error.name === "AbortError") {
           return NextResponse.json(

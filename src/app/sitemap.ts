@@ -1,9 +1,10 @@
 import { MetadataRoute } from "next";
+import { getAbsoluteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: "https://www.audentic.io",
+      url: getAbsoluteUrl("/"),
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 1,

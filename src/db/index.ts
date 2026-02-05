@@ -249,48 +249,6 @@ function transformDBKnowledgeBaseArticle(
   };
 }
 
-// Add to existing exports
-export async function getMcpServers(agentId: string) {
-  logger.debug("Getting MCP servers for agent:", agentId);
-  const { rows } = await sql`
-    SELECT name, env 
-    FROM mcp_servers 
-    WHERE agent_id = ${agentId}
-  `;
-  return rows.map((row) => ({
-    name: row.name,
-    env: row.env,
-  }));
-}
-
-export async function saveMcpServer(
-  agentId: string,
-  server: { name: string; env: Record<string, string> }
-) {
-  logger.debug("Saving server:", server);
-  await sql`
-    INSERT INTO mcp_servers (agent_id, name, env)
-    VALUES (${agentId}, ${server.name}, ${JSON.stringify(server.env)})
-    ON CONFLICT (agent_id, name)
-    DO UPDATE SET env = ${JSON.stringify(
-      server.env
-    )}, updated_at = CURRENT_TIMESTAMP
-  `;
-}
-
-export async function deleteMcpServer(agentId: string, serverName: string) {
-  try {
-    await sql`
-      DELETE FROM mcp_servers
-      WHERE agent_id = ${agentId} AND name = ${serverName}
-    `;
-    return true;
-  } catch (error) {
-    logger.error("Error deleting MCP server:", error);
-    return false;
-  }
-}
-
 // User Budget Management
 export async function getUserBudget(userId: string): Promise<UserBudget> {
   try {
