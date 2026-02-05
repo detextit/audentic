@@ -1,5 +1,4 @@
 import { Tool } from "@/types/agent";
-import { getAudenticApiBaseUrl } from "@/lib/audentic-api";
 
 export const formAgentMetaPrompt = `
 # Form Filling Instruction
@@ -153,8 +152,8 @@ export const getVoiceAgentInstruction = async (
   description: string,
   personality?: string
 ): Promise<string> => {
-  const baseUrl = getAudenticApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/chat/completions`, {
+
+  const response = await fetch(`/api/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -292,8 +291,7 @@ Make sure that every property, no matter how short, has a type and clear descrip
 export const getToolSchemaFromLLM = async (
   user_description: string
 ): Promise<Tool> => {
-  const baseUrl = getAudenticApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/chat/completions`, {
+  const response = await fetch(`/api/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -394,8 +392,7 @@ export const getToolLogicFromLLM = async (
   user_description: string,
   schema: string
 ): Promise<string> => {
-  const baseUrl = getAudenticApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/chat/completions`, {
+  const response = await fetch(`/api/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
