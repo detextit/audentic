@@ -7,6 +7,16 @@ import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 
 const logger = createLogger("Sessions API");
 
+const isProModel = (model: string | null | undefined) => {
+  if (!model) return false;
+  const normalized = model.toLowerCase();
+  if (normalized.includes("mini")) return false;
+  if (normalized === "gpt-realtime") return true;
+  if (normalized.startsWith("gpt-realtime")) return true;
+  if (normalized.startsWith("gpt-4o-realtime")) return true;
+  return false;
+};
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
@@ -71,7 +81,7 @@ export async function GET(
           costs: session.cost_breakdown || DEFAULT_COST_DATA.costs,
           total_cost: parseFloat(session.total_cost || 0),
           is_final: !!session.ended_at,
-          isPro: session.model_type === "gpt-realtime",
+          isPro: isProModel(session.model_type),
         };
       } else {
         // Session exists but doesn't have complete cost data
@@ -110,7 +120,7 @@ export async function GET(
           }
         }
 
-        const isPro = model === "gpt-realtime";
+        const isPro = isProModel(model);
 
         // Get usage data from response.done events
         const usageResult = await sql`

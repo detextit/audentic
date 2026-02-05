@@ -335,16 +335,49 @@ async function hasEnoughBudget(
   }
 }
 
+const normalizeOrigin = (value: string) => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value.trim();
+  }
+};
+
+const isOriginAllowed = (origin: string, allowedOrigins: string) => {
+  const normalizedOrigin = normalizeOrigin(origin);
+  const allowedList = allowedOrigins
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map(normalizeOrigin);
+
+  return allowedList.includes(normalizedOrigin);
+};
+
 // Enhance the verifyApiKey function to check both API key and origin if needed
 async function verifyApiKey(
   origin: string | null,
   apiKey: string | null
 ): Promise<boolean> {
-  if (!apiKey && !origin) return false;
+  if (!apiKey) return false;
 
   try {
-    logger.info("Verify API key", origin, apiKey);
-    return true; // Replace with actual verification
+    const agent = await getAgentById(apiKey);
+
+    if (!agent) {
+      logger.warn("Invalid API key", apiKey);
+      return false;
+    }
+
+    if (origin && agent.webUI) {
+      const allowed = isOriginAllowed(origin, agent.webUI);
+      if (!allowed) {
+        logger.warn("Origin not allowed", { origin, allowed: agent.webUI });
+      }
+      return allowed;
+    }
+
+    return true;
   } catch (error) {
     logger.error("API key verification error:", error);
     return false;
