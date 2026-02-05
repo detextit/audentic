@@ -7,6 +7,16 @@ import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 
 const logger = createLogger("Sessions API");
 
+const isProModel = (model: string | null | undefined) => {
+  if (!model) return false;
+  const normalized = model.toLowerCase();
+  if (normalized.includes("mini")) return false;
+  if (normalized === "gpt-realtime") return true;
+  if (normalized.startsWith("gpt-realtime")) return true;
+  if (normalized.startsWith("gpt-4o-realtime")) return true;
+  return false;
+};
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
@@ -71,7 +81,7 @@ export async function GET(
           costs: session.cost_breakdown || DEFAULT_COST_DATA.costs,
           total_cost: parseFloat(session.total_cost || 0),
           is_final: !!session.ended_at,
-          isPro: session.model_type === "gpt-4o-realtime-preview",
+          isPro: isProModel(session.model_type),
         };
       } else {
         // Session exists but doesn't have complete cost data
@@ -96,9 +106,7 @@ export async function GET(
               const settings = agentModelResult.rows[0].settings;
               const isAdvancedModel = settings.isAdvancedModel === true;
 
-              model = isAdvancedModel
-                ? "gpt-4o-realtime-preview"
-                : "gpt-4o-mini-realtime-preview";
+              model = isAdvancedModel ? "gpt-realtime" : "gpt-realtime-mini";
 
               logger.info(
                 `Determined model ${model} from agent settings for session ${sessionId}`
@@ -108,11 +116,11 @@ export async function GET(
 
           // Default to non-pro model if still not found
           if (!model) {
-            model = "gpt-4o-mini-realtime-preview";
+            model = "gpt-realtime-mini";
           }
         }
 
-        const isPro = model === "gpt-4o-realtime-preview";
+        const isPro = isProModel(model);
 
         // Get usage data from response.done events
         const usageResult = await sql`
@@ -170,7 +178,7 @@ export async function GET(
       events: eventsResult.rows.map(
         (row) =>
           ({
-            id: row.id,
+            id: String(row.id),
             direction: row.direction,
             eventName: row.event_name,
             eventData: row.event_data,

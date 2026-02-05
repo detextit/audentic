@@ -8,6 +8,16 @@ import { getAgentById, recordUsage } from "@/db";
 
 const logger = createLogger("Sessions End API");
 
+const isProModel = (model: string | null | undefined) => {
+  if (!model) return false;
+  const normalized = model.toLowerCase();
+  if (normalized.includes("mini")) return false;
+  if (normalized === "gpt-realtime") return true;
+  if (normalized.startsWith("gpt-realtime")) return true;
+  if (normalized.startsWith("gpt-4o-realtime")) return true;
+  return false;
+};
+
 export async function POST(request: Request) {
   try {
     const { sessionId, transcriptItems } = await request.json();
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
     `;
 
     let model = modelResult.rows[0]?.model;
-    let isPro = model === "gpt-4o-realtime-preview";
+    let isPro = isProModel(model);
 
     // If model is not found in events, try to get it from the agent table
     if (!model && agentId) {
@@ -52,19 +62,17 @@ export async function POST(request: Request) {
         const settings = agentResult.rows[0].settings;
         const isAdvancedModel = settings.isAdvancedModel === true;
 
-        model = isAdvancedModel
-          ? "gpt-4o-realtime-preview"
-          : "gpt-4o-mini-realtime-preview";
+        model = isAdvancedModel ? "gpt-realtime" : "gpt-realtime-mini";
 
-        isPro = isAdvancedModel;
+        isPro = isProModel(model);
 
         logger.info(
           `Determined model ${model} from agent settings for session ${sessionId}`
         );
       } else {
         // Default to non-pro model if not found
-        model = "gpt-4o-mini-realtime-preview";
-        isPro = false;
+        model = "gpt-realtime-mini";
+        isPro = isProModel(model);
         logger.warn(
           `Model not found for session ${sessionId}, defaulting to ${model}`
         );

@@ -25,7 +25,7 @@ export interface Tool {
 }
 export interface AgentConfig {
   name: string;
-  model?: "gpt-4o-realtime-preview" | "gpt-4o-mini-realtime-preview";
+  model?: "gpt-realtime" | "gpt-realtime-mini";
   initiateConversation: boolean;
   instructions: string;
   tools: Tool[];

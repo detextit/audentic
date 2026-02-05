@@ -1,43 +1,41 @@
 # Audentic
 
-Enable voice agents for your website
+A Next.js application for creating and managing voice-enabled AI agents.
 
-## Overview
+## Getting Started
 
-Audentic is a powerful tool that allows you to integrate voice-enabled AI agents into your website. It provides a seamless way to add voice interaction capabilities to enhance user experience and accessibility.
+1. Clone the repository
+2. Copy `.env.example` to `.env.local` and fill in your API keys
+3. Install dependencies: `npm install`
+4. Run the development server: `npm run dev`
 
-## Features
+## Project Structure
 
-- 🎙️ Real-time voice interaction
-- 🤖 AI-powered conversational agents
-- 🌐 Easy website integration
-- ⚡ Low-latency responses
-- 🔒 Secure communication
-
-## Development
-
-### Logging
-
-The application uses a custom logging utility that automatically handles different environments:
-
-- In development: Debug logs are displayed in the console
-- In production: Debug logs are suppressed, but info, warn, and error logs are still shown
-
-To use the logger in your components:
-
-```typescript
-import { createLogger } from "@/utils/logger";
-
-// Create a logger instance for your component
-const logger = createLogger("ComponentName");
-
-// Different log levels
-logger.debug("Debug message", { data }); // Only shown in development
-logger.info("Info message"); // Shown in all environments
-logger.warn("Warning message"); // Shown in all environments
-logger.error("Error message"); // Always shown
-
-// You can also use the default logger
-import { logger } from "@/utils/logger";
-logger.info("Using default logger");
 ```
+src/
+├── app/              # Next.js App Router pages and API routes
+│   ├── api/         # Backend API endpoints
+│   ├── agents/      # Agent management pages
+│   └── history/     # Session history pages
+├── components/       # Reusable React components
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions
+├── types/           # TypeScript type definitions
+└── utils/           # Helper utilities and logging
+```
+
+## Environment Variables
+
+See `.env.example` for required environment variables including:
+- AI model API keys (OpenAI, Gemini, Mistral)
+- Database connection strings
+- Authentication keys (Clerk)
+- Payment processing (Stripe)
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Database**: PostgreSQL with Neon
+- **Authentication**: Clerk
+- **UI**: Tailwind CSS + shadcn/ui
+- **AI Models**: OpenAI, Google Gemini, Mistral

@@ -4,6 +4,7 @@ import { createLogger } from "@/utils/logger";
 const logger = createLogger("Cost Calculation");
 
 export const COST_PER_1M_TOKENS = {
+  // Pricing buckets map to gpt-realtime (PRO) and gpt-realtime-mini (BASE).
   PRO: {
     TEXT: {
       input: 5.0,

@@ -1,5 +1,23 @@
 import type { NextConfig } from "next";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL;
+let redirectHost: string | undefined;
+let redirectDestination: string | undefined;
+
+if (siteUrl) {
+  try {
+    const parsed = new URL(siteUrl);
+    if (parsed.hostname.startsWith("www.")) {
+      redirectHost = parsed.hostname.replace(/^www\./, "");
+      redirectDestination = parsed.origin;
+    }
+  } catch {
+    redirectHost = undefined;
+    redirectDestination = undefined;
+  }
+}
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -91,16 +109,20 @@ const nextConfig: NextConfig = {
   },
   trailingSlash: false,
   async redirects() {
+    if (!redirectHost || !redirectDestination) {
+      return [];
+    }
+
     return [
       {
         source: "/",
         has: [
           {
             type: "host",
-            value: "audentic.io",
+            value: redirectHost,
           },
         ],
-        destination: "https://www.audentic.io",
+        destination: redirectDestination,
         permanent: true,
       },
     ];
