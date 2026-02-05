@@ -38,4 +38,6 @@ See `.env.example` for required environment variables including:
 - **Database**: PostgreSQL with Neon
 - **Authentication**: Clerk
 - **UI**: Tailwind CSS + shadcn/ui
-- **AI Models**: OpenAI, Google Gemini, Mistral
+- **AI Models**: OpenAI
++- Uses the `@audentic/react` package, which will be open sourced as well
+
