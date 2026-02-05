@@ -13,5 +13,5 @@ Allow: /robots.txt
 Crawl-delay: 10
 
 # Specify sitemap
-Sitemap: https://www.audentic.io/sitemap.xml
-Host: https://www.audentic.io 
+Sitemap: https://www.audentic.org/sitemap.xml
+Host: https://www.audentic.org 
