@@ -20,7 +20,6 @@ src/
 ├── components/       # Reusable React components
 ├── hooks/           # Custom React hooks
 ├── lib/             # Utility functions
-├── mcp/             # MCP (Model Context Protocol) utilities
 ├── types/           # TypeScript type definitions
 └── utils/           # Helper utilities and logging
 ```

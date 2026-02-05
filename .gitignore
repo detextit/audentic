@@ -39,6 +39,10 @@ yarn-error.log*
 next-env.d.ts
 todo.md
 
+# agent folders
+AGENTS.md
+.cursor
+
 .vscode/settings.json
 
 src/scripts

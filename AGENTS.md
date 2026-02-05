@@ -19,7 +19,6 @@ Run these commands from this directory:
 - **`src/app`**: Contains the App Router pages and API routes.
 - **`src/components`**: Reusable React components.
 - **`src/lib`**: Core utilities and helper functions.
-- **`src/mcp`**: Model Context Protocol utilities.
 
 ## Configuration
 - Environment variables are stored in `.env.local`. Copy from `.env.example`.
