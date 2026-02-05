@@ -4,7 +4,7 @@ export interface UserBudget {
   usedAmount: number;
   lastUpdated: Date;
   nextRefreshDate: Date;
-  planType: string;
+  planType: "free" | "byok";
   openaiApiKey: string;
 }
 
