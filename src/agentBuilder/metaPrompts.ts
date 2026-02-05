@@ -1,4 +1,5 @@
 import { Tool } from "@/types/agent";
+import { getAudenticApiBaseUrl } from "@/lib/audentic-api";
 
 export const formAgentMetaPrompt = `
 # Form Filling Instruction
@@ -152,7 +153,7 @@ export const getVoiceAgentInstruction = async (
   description: string,
   personality?: string
 ): Promise<string> => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getAudenticApiBaseUrl();
   const response = await fetch(`${baseUrl}/api/chat/completions`, {
     method: "POST",
     headers: {
@@ -291,7 +292,7 @@ Make sure that every property, no matter how short, has a type and clear descrip
 export const getToolSchemaFromLLM = async (
   user_description: string
 ): Promise<Tool> => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getAudenticApiBaseUrl();
   const response = await fetch(`${baseUrl}/api/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -393,7 +394,7 @@ export const getToolLogicFromLLM = async (
   user_description: string,
   schema: string
 ): Promise<string> => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getAudenticApiBaseUrl();
   const response = await fetch(`${baseUrl}/api/chat/completions`, {
     method: "POST",
     headers: {

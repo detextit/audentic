@@ -95,11 +95,8 @@ export function useSessions() {
           setLoading(true);
         }
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
         // Create a new fetch promise and store it
-        fetchPromise = fetch(`${baseUrl}/api/sessions`)
+        fetchPromise = fetch(`/api/sessions`)
           .then((response) => {
             if (!response.ok) {
               return response.json().then((errorData) => {

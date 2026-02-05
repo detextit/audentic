@@ -36,9 +36,6 @@ export default function LandingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const contactEmail = getContactEmail();
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_AUDENTIC_API_BASE_URL ??
-    (process.env.NODE_ENV === "development" ? "/api" : undefined);
 
   const handleGetStarted = () => {
     if (isSignedIn) {
@@ -349,7 +346,6 @@ export default function LandingPage() {
         <div className="rounded-lg animate-pulse-subtle">
           <SessionControl
             agentId="25b9a905-b2f4-49d9-97e9-4c6891214d57"
-            apiBaseUrl={apiBaseUrl}
             widgetConfiguration={{
               showBackgroundCard: false,
               title: "Need Help?",

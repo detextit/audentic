@@ -98,11 +98,8 @@ export function useAgents() {
           setLoading(true);
         }
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
         // Create a new fetch promise and store it
-        fetchPromise = fetch(`${baseUrl}/api/agents`)
+        fetchPromise = fetch(`/api/agents`)
           .then((response) => {
             if (!response.ok) {
               return response.json().then((errorData) => {
@@ -193,9 +190,7 @@ export function useAgents() {
 
   const createAgent = async (input: AgentCreateInput) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/agents`, {
+      const response = await fetch(`/api/agents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -237,9 +232,7 @@ export function useAgents() {
     updates: Partial<AgentDBConfig>
   ) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/agents?id=${agentId}`, {
+      const response = await fetch(`/api/agents?id=${agentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
@@ -272,9 +265,7 @@ export function useAgents() {
 
   const deleteAgent = async (agentId: string) => {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/agents?id=${agentId}`, {
+      const response = await fetch(`/api/agents?id=${agentId}`, {
         method: "DELETE",
       });
 

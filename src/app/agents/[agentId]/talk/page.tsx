@@ -18,9 +18,6 @@ const logger = createLogger("Talk Page");
 export default function TalkAgentPage(): JSX.Element {
   const pathname = usePathname();
   const agentId = pathname.split("/").slice(-2)[0];
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_AUDENTIC_API_BASE_URL ??
-    (process.env.NODE_ENV === "development" ? "/api" : undefined);
   const [agent, setAgent] = useState<AgentDBConfig | null>(null);
   const [widgetConfig, setWidgetConfig] =
     useState<WidgetBuilderConfiguration>(defaultWidgetConfig);
@@ -62,11 +59,10 @@ export default function TalkAgentPage(): JSX.Element {
   }
 
   function handleCopy(update: { id: string; value: any }, idx: number) {
-    const text = `${update.id}: ${
-      typeof update.value === "string"
-        ? update.value
-        : JSON.stringify(update.value)
-    }`;
+    const text = `${update.id}: ${typeof update.value === "string"
+      ? update.value
+      : JSON.stringify(update.value)
+      }`;
     navigator.clipboard.writeText(text).then(
       () => setCopiedIndex(idx),
       () => setCopiedIndex(null)
@@ -92,7 +88,6 @@ export default function TalkAgentPage(): JSX.Element {
       <SessionControl
         agentId={agentId}
         maxOutputTokens={8192}
-        apiBaseUrl={apiBaseUrl}
         widgetConfiguration={widgetConfig as WidgetConfiguration}
         updateForm={handleUpdates}
       />

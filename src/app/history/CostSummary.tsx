@@ -53,9 +53,7 @@ export function CostSummary({
       }
 
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
+        const response = await fetch(`/api/sessions/${sessionId}`);
 
         if (!response.ok) {
           logger.error(

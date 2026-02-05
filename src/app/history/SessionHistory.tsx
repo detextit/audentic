@@ -91,9 +91,7 @@ const SessionHistory = React.memo(function SessionHistory({
       }
 
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const response = await fetch(`${baseUrl}/api/sessions/${sessionId}`);
+        const response = await fetch(`/api/sessions/${sessionId}`);
         if (!response.ok) throw new Error("Failed to fetch session data");
 
         const data = await response.json();
