@@ -43,6 +43,11 @@ export interface AgentDBConfig extends AgentConfig {
   updatedAt: Date;
 }
 
+export type AgentCreateInput = Omit<
+  AgentDBConfig,
+  "id" | "userId" | "createdAt" | "updatedAt"
+>;
+
 // Knowledge Base Article type
 export interface KnowledgeBaseDBArticle {
   id: string;

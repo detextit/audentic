@@ -1,5 +1,9 @@
 import { sql } from "@vercel/postgres";
-import { AgentDBConfig, KnowledgeBaseDBArticle } from "@/types/agent";
+import {
+  AgentCreateInput,
+  AgentDBConfig,
+  KnowledgeBaseDBArticle,
+} from "@/types/agent";
 import { setupDatabase } from "@/db/setup";
 import { WidgetBuilderConfiguration } from "@/types/widget";
 import { createLogger } from "@/utils/logger";
@@ -15,7 +19,7 @@ const logger = createLogger("DB Actions");
 // Create agent
 export async function createAgent(
   userId: string,
-  agent: AgentDBConfig
+  agent: AgentCreateInput
 ): Promise<AgentDBConfig> {
   const result = await sql`
     INSERT INTO agents (

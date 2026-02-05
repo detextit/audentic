@@ -7,8 +7,9 @@ import {
   updateAgent,
   deleteAgent,
 } from "@/db";
-import { AgentDBConfig } from "@/types/agent";
+import { AgentCreateInput, AgentDBConfig } from "@/types/agent";
 import { createLogger } from "@/utils/logger";
+import { getDefaultVoiceAgentTemplate } from "@/lib/agent-templates";
 
 const logger = createLogger("Agents API");
 
@@ -31,6 +32,18 @@ export async function GET(request: Request) {
     }
 
     const agents = await getUserAgents(userId);
+
+    if (agents.length === 0) {
+      try {
+        const template = getDefaultVoiceAgentTemplate();
+        const agent = await createAgent(userId, template);
+        return NextResponse.json([agent]);
+      } catch (error) {
+        logger.error("Error creating default agent:", error);
+        return NextResponse.json([]);
+      }
+    }
+
     return NextResponse.json(agents);
   } catch (error) {
     logger.error("Error fetching agents:", error);
@@ -45,7 +58,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body: AgentDBConfig = await request.json();
+    const body: AgentCreateInput = await request.json();
     const agent = await createAgent(userId, body);
 
     return NextResponse.json(agent);

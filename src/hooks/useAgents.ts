@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { AgentDBConfig } from "@/types/agent";
+import { AgentCreateInput, AgentDBConfig } from "@/types/agent";
 import { createLogger } from "@/utils/logger";
 
 const logger = createLogger("Use Agents");
@@ -191,7 +191,7 @@ export function useAgents() {
     };
   }, [userId, doFetchAgents]);
 
-  const createAgent = async (input: AgentDBConfig) => {
+  const createAgent = async (input: AgentCreateInput) => {
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
