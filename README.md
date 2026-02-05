@@ -1,6 +1,6 @@
 # Audentic
 
-A Next.js application for creating and managing voice-enabled AI agents.
+A Next.js application for creating and managing voice-enabled OpenAI Realtime agents.
 
 ## Getting Started
 
