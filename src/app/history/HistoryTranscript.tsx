@@ -29,20 +29,21 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
         let content = "";
 
         if (item.role === "user" || item.role === "assistant") {
-          content = item.content.type === "text" ? item.content.text : "";
+          content =
+            (item.content as any).type === "text"
+              ? (item.content as any).text
+              : "";
         } else if (item.role === "system") {
           if (item.content.type === "session") {
             content = `Session started at ${item.content.started_at}`;
           } else if (item.content.type === "session_end") {
-            content = `Session ended at ${item.content.ended_at}${
-              item.content.reason ? ` (${item.content.reason})` : ""
-            }`;
+            content = `Session ended at ${item.content.ended_at}${item.content.reason ? ` (${item.content.reason})` : ""
+              }`;
           }
         } else if (item.role === "tool") {
           if (item.content.type === "function_call") {
-            content = `Function: ${
-              item.content.name
-            }\nArguments: ${JSON.stringify(item.content.arguments, null, 2)}`;
+            content = `Function: ${item.content.name
+              }\nArguments: ${JSON.stringify(item.content.arguments, null, 2)}`;
           } else if (item.content.type === "function_call_output") {
             content = `Output: ${item.content.output}`;
           }
@@ -127,7 +128,11 @@ export function HistoryTranscript({ transcriptItems }: HistoryTranscriptProps) {
                   </div>
                   {item.content.type === "text" && (
                     <div className="prose prose-sm max-w-none pl-8 text-sm">
-                      <ReactMarkdown>{item.content.text || ""}</ReactMarkdown>
+                      <ReactMarkdown>
+                        {typeof item.content.text === "string"
+                          ? item.content.text
+                          : ""}
+                      </ReactMarkdown>
                     </div>
                   )}
                 </div>
