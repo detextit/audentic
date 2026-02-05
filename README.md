@@ -5,7 +5,7 @@ A Next.js application for creating and managing voice-enabled AI agents.
 ## Getting Started
 
 1. Clone the repository
-2. Copy `.env.example` to `.env.local` and fill in your API keys
+2. Request `.env.local` and fill in your API keys
 3. Install dependencies: `npm install`
 4. Run the development server: `npm run dev`
 
