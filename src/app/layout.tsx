@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster";
+import { getAbsoluteUrl, getBaseSiteUrl } from "@/lib/site-url";
 import "./globals.css";
+
+const siteUrl = getBaseSiteUrl();
+const dashboardImageUrl = getAbsoluteUrl("/dashboard.png");
+const coverImageUrl = getAbsoluteUrl("/cover.png");
+const iconUrl = getAbsoluteUrl("/icon.png");
 
 export const metadata: Metadata = {
   title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
@@ -13,12 +19,12 @@ export const metadata: Metadata = {
     title: "Audentic | Voice AI Agents for Website Interaction | No-Code",
     description:
       "Create intelligent voice interactions for your website. Our AI agents provide natural conversations and automated support, improving user experience instantly.",
-    url: "https://www.audentic.io",
+    url: siteUrl,
     siteName: "Audentic",
     type: "website",
     images: [
       {
-        url: "https://www.audentic.io/dashboard.png",
+        url: dashboardImageUrl,
         width: 2940,
         height: 1658,
         alt: "Audentic - Voice AI Agent Platform",
@@ -32,7 +38,7 @@ export const metadata: Metadata = {
       "Enhance your website with voice AI agents. Enable natural conversations and automated support without coding. Start improving engagement today.",
     site: "@audentic_io",
     creator: "@audentic_io",
-    images: ["https://www.audentic.io/cover.png"],
+    images: [coverImageUrl],
   },
   robots: {
     index: true,
@@ -49,12 +55,12 @@ export const metadata: Metadata = {
     google: "lIr3-vVrCTgSE3Maioh0xU-TkH5ck2q5vCUcz-dyNGo",
   },
   alternates: {
-    canonical: "https://www.audentic.io",
+    canonical: siteUrl,
     languages: {
-      en: "https://www.audentic.io",
+      en: siteUrl,
     },
     types: {
-      "text/html": [{ url: "https://audentic.io" }],
+      "text/html": [{ url: siteUrl }],
     },
   },
 };
@@ -76,8 +82,8 @@ export default function RootLayout({
                   "@context": "https://schema.org",
                   "@type": "Organization",
                   name: "Audentic",
-                  url: "https://www.audentic.io",
-                  logo: "https://www.audentic.io/icon.png",
+                  url: siteUrl,
+                  logo: iconUrl,
                   description:
                     "Leading provider of No-Code Voice AI Agents for Websites. We specialize in creating intelligent, conversational AI solutions that enhance website functionality and user experience. Our platform enables businesses to implement sophisticated voice interactions without technical expertise.",
                 },

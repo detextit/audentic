@@ -25,6 +25,7 @@ import ReactMarkdown from "react-markdown";
 import { FeatureSection } from "@/components/feature-card-section";
 import React from "react";
 import dynamic from "next/dynamic";
+import { getContactEmail } from "@/lib/site-url";
 
 const SessionControl = dynamic(
   () => import("@audentic/react").then((mod) => mod.SessionControl),
@@ -34,6 +35,7 @@ const SessionControl = dynamic(
 export default function LandingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
+  const contactEmail = getContactEmail();
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_AUDENTIC_API_BASE_URL ??
     (process.env.NODE_ENV === "development" ? "/api" : undefined);
@@ -105,16 +107,6 @@ export default function LandingPage() {
                   >
                     Start Building
                   </Button>
-                  {/* <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() =>
-                      (window.location.href =
-                        "https://www.audentic.io/agents/94e2f732-6ef4-4089-a5bc-2bebdbc7818e/form")
-                    }
-                  >
-                    Try it out!
-                  </Button> */}
                 </div>
               </div>
               <div className="lg:w-2/3">
@@ -333,7 +325,16 @@ export default function LandingPage() {
               <div className="text-sm text-gray-400">© 2025 Audentic</div>
               <div className="text-sm text-gray-400 flex flex-row items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <div>info@audentic.io</div>
+                {contactEmail ? (
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="hover:underline"
+                  >
+                    {contactEmail}
+                  </a>
+                ) : (
+                  <span>Contact us</span>
+                )}
               </div>
             </div>
           </div>

@@ -21,6 +21,7 @@ import { createLogger } from "@/utils/logger";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getContactEmail } from "@/lib/site-url";
 const logger = createLogger("Subscription Dialog");
 interface PlanFeature {
   name: string;
@@ -41,6 +42,11 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   const [apiKey, setApiKey] = useState("");
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const contactEmail = getContactEmail();
+  const contactEmailSubject = encodeURIComponent("Subscription Inquiry");
+  const contactEmailLink = contactEmail
+    ? `mailto:${contactEmail}?subject=${contactEmailSubject}`
+    : undefined;
 
   // Memoize feature lists to prevent recreating on each render
   const freeFeatures = useMemo<PlanFeature[]>(
@@ -49,7 +55,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
       { name: "Monthly credit", included: true },
       { name: "Basic analytics", included: true },
       { name: "Community support", included: true },
-      { name: "Shared MCP compute", included: true },
       { name: "Custom branding", included: false },
       { name: "Custom integrations", included: false },
     ],
@@ -62,7 +67,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
       { name: "Use your OpenAI credit", included: true },
       { name: "Basic analytics", included: true },
       { name: "Community support", included: true },
-      { name: "Shared MCP compute", included: false },
       { name: "Custom branding", included: false },
       { name: "Custom integrations", included: false },
     ],
@@ -75,7 +79,6 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
       { name: "Custom credit", included: true },
       { name: "Advanced analytics", included: true },
       { name: "Priority support", included: true },
-      { name: "Dedicated MCP compute", included: true },
       { name: "Custom branding", included: true },
       { name: "Custom integrations", included: true },
     ],
@@ -83,9 +86,11 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
   );
 
   const handleContactUs = useCallback(() => {
-    window.location.href =
-      "mailto:info@audentic.io?subject=Subscription Inquiry";
-  }, []);
+    if (!contactEmailLink) {
+      return;
+    }
+    window.location.href = contactEmailLink;
+  }, [contactEmailLink]);
 
   const handleScheduleDemo = useCallback(() => {
     window.open("https://calendly.com/audentic-info", "_blank");
@@ -384,12 +389,13 @@ export const SubscriptionDialog = React.memo(function SubscriptionDialog({
 
         <div className="text-center text-sm text-muted-foreground mt-4">
           Have questions?{" "}
-          <a
-            href="mailto:info@audentic.io"
-            className="text-primary hover:underline"
-          >
-            Email our team
-          </a>
+          {contactEmailLink ? (
+            <a href={contactEmailLink} className="text-primary hover:underline">
+              Email our team
+            </a>
+          ) : (
+            <span>Email our team</span>
+          )}
         </div>
       </DialogContent>
     </Dialog>

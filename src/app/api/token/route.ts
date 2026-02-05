@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import {
   getAgentById,
   getAgentKnowledgeBase,
-  getMcpServers,
   getUserBudget,
 } from "@/db";
 import { injectBrowserTools } from "@/agentBuilder/browserUtils";
 import { injectBrowserActions } from "@/agentBuilder/browserActions";
-import { AgentConfig, AgentDBConfig, Tool } from "@/types/agent";
+import { AgentConfig, AgentDBConfig } from "@/types/agent";
 import {
   createFormToolLogic,
   FormToolState,
@@ -19,8 +18,6 @@ import {
   formAgentMetaPrompt,
   getVoiceAgentDefaultInstructions,
 } from "@/agentBuilder/metaPrompts";
-import { configureServers, listTools } from "@/mcp/mcpUtils";
-import { AVAILABLE_MCP_SERVERS } from "@/mcp/servers";
 import { createLogger } from "@/utils/logger";
 import { UserBudget } from "@/types/budget";
 
@@ -114,61 +111,6 @@ export async function POST(request: Request) {
       agentConfig.instructions;
 
     const tools = [...(agentConfig.tools || [])];
-    const mcpTools: Record<string, string[]> = {};
-    const mcpBaseUrl = process.env.MCP_SERVER_URL; // TODO: make this unique per agent with secure token
-
-    if (userBudget.planType !== "byok") {
-      // BYOK users do not have MCP server support
-
-      logger.debug("MCP base URL:", mcpBaseUrl);
-      // get MCP servers
-      const mcpServers = await getMcpServers(apiKey);
-      if (mcpServers.length > 0) {
-        // Configure MCP servers and get tools
-        const mcpServerConfig: Record<string, any> = {};
-        const configuredServerNames: string[] = [];
-
-        for (const server of mcpServers) {
-          if (AVAILABLE_MCP_SERVERS[server.name]) {
-            // Create a deep copy of the defaultEnv to avoid modifying the original
-            const defaultEnv = {
-              ...AVAILABLE_MCP_SERVERS[server.name].defaultEnv,
-            };
-
-            // Customize MEMORY_FILE_PATH if it exists
-            if (defaultEnv?.MEMORY_FILE_PATH) {
-              defaultEnv.MEMORY_FILE_PATH = defaultEnv.MEMORY_FILE_PATH.replace(
-                "${agentId}",
-                apiKey
-              );
-            }
-
-            mcpServerConfig[server.name] = {
-              command: AVAILABLE_MCP_SERVERS[server.name].command,
-              env: {
-                ...server.env,
-                ...defaultEnv,
-              },
-              args: AVAILABLE_MCP_SERVERS[server.name].args,
-            };
-            configuredServerNames.push(server.name);
-          } else {
-            logger.error(`MCP server ${server.name} not found`);
-          }
-        }
-
-        // Configure servers and get available tools
-        const result = await configureServers(mcpServerConfig);
-        logger.info("MCP servers configured:", result);
-
-        // Get tools from each configured server
-        for (const serverName of configuredServerNames) {
-          const serverTools: Tool[] = await listTools(serverName);
-          tools.push(...serverTools);
-          mcpTools[serverName] = serverTools.map((tool) => tool.name);
-        }
-      }
-    }
 
     const agentConfigForClient: AgentConfig = {
       ...agentConfig,
@@ -234,8 +176,6 @@ export async function POST(request: Request) {
       ephemeral_key: ephemeralKey,
       agent_config: agentConfigForClient,
       tool_logic: toolLogic,
-      mcp_tools: mcpTools,
-      mcp_base_url: mcpBaseUrl,
     };
 
     return NextResponse.json(tokenResponse, {
