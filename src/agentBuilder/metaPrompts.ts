@@ -216,7 +216,7 @@ Remember to focus on extracting factual information and avoid adding your own in
 
 const toolSchemaMetaPrompt = `
 # Instructions
-Return a valid schema for the described function. The function definition will be used verbatim as one of the tools for OpenAI GPT4o Realtime model.
+Return a valid schema for the described function. The function definition will be used verbatim as one of the tools for an OpenAI Realtime voice model.
 
 Pay attention to making sure that the elements are defined at the correct level of nesting. 
 Make sure that every property, no matter how short, has a type and clear description that informs the model what it does, what input arguments it expects, and when to call the tool.

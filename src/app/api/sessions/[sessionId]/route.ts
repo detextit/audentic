@@ -4,18 +4,13 @@ import { NextResponse } from "next/server";
 import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
 import { createLogger } from "@/utils/logger";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
+import {
+  LEGACY_MINI_REALTIME_MODEL,
+  getAgentRealtimeModel,
+  isAdvancedRealtimeModel,
+} from "@/lib/realtime";
 
 const logger = createLogger("Sessions API");
-
-const isProModel = (model: string | null | undefined) => {
-  if (!model) return false;
-  const normalized = model.toLowerCase();
-  if (normalized.includes("mini")) return false;
-  if (normalized === "gpt-realtime") return true;
-  if (normalized.startsWith("gpt-realtime")) return true;
-  if (normalized.startsWith("gpt-4o-realtime")) return true;
-  return false;
-};
 
 export async function GET(
   _request: Request,
@@ -81,7 +76,7 @@ export async function GET(
           costs: session.cost_breakdown || DEFAULT_COST_DATA.costs,
           total_cost: parseFloat(session.total_cost || 0),
           is_final: !!session.ended_at,
-          isPro: isProModel(session.model_type),
+          isPro: isAdvancedRealtimeModel(session.model_type),
         };
       } else {
         // Session exists but doesn't have complete cost data
@@ -106,7 +101,7 @@ export async function GET(
               const settings = agentModelResult.rows[0].settings;
               const isAdvancedModel = settings.isAdvancedModel === true;
 
-              model = isAdvancedModel ? "gpt-realtime" : "gpt-realtime-mini";
+              model = getAgentRealtimeModel(isAdvancedModel);
 
               logger.info(
                 `Determined model ${model} from agent settings for session ${sessionId}`
@@ -116,11 +111,11 @@ export async function GET(
 
           // Default to non-pro model if still not found
           if (!model) {
-            model = "gpt-realtime-mini";
+            model = LEGACY_MINI_REALTIME_MODEL;
           }
         }
 
-        const isPro = isProModel(model);
+        const isPro = isAdvancedRealtimeModel(model);
 
         // Get usage data from response.done events
         const usageResult = await sql`
@@ -143,7 +138,7 @@ export async function GET(
         if (hasValidUsageData) {
           // Process usage data and calculate costs
           const totalStats = processUsageData(usageData);
-          const { costs, totalCost } = calculateCosts(totalStats, isPro);
+          const { costs, totalCost } = calculateCosts(totalStats, model);
 
           costData = {
             usage: totalStats,
