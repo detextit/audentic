@@ -5,18 +5,13 @@ import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 import { createLogger } from "@/utils/logger";
 import { DEFAULT_COST_DATA } from "@/types/cost";
 import { getAgentById, recordUsage } from "@/db";
+import {
+  LEGACY_MINI_REALTIME_MODEL,
+  getAgentRealtimeModel,
+  isAdvancedRealtimeModel,
+} from "@/lib/realtime";
 
 const logger = createLogger("Sessions End API");
-
-const isProModel = (model: string | null | undefined) => {
-  if (!model) return false;
-  const normalized = model.toLowerCase();
-  if (normalized.includes("mini")) return false;
-  if (normalized === "gpt-realtime") return true;
-  if (normalized.startsWith("gpt-realtime")) return true;
-  if (normalized.startsWith("gpt-4o-realtime")) return true;
-  return false;
-};
 
 export async function POST(request: Request) {
   try {
@@ -47,7 +42,7 @@ export async function POST(request: Request) {
     `;
 
     let model = modelResult.rows[0]?.model;
-    let isPro = isProModel(model);
+    let isPro = isAdvancedRealtimeModel(model);
 
     // If model is not found in events, try to get it from the agent table
     if (!model && agentId) {
@@ -62,17 +57,17 @@ export async function POST(request: Request) {
         const settings = agentResult.rows[0].settings;
         const isAdvancedModel = settings.isAdvancedModel === true;
 
-        model = isAdvancedModel ? "gpt-realtime" : "gpt-realtime-mini";
+        model = getAgentRealtimeModel(isAdvancedModel);
 
-        isPro = isProModel(model);
+        isPro = isAdvancedRealtimeModel(model);
 
         logger.info(
           `Determined model ${model} from agent settings for session ${sessionId}`
         );
       } else {
         // Default to non-pro model if not found
-        model = "gpt-realtime-mini";
-        isPro = isProModel(model);
+        model = LEGACY_MINI_REALTIME_MODEL;
+        isPro = isAdvancedRealtimeModel(model);
         logger.warn(
           `Model not found for session ${sessionId}, defaulting to ${model}`
         );
@@ -104,7 +99,7 @@ export async function POST(request: Request) {
     if (hasValidUsageData) {
       // Process usage data and calculate costs
       totalStats = processUsageData(usageData);
-      const costResult = calculateCosts(totalStats, isPro);
+      const costResult = calculateCosts(totalStats, model);
       costs = costResult.costs;
       totalCost = costResult.totalCost;
     } else {

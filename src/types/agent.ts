@@ -1,3 +1,5 @@
+import type { RealtimeModel, RealtimeSessionSettings } from "@/lib/realtime";
+
 interface ToolParameterProperty {
   type: string;
   description?: string;
@@ -25,7 +27,8 @@ export interface Tool {
 }
 export interface AgentConfig {
   name: string;
-  model?: "gpt-realtime" | "gpt-realtime-mini";
+  model?: RealtimeModel;
+  realtime?: RealtimeSessionSettings;
   initiateConversation: boolean;
   instructions: string;
   tools: Tool[];

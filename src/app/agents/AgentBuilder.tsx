@@ -750,12 +750,13 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
                     htmlFor="agentType"
                     className="text-sm font-medium cursor-pointer flex-1"
                   >
-                    Use Advanced Model
+                    Use Realtime 2
                     <span className="ml-1 text-xs text-muted-foreground">
-                      (5x pricing)
+                      (reasoning model)
                     </span>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Enable more powerful AI capabilities
+                      Enable stronger reasoning and tool use for complex voice
+                      flows
                     </p>
                   </Label>
                   <Switch

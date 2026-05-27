@@ -4,23 +4,34 @@ import { createLogger } from "@/utils/logger";
 const logger = createLogger("Cost Calculation");
 
 export const COST_PER_1M_TOKENS = {
-  // Pricing buckets map to gpt-realtime (PRO) and gpt-realtime-mini (BASE).
-  PRO: {
+  REALTIME_2: {
     TEXT: {
-      input: 5.0,
-      cached_input: 2.5,
-      output: 20.0,
+      input: 4.0,
+      cached_input: 0.4,
+      output: 24.0,
     },
     AUDIO: {
-      input: 40.0,
-      cached_input: 2.5,
-      output: 80.0,
+      input: 32.0,
+      cached_input: 0.4,
+      output: 64.0,
     },
   },
-  BASE: {
+  REALTIME_1_5: {
+    TEXT: {
+      input: 4.0,
+      cached_input: 0.4,
+      output: 16.0,
+    },
+    AUDIO: {
+      input: 32.0,
+      cached_input: 0.4,
+      output: 64.0,
+    },
+  },
+  REALTIME_MINI: {
     TEXT: {
       input: 0.6,
-      cached_input: 0.3,
+      cached_input: 0.06,
       output: 2.4,
     },
     AUDIO: {
@@ -31,6 +42,23 @@ export const COST_PER_1M_TOKENS = {
   },
 };
 
+const resolveRealtimePricing = (modelOrIsPro: string | boolean | null | undefined) => {
+  if (typeof modelOrIsPro === "boolean") {
+    return modelOrIsPro
+      ? COST_PER_1M_TOKENS.REALTIME_2
+      : COST_PER_1M_TOKENS.REALTIME_MINI;
+  }
+
+  const model = (modelOrIsPro || "").toLowerCase();
+  if (model.includes("mini")) {
+    return COST_PER_1M_TOKENS.REALTIME_MINI;
+  }
+  if (model.startsWith("gpt-realtime-2")) {
+    return COST_PER_1M_TOKENS.REALTIME_2;
+  }
+  return COST_PER_1M_TOKENS.REALTIME_1_5;
+};
+
 /**
  * Calculate costs based on token usage and model type
  * @param usage Token usage statistics
@@ -39,9 +67,9 @@ export const COST_PER_1M_TOKENS = {
  */
 export function calculateCosts(
   usage: TokenUsage,
-  isPro: boolean
+  modelOrIsPro: string | boolean | null | undefined
 ): { costs: TokenCosts; totalCost: number } {
-  const pricing = isPro ? COST_PER_1M_TOKENS.PRO : COST_PER_1M_TOKENS.BASE;
+  const pricing = resolveRealtimePricing(modelOrIsPro);
 
   const costs: TokenCosts = {
     text_uncached_input:

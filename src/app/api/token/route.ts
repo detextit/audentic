@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import {
   getAgentById,
   getAgentKnowledgeBase,
@@ -20,8 +21,14 @@ import {
 } from "@/agentBuilder/metaPrompts";
 import { createLogger } from "@/utils/logger";
 import { UserBudget } from "@/types/budget";
+import {
+  STANDARD_REALTIME_MODEL,
+  getAgentRealtimeModel,
+  getRealtimeSessionSettings,
+} from "@/lib/realtime";
 
 const logger = createLogger("Token API");
+const REALTIME_CLIENT_SECRET_TTL_SECONDS = 600;
 
 const getCorsHeaders = (isAllowed: boolean) => {
   if (isAllowed) {
@@ -86,6 +93,14 @@ export async function POST(request: Request) {
         ? userBudget.openaiApiKey
         : process.env.OPENAI_API_KEY;
 
+    if (!apiKeyToUse) {
+      logger.error("OpenAI API key missing for realtime client secret");
+      return NextResponse.json(
+        { error: "OpenAI API key is not configured" },
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     // Fetch knowledge base articles
     const knowledgeBase = await getAgentKnowledgeBase(apiKey);
 
@@ -116,14 +131,52 @@ export async function POST(request: Request) {
       ...agentConfig,
       instructions,
       tools,
+      realtime: getRealtimeSessionSettings(
+        agentConfig.model ?? STANDARD_REALTIME_MODEL
+      ),
     };
 
     const sessionConfig = {
+      expires_after: {
+        anchor: "created_at",
+        seconds: REALTIME_CLIENT_SECRET_TTL_SECONDS,
+      },
       session: {
         type: "realtime",
-        model: agentConfigForClient.model ?? "gpt-realtime-mini",
+        model: agentConfigForClient.model,
+        output_modalities: ["audio"],
+        audio: {
+          input: {
+            transcription:
+              agentConfigForClient.realtime?.audio?.input?.transcription ??
+              null,
+            turn_detection:
+              agentConfigForClient.realtime?.audio?.input?.turnDetection ??
+              undefined,
+            noise_reduction:
+              agentConfigForClient.realtime?.audio?.input?.noiseReduction ??
+              null,
+          },
+          output: agentConfigForClient.realtime?.audio?.output,
+        },
+        ...(agentConfigForClient.realtime?.reasoning
+          ? { reasoning: agentConfigForClient.realtime.reasoning }
+          : {}),
+        ...(agentConfigForClient.realtime?.truncation
+          ? { truncation: agentConfigForClient.realtime.truncation }
+          : {}),
+        ...(typeof agentConfigForClient.realtime?.parallelToolCalls ===
+          "boolean"
+          ? {
+              parallel_tool_calls:
+                agentConfigForClient.realtime.parallelToolCalls,
+            }
+          : {}),
+        max_output_tokens:
+          agentConfigForClient.realtime?.maxOutputTokens ?? 4096,
       },
     };
+    const safetyIdentifier = createSafetyIdentifier(userBudget.userId);
 
     const response = await fetch(
       "https://api.openai.com/v1/realtime/client_secrets",
@@ -132,6 +185,7 @@ export async function POST(request: Request) {
         headers: {
           Authorization: `Bearer ${apiKeyToUse}`,
           "Content-Type": "application/json",
+          "OpenAI-Safety-Identifier": safetyIdentifier,
         },
         body: JSON.stringify(sessionConfig),
       }
@@ -211,9 +265,7 @@ async function getAgentConfig(
 
     let agentConfig: AgentConfig = {
       name: agent.name,
-      model: agent.settings?.isAdvancedModel
-        ? "gpt-realtime"
-        : "gpt-realtime-mini",
+      model: getAgentRealtimeModel(agent.settings?.isAdvancedModel),
       initiateConversation: agent.initiateConversation,
       instructions: agent.instructions,
       tools: agent.tools,
@@ -257,6 +309,13 @@ async function getAgentConfig(
     logger.error("Error fetching agent config:", error);
     return { agentConfig: null, userBudget: null };
   }
+}
+
+function createSafetyIdentifier(userId: string) {
+  return createHash("sha256")
+    .update(`audentic:${userId}`)
+    .digest("hex")
+    .slice(0, 64);
 }
 
 async function hasEnoughBudget(
