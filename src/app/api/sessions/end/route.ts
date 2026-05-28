@@ -5,11 +5,7 @@ import { processUsageData, calculateCosts } from "@/utils/costCalculation";
 import { createLogger } from "@/utils/logger";
 import { DEFAULT_COST_DATA } from "@/types/cost";
 import { getAgentById, recordUsage } from "@/db";
-import {
-  LEGACY_MINI_REALTIME_MODEL,
-  getAgentRealtimeModel,
-  isAdvancedRealtimeModel,
-} from "@/lib/realtime";
+import { REALTIME_MODEL } from "@/lib/realtime";
 
 const logger = createLogger("Sessions End API");
 
@@ -31,8 +27,7 @@ export async function POST(request: Request) {
     const agentId =
       sessionCheck.rows.length > 0 ? sessionCheck.rows[0].agent_id : null;
 
-    // Calculate the total cost for the session
-    // First get the model type from session.created event
+    // Calculate the total cost for the session using the recorded model value when present.
     const modelResult = await sql`
       SELECT event_data->'session'->>'model' as model
       FROM events 
@@ -41,37 +36,11 @@ export async function POST(request: Request) {
       LIMIT 1
     `;
 
-    let model = modelResult.rows[0]?.model;
-    let isPro = isAdvancedRealtimeModel(model);
-
-    // If model is not found in events, try to get it from the agent table
-    if (!model && agentId) {
+    const model = modelResult.rows[0]?.model || REALTIME_MODEL;
+    if (!modelResult.rows[0]?.model) {
       logger.info(
-        `Model not found in events for session ${sessionId}, trying agent table`
+        `Model not found in events for session ${sessionId}, defaulting to ${REALTIME_MODEL}`
       );
-      const agentResult = await sql`
-        SELECT settings FROM agents WHERE id = ${agentId}
-      `;
-
-      if (agentResult.rows.length > 0 && agentResult.rows[0].settings) {
-        const settings = agentResult.rows[0].settings;
-        const isAdvancedModel = settings.isAdvancedModel === true;
-
-        model = getAgentRealtimeModel(isAdvancedModel);
-
-        isPro = isAdvancedRealtimeModel(model);
-
-        logger.info(
-          `Determined model ${model} from agent settings for session ${sessionId}`
-        );
-      } else {
-        // Default to non-pro model if not found
-        model = LEGACY_MINI_REALTIME_MODEL;
-        isPro = isAdvancedRealtimeModel(model);
-        logger.warn(
-          `Model not found for session ${sessionId}, defaulting to ${model}`
-        );
-      }
     }
 
     // Get token usage data from response.done events
@@ -99,7 +68,7 @@ export async function POST(request: Request) {
     if (hasValidUsageData) {
       // Process usage data and calculate costs
       totalStats = processUsageData(usageData);
-      const costResult = calculateCosts(totalStats, model);
+      const costResult = calculateCosts(totalStats);
       costs = costResult.costs;
       totalCost = costResult.totalCost;
     } else {
@@ -124,13 +93,7 @@ export async function POST(request: Request) {
         // Very rough estimation - assume average token usage per message
         const estimatedTokens = messageCount * 100;
 
-        if (isPro) {
-          // Rough estimate for Pro model
-          totalCost = estimatedTokens * 0.00001; // $0.01 per 1000 tokens rough estimate
-        } else {
-          // Rough estimate for Base model
-          totalCost = estimatedTokens * 0.000001; // $0.001 per 1000 tokens rough estimate
-        }
+        totalCost = estimatedTokens * 0.00001; // $0.01 per 1000 tokens rough estimate
 
         logger.info(
           `Estimated cost for session ${sessionId} based on ${messageCount} messages: $${totalCost.toFixed(

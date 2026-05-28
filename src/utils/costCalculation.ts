@@ -16,60 +16,18 @@ export const COST_PER_1M_TOKENS = {
       output: 64.0,
     },
   },
-  REALTIME_1_5: {
-    TEXT: {
-      input: 4.0,
-      cached_input: 0.4,
-      output: 16.0,
-    },
-    AUDIO: {
-      input: 32.0,
-      cached_input: 0.4,
-      output: 64.0,
-    },
-  },
-  REALTIME_MINI: {
-    TEXT: {
-      input: 0.6,
-      cached_input: 0.06,
-      output: 2.4,
-    },
-    AUDIO: {
-      input: 10.0,
-      cached_input: 0.3,
-      output: 20.0,
-    },
-  },
-};
-
-const resolveRealtimePricing = (modelOrIsPro: string | boolean | null | undefined) => {
-  if (typeof modelOrIsPro === "boolean") {
-    return modelOrIsPro
-      ? COST_PER_1M_TOKENS.REALTIME_2
-      : COST_PER_1M_TOKENS.REALTIME_MINI;
-  }
-
-  const model = (modelOrIsPro || "").toLowerCase();
-  if (model.includes("mini")) {
-    return COST_PER_1M_TOKENS.REALTIME_MINI;
-  }
-  if (model.startsWith("gpt-realtime-2")) {
-    return COST_PER_1M_TOKENS.REALTIME_2;
-  }
-  return COST_PER_1M_TOKENS.REALTIME_1_5;
 };
 
 /**
- * Calculate costs based on token usage and model type
+ * Calculate Realtime 2 costs based on token usage
  * @param usage Token usage statistics
- * @param isPro Whether the model is a Pro model
  * @returns Object containing individual costs and total cost
  */
-export function calculateCosts(
-  usage: TokenUsage,
-  modelOrIsPro: string | boolean | null | undefined
-): { costs: TokenCosts; totalCost: number } {
-  const pricing = resolveRealtimePricing(modelOrIsPro);
+export function calculateCosts(usage: TokenUsage): {
+  costs: TokenCosts;
+  totalCost: number;
+} {
+  const pricing = COST_PER_1M_TOKENS.REALTIME_2;
 
   const costs: TokenCosts = {
     text_uncached_input:
