@@ -14,6 +14,181 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+type TranscriptContent = Record<string, unknown>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractTranscriptText(content: unknown): string {
+  if (!Array.isArray(content)) {
+    return "";
+  }
+
+  for (const part of content) {
+    if (!isRecord(part)) {
+      continue;
+    }
+    const transcript = part.transcript;
+    if (typeof transcript === "string" && transcript.trim()) {
+      return transcript;
+    }
+    const text = part.text;
+    if (typeof text === "string" && text.trim()) {
+      return text;
+    }
+  }
+
+  return "";
+}
+
+function hasConversationTranscript(items: TranscriptItem[] | undefined) {
+  return (
+    Array.isArray(items) &&
+    items.some((item) => item.role === "user" || item.role === "assistant")
+  );
+}
+
+async function deriveTranscriptItemsFromEvents(
+  sessionId: string
+): Promise<TranscriptItem[]> {
+  const result = await sql`
+    SELECT event_name, event_data, timestamp
+    FROM events
+    WHERE session_id = ${sessionId}
+      AND event_name IN (
+        'conversation.item.done',
+        'conversation.item.input_audio_transcription.completed',
+        'response.output_audio_transcript.done'
+      )
+    ORDER BY timestamp ASC
+  `;
+
+  const items = new Map<string, TranscriptItem>();
+
+  for (const row of result.rows) {
+    const eventName = row.event_name as string;
+    const eventData = row.event_data as unknown;
+    if (!isRecord(eventData)) {
+      continue;
+    }
+
+    let itemId: unknown;
+    let role: TranscriptItem["role"] | undefined;
+    let content: TranscriptContent | undefined;
+
+    if (eventName === "conversation.item.done" && isRecord(eventData.item)) {
+      const item = eventData.item;
+      itemId = item.id;
+      const itemRole = item.role;
+      if (itemRole !== "user" && itemRole !== "assistant") {
+        continue;
+      }
+
+      const text = extractTranscriptText(item.content);
+      if (!text.trim()) {
+        continue;
+      }
+
+      role = itemRole;
+      content = { type: "text", text };
+    } else if (
+      eventName === "conversation.item.input_audio_transcription.completed"
+    ) {
+      itemId = eventData.item_id;
+      const transcript = eventData.transcript;
+      if (typeof transcript !== "string" || !transcript.trim()) {
+        continue;
+      }
+
+      role = "user";
+      content = { type: "text", text: transcript };
+    } else if (eventName === "response.output_audio_transcript.done") {
+      itemId = eventData.item_id;
+      const transcript = eventData.transcript;
+      if (typeof transcript !== "string" || !transcript.trim()) {
+        continue;
+      }
+
+      role = "assistant";
+      content = { type: "text", text: transcript };
+    }
+
+    if (typeof itemId !== "string" || !role || !content) {
+      continue;
+    }
+
+    items.set(itemId, {
+      itemId,
+      role,
+      content,
+      timestamp: new Date(row.timestamp).toISOString(),
+    });
+  }
+
+  return Array.from(items.values());
+}
+
+async function logTranscriptItems(
+  sessionId: string,
+  transcriptItems: TranscriptItem[] | undefined
+) {
+  if (!Array.isArray(transcriptItems)) {
+    return;
+  }
+
+  const itemsToLog = transcriptItems.filter(
+    (item: TranscriptItem) =>
+      !(
+        item.role === "user" &&
+        item.content.type === "text" &&
+        ((item.content as any).text.trim() == "" ||
+          (item.content as any).text.includes("Transcribing"))
+      )
+  );
+
+  for (const item of itemsToLog) {
+    await sql`
+      INSERT INTO transcript_items (
+        item_id,
+        session_id,
+        role,
+        content,
+        timestamp
+      )
+      VALUES (
+        ${item.itemId},
+        ${sessionId},
+        ${item.role},
+        ${item.content ? JSON.stringify(item.content) : null},
+        ${item.timestamp}
+      )
+      ON CONFLICT (item_id) 
+      DO UPDATE SET
+        role = EXCLUDED.role,
+        content = EXCLUDED.content,
+        timestamp = EXCLUDED.timestamp
+    `;
+  }
+}
+
+async function backfillTranscriptFromEventsIfNeeded(sessionId: string) {
+  const existingTranscript = await sql`
+    SELECT COUNT(*) FILTER (WHERE role IN ('user', 'assistant'))::int as conversation_count
+    FROM transcript_items
+    WHERE session_id = ${sessionId}
+  `;
+
+  if (existingTranscript.rows[0]?.conversation_count > 0) {
+    return;
+  }
+
+  const derivedItems = await deriveTranscriptItemsFromEvents(sessionId);
+  if (derivedItems.length > 0) {
+    await logTranscriptItems(sessionId, derivedItems);
+  }
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
@@ -48,6 +223,7 @@ export async function POST(request: Request) {
     // If session is already ended, don't process it again
     if (sessionCheck.rows.length > 0 && sessionCheck.rows[0].ended_at) {
       logger.info(`Session ${sessionId} already ended, skipping processing`);
+      await backfillTranscriptFromEventsIfNeeded(sessionId);
       return NextResponse.json(
         { success: true, status: "already_ended" },
         { headers: corsHeaders }
@@ -170,44 +346,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // Then, if transcript items are provided, log the final transcript
-    if (transcriptItems) {
-      // Filter and log completed messages and breadcrumbs
-      const itemsToLog = transcriptItems.filter(
-        (item: TranscriptItem) =>
-          // Exclude incomplete messages
-          !(
-            item.role === "user" &&
-            item.content.type === "text" &&
-            ((item.content as any).text.trim() == "" ||
-              (item.content as any).text.includes("Transcribing"))
-          )
-      );
+    const incomingTranscriptItems = Array.isArray(transcriptItems)
+      ? (transcriptItems as TranscriptItem[])
+      : undefined;
+    const derivedTranscriptItems = hasConversationTranscript(
+      incomingTranscriptItems
+    )
+      ? []
+      : await deriveTranscriptItemsFromEvents(sessionId);
 
-      for (const item of itemsToLog) {
-        await sql`
-          INSERT INTO transcript_items (
-            item_id,
-            session_id,
-            role,
-            content,
-            timestamp
-          )
-          VALUES (
-            ${item.itemId},
-            ${sessionId},
-            ${item.role},
-            ${item.content ? JSON.stringify(item.content) : null},
-            ${item.timestamp}
-          )
-          ON CONFLICT (item_id) 
-          DO UPDATE SET
-            role = EXCLUDED.role,
-            content = EXCLUDED.content,
-            timestamp = EXCLUDED.timestamp
-        `;
-      }
-    }
+    await logTranscriptItems(sessionId, [
+      ...(incomingTranscriptItems ?? []),
+      ...derivedTranscriptItems,
+    ]);
 
     return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error) {
