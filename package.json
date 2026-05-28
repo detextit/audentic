@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@audentic/react": "^0.3.2",
+    "@audentic/react": "^0.3.3",
     "@clerk/nextjs": "^6.9.15",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.3",
