@@ -8,10 +8,37 @@ import { getAgentById, recordUsage } from "@/db";
 import { REALTIME_MODEL } from "@/lib/realtime";
 
 const logger = createLogger("Sessions End API");
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
 
 export async function POST(request: Request) {
   try {
-    const { sessionId, transcriptItems } = await request.json();
+    const { sessionId, transcriptItems, agentId: requestAgentId } =
+      await request.json();
+    const providedAgentId =
+      typeof requestAgentId === "string" ? requestAgentId : null;
+
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: "Missing sessionId" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    await sql`
+      INSERT INTO sessions (session_id, agent_id)
+      VALUES (${sessionId}, ${providedAgentId})
+      ON CONFLICT (session_id)
+      DO UPDATE SET
+        agent_id = COALESCE(sessions.agent_id, EXCLUDED.agent_id)
+    `;
 
     // Check if the session already exists and has been ended
     const sessionCheck = await sql`
@@ -21,7 +48,10 @@ export async function POST(request: Request) {
     // If session is already ended, don't process it again
     if (sessionCheck.rows.length > 0 && sessionCheck.rows[0].ended_at) {
       logger.info(`Session ${sessionId} already ended, skipping processing`);
-      return NextResponse.json({ success: true, status: "already_ended" });
+      return NextResponse.json(
+        { success: true, status: "already_ended" },
+        { headers: corsHeaders }
+      );
     }
 
     const agentId =
@@ -179,12 +209,12 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error) {
     logger.error("Error ending session:", error);
     return NextResponse.json(
       { error: "Failed to end session" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
