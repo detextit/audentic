@@ -22,7 +22,7 @@ import {
 import { createLogger } from "@/utils/logger";
 import { UserBudget } from "@/types/budget";
 import {
-  STANDARD_REALTIME_MODEL,
+  REALTIME_MODEL,
   getAgentRealtimeModel,
   getRealtimeSessionSettings,
 } from "@/lib/realtime";
@@ -131,9 +131,8 @@ export async function POST(request: Request) {
       ...agentConfig,
       instructions,
       tools,
-      realtime: getRealtimeSessionSettings(
-        agentConfig.model ?? STANDARD_REALTIME_MODEL
-      ),
+      model: REALTIME_MODEL,
+      realtime: getRealtimeSessionSettings(),
     };
 
     const sessionConfig = {
@@ -265,7 +264,7 @@ async function getAgentConfig(
 
     let agentConfig: AgentConfig = {
       name: agent.name,
-      model: getAgentRealtimeModel(agent.settings?.isAdvancedModel),
+      model: getAgentRealtimeModel(),
       initiateConversation: agent.initiateConversation,
       instructions: agent.instructions,
       tools: agent.tools,

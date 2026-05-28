@@ -4,11 +4,7 @@ import { NextResponse } from "next/server";
 import { CostData, DEFAULT_COST_DATA } from "@/types/cost";
 import { createLogger } from "@/utils/logger";
 import { processUsageData, calculateCosts } from "@/utils/costCalculation";
-import {
-  LEGACY_MINI_REALTIME_MODEL,
-  getAgentRealtimeModel,
-  isAdvancedRealtimeModel,
-} from "@/lib/realtime";
+import { REALTIME_MODEL, isAdvancedRealtimeModel } from "@/lib/realtime";
 
 const logger = createLogger("Sessions API");
 
@@ -76,46 +72,15 @@ export async function GET(
           costs: session.cost_breakdown || DEFAULT_COST_DATA.costs,
           total_cost: parseFloat(session.total_cost || 0),
           is_final: !!session.ended_at,
-          isPro: isAdvancedRealtimeModel(session.model_type),
+          isPro: isAdvancedRealtimeModel(),
         };
       } else {
         // Session exists but doesn't have complete cost data
         // Try to calculate it on the fly
 
-        // First determine the model type
-        let model = session.model_type;
-        if (!model) {
-          // Try to get model from session.created event
-          model = agentResult.rows[0]?.model;
-
-          // If still no model and we have agent_id, try to get from agent table
-          if (!model && session.agent_id) {
-            const agentModelResult = await sql`
-              SELECT settings FROM agents WHERE id = ${session.agent_id}
-            `;
-
-            if (
-              agentModelResult.rows.length > 0 &&
-              agentModelResult.rows[0].settings
-            ) {
-              const settings = agentModelResult.rows[0].settings;
-              const isAdvancedModel = settings.isAdvancedModel === true;
-
-              model = getAgentRealtimeModel(isAdvancedModel);
-
-              logger.info(
-                `Determined model ${model} from agent settings for session ${sessionId}`
-              );
-            }
-          }
-
-          // Default to non-pro model if still not found
-          if (!model) {
-            model = LEGACY_MINI_REALTIME_MODEL;
-          }
-        }
-
-        const isPro = isAdvancedRealtimeModel(model);
+        // Use the recorded model value when present, otherwise use the platform default.
+        const model = session.model_type || agentResult.rows[0]?.model || REALTIME_MODEL;
+        const isPro = isAdvancedRealtimeModel();
 
         // Get usage data from response.done events
         const usageResult = await sql`
@@ -138,7 +103,7 @@ export async function GET(
         if (hasValidUsageData) {
           // Process usage data and calculate costs
           const totalStats = processUsageData(usageData);
-          const { costs, totalCost } = calculateCosts(totalStats, model);
+          const { costs, totalCost } = calculateCosts(totalStats);
 
           costData = {
             usage: totalStats,

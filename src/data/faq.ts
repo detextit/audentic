@@ -19,7 +19,7 @@ export const faqData: FAQItem[] = [
 * End-to-end voice processing that removes the speech-to-text-to-speech pipeline
 * Integration in minutes with no-code platforms
 
-Our platform is currently built entirely around *OpenAI Realtime API*. We will expand to other providers when a competitive end-to-end voice model is made available.`,
+Our platform is built around *OpenAI Realtime 2* for low-latency voice agents.`,
   },
   {
     question: "What makes Audentic different from chatbots?",

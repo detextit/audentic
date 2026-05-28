@@ -39,7 +39,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Copy, Check, PlusCircle } from "lucide-react";
+import {
+  Trash2,
+  Copy,
+  Check,
+  PlusCircle,
+  Search,
+  FileText,
+  Network,
+  Package,
+  Terminal,
+  Monitor,
+  Image,
+  Wrench,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -56,6 +71,26 @@ import type { Tool } from "@/types/agent";
 
 // Create a logger instance for this component
 const logger = createLogger("Agent Builder");
+
+const OPENAI_TOOL_CAPABILITIES: { label: string; Icon: LucideIcon }[] = [
+  { label: "Web search", Icon: Search },
+  { label: "File search", Icon: FileText },
+  { label: "MCP", Icon: Network },
+  { label: "Skills", Icon: Package },
+  { label: "Shell", Icon: Terminal },
+  { label: "Computer use", Icon: Monitor },
+  { label: "Image", Icon: Image },
+  { label: "Functions", Icon: Wrench },
+  { label: "Tool search", Icon: Sparkles },
+];
+
+const escapeEmbedAttribute = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/'/g, "&#39;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
 export function AgentBuilder({ agentId }: { agentId: string }) {
   const router = useRouter();
@@ -79,7 +114,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
       isFormAgent: false,
       formSchema: false,
       knowledgeBase: false,
-      isAdvancedModel: false,
     },
     webUI: false,
     widgetConfig: false,
@@ -90,11 +124,14 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
   const [copied, setCopied] = useState(false);
   // Generate embed code based on current configuration
   const generateEmbedCode = () => {
-    return `<audentic-embed agent-id="${currentAgent?.id
-      }" max-output-tokens="1024" widget-configuration='${JSON.stringify(
-        widgetConfig
-      )}'></audentic-embed>
-    <script src="https://unpkg.com/@audentic/react/dist/embed.js" async type="text/javascript"></script>`;
+    const widgetConfigAttribute = widgetConfig
+      ? ` widget-configuration='${escapeEmbedAttribute(
+          JSON.stringify(widgetConfig)
+        )}'`
+      : "";
+
+    return `<audentic-embed agent-id="${currentAgent?.id}"${widgetConfigAttribute}></audentic-embed>
+<script src="https://unpkg.com/@audentic/react/dist/embed.js" async></script>`;
   };
 
   const handleCopy = async () => {
@@ -173,7 +210,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
         isFormAgent: false,
         formSchema: false,
         knowledgeBase: false,
-        isAdvancedModel: false,
       },
       webUI: false,
       widgetConfig: false,
@@ -747,36 +783,6 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               <div className="grid gap-3">
                 <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
                   <Label
-                    htmlFor="agentType"
-                    className="text-sm font-medium cursor-pointer flex-1"
-                  >
-                    Use Realtime 2
-                    <span className="ml-1 text-xs text-muted-foreground">
-                      (reasoning model)
-                    </span>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Enable stronger reasoning and tool use for complex voice
-                      flows
-                    </p>
-                  </Label>
-                  <Switch
-                    id="agentType"
-                    checked={currentAgent.settings?.isAdvancedModel}
-                    onCheckedChange={(checked) => {
-                      setCurrentAgent({
-                        ...currentAgent,
-                        settings: {
-                          ...currentAgent.settings,
-                          isAdvancedModel: checked,
-                        },
-                      });
-                      markFieldDirty("settings", "isAdvancedModel");
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 transition-colors">
-                  <Label
                     htmlFor="initiate"
                     className="text-sm font-medium cursor-pointer flex-1"
                   >
@@ -913,6 +919,22 @@ export function AgentBuilder({ agentId }: { agentId: string }) {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-3">
+              <div className="mb-5 rounded-md border border-border/40 bg-background p-3">
+                <div className="mb-3 text-xs font-medium text-muted-foreground">
+                  OpenAI tools
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                  {OPENAI_TOOL_CAPABILITIES.map(({ label, Icon }) => (
+                    <div
+                      key={label}
+                      className="flex min-h-12 items-center gap-2 rounded-md border border-border/40 bg-muted/20 px-3 py-2 text-sm"
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="truncate">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="space-y-4">
                 {currentAgent.tools?.map((tool, index) => {
                   // Validation helpers
